@@ -27,6 +27,12 @@ class SciPyBackend(Backend):
     def rank(self, value):
         return len(value.shape)
 
+    def range(self, limit, start=0, delta=1, dtype=None):
+        return np.arange(start, limit, delta, dtype)
+
+    def tile(self, value, multiples):
+        return np.tile(value, multiples)
+
     def stack(self, values, axis=0):
         return np.stack(values, axis)
 
@@ -50,6 +56,16 @@ class SciPyBackend(Backend):
     def sum(self, value, axis=None):
         return np.sum(value, axis=axis)
 
+    def prod(self, value, axis=None):
+        if value.dtype == bool:
+            return np.all(value, axis=axis)
+        return np.prod(value, axis=axis)
+
+    def where(self, condition, x=None, y=None):
+        if x is None or y is None:
+            return np.where(condition)
+        return np.where(condition, x, y)
+
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         result = func(*inputs)
         assert result.dtype == Tout, "returned value has wrong type: {}, expected {}".format(result.dtype, Tout)
@@ -62,9 +78,34 @@ class SciPyBackend(Backend):
             pass # default
         elif boundary.lower() == "replicate":
             sample_coords = clamp(sample_coords, inputs.shape[1:-1])
+        elif boundary.lower() == "updim":
+            dimensions = inputs.shape[1:-1]
+            rank = len(dimensions)
+            if rank == 1:
+                updim = 0
+            else:
+                updim = rank - 2
+            # Zero boundary resample in positive upper dimension, replicate resample for all other dimensions.
+            # Adding 1 will allow out of bounds resample, which results to a zero value.
+            dimensions = np.array(dimensions)
+            dimensions[updim] = dimensions[updim] + 1
+            sample_coords = clamp(sample_coords, dimensions)
         else:
             raise ValueError("Unsupported boundary: %s"%boundary)
 
+        # if interpolation.lower() == "sigmoid":            
+        #     def sigmoid(x):
+        #         x_sc = 10.0
+        #         x_tr = 0.5
+        #         b = (np.exp(x_sc * (1 - x_tr)) + 1) / (1 - np.exp(x_sc))
+        #         a = -b * (1 + np.exp(x_sc * x_tr))
+                
+        #         return b + a / (1 + np.exp(-x_sc * (x - x_tr)))
+
+        #     diff = sample_coords - np.floor(sample_coords)
+        #     sample_coords = np.floor(sample_coords) + sigmoid(diff)
+        #     interpolation = "linear"
+        
         import scipy.interpolate
         points = [np.arange(dim) for dim in inputs.shape[1:-1]]
         result = []
@@ -105,6 +146,12 @@ class SciPyBackend(Backend):
 
     def abs(self, x):
         return np.abs(x)
+
+    def sign(self, x):
+        return np.sign(x)
+
+    def round(self, x):
+        return np.round(x)
 
     def ceil(self, x):
         return np.ceil(x)
@@ -161,6 +208,9 @@ class SciPyBackend(Backend):
     def gather(self, values, indices):
         return values[indices]
 
+    def gather_nd(self, values, indices):
+        return values[indices]
+
     def unstack(self, tensor, axis=0):
         if axis < 0:
             axis += len(tensor.shape)
@@ -186,6 +236,20 @@ class SciPyBackend(Backend):
     def all(self, boolean_tensor, axis=None, keepdims=False):
         return np.all(boolean_tensor, axis=axis, keepdims=keepdims)
 
+    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+        indices = self.unstack(indices, axis=-1)
+        array = np.zeros(shape, np.float32)
+        if duplicates_handling == 'add':
+            np.add.at(array, indices, values)
+        elif duplicates_handling == 'mean':
+            count = np.zeros(shape, np.int32)
+            np.add.at(array, indices, values)
+            np.add.at(count, indices, 1)
+            count = np.maximum(1, count)
+            return array / count
+        else: # last, any, undefined
+            array[indices] = values
+        return array
 
 
 def clamp(coordinates, shape):

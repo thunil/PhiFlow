@@ -21,6 +21,12 @@ class TFBackend(Backend):
     def rank(self, value):
         return len(value.shape)
 
+    def range(self, limit, start=0, delta=1, dtype=None):
+        return tf.range(start, limit, delta, dtype)
+
+    def tile(self, value, multiples):
+        return tf.tile(value, multiples)
+
     def stack(self, values, axis=0):
         return tf.stack(values, axis=axis)
 
@@ -43,6 +49,17 @@ class TFBackend(Backend):
             if not isinstance(axis, int):
                 axis = list(axis)
         return tf.reduce_sum(value, axis=axis)
+    
+    def prod(self, value, axis=None):
+        if axis is not None:
+            if not isinstance(axis, int):
+                axis = list(axis)
+        if value.dtype == bool:
+            return tf.reduce_all(value, axis=axis)
+        return tf.reduce_prod(value, axis=axis)
+
+    def where(self, condition, x=None, y=None):
+        return tf.where(condition, x, y)
 
     def mean(self, value, axis=None):
         if axis is not None:
@@ -96,6 +113,12 @@ class TFBackend(Backend):
 
     def abs(self, x):
         return tf.abs(x)
+
+    def sign(self, x):
+        return tf.sign(x)
+
+    def round(self, x):
+        return tf.round(x)
 
     def ceil(self, x):
         return tf.ceil(x)
@@ -160,10 +183,13 @@ class TFBackend(Backend):
         return tf.to_float(x)
 
     def to_int(self, x, int64=False):
-        return tf.to_int64(x) if int64 else tf.to_int32(x)
+        return tf.cast(x, tf.int64) if int64 else tf.cast(x, tf.int32)
 
     def gather(self, values, indices):
         return tf.gather(values, indices)
+
+    def gather_nd(self, values, indices):
+        return tf.gather_nd(values, indices)
 
     def unstack(self, tensor, axis=0):
         return tf.unstack(tensor, axis=axis)
@@ -183,7 +209,30 @@ class TFBackend(Backend):
 
     def all(self, boolean_tensor, axis=None, keepdims=False):
         return tf.reduce_all(boolean_tensor, axis=axis, keepdims=keepdims)
+    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+        # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
+        # Input indices only has the 2D coordinates.
+        # EDIT: This formatting should be already done before calling scatter.
+        z = tf.zeros(shape, dtype=values.dtype)
+        
+        if duplicates_handling == 'add':
+            return tf.tensor_scatter_add(z, indices, values)
+        elif duplicates_handling == 'mean':
+            # Won't entirely work with out of bounds particles (still counted in mean)
+            count = tf.tensor_scatter_add(z, indices, tf.ones_like(values))
+            total = tf.tensor_scatter_add(z, indices, values)
 
+            return (total / tf.maximum(1.0, count))
+        elif duplicates_handling == 'no duplicates':
+            st = tf.SparseTensor(indices, values, shape)
+            st = tf.sparse.reorder(st)   # only needed if not ordered
+            return tf.sparse.to_dense(st)
+        else: # last, any, undefined
+            # Same as 'no duplicates'?
+            st = tf.SparseTensor(indices, values, shape)
+            st = tf.sparse.reorder(st)   # only needed if not ordered
+            return tf.sparse.to_dense(st)
+            
 
 # from niftynet.layer.resampler.py
 # https://cmiclab.cs.ucl.ac.uk/CMIC/NiftyNet/blob/69c98e5a95cc6788ad9fb8c5e27dc24d1acec634/niftynet/layer/resampler.py
@@ -289,12 +338,33 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     if boundary == 'ZERO':
         weight_0 = [tf.expand_dims(x - tf.cast(i, tf.float32), -1) for (x, i) in zip(xy, floor_coords)]
         weight_1 = [tf.expand_dims(tf.cast(i, tf.float32) - x, -1) for (x, i) in zip(xy, ceil_coords)]
+    elif boundary == 'UPDIM':
+        if in_spatial_rank == 1:
+            updim = 0
+        else:
+            updim = in_spatial_rank - 2
+
+        # Zero boundary resample in positive upper dimension, replicate resample for all other dimensions.
+        # We allow out of bounds coordinates for updim, such that we can filter these out in the next step
+        updim_floor = [(tf.cast(x, COORDINATES_TYPE) if idx == updim else tf.cast(boundary_func(x, in_spatial_size[idx]), COORDINATES_TYPE)) for (idx, x) in enumerate(base_coords)]
+        
+        updim_ceil = [(tf.cast(x + 1.0, COORDINATES_TYPE) if idx == updim else tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE)) for (idx, x) in enumerate(base_coords)]
+
+        # The updim coordinates are the only ones that have been left out of bounds, the other dimensions have been clamped.
+        weight_0 = [tf.expand_dims(tf.where(c > s-1, tf.zeros_like(x), x - i), axis=-1) for (x, i, c, s) in zip(xy, base_coords, updim_ceil, in_spatial_size)]
+
+        #weight_1 = [tf.where(tf.expand_dims(c > s-1, axis=-1), tf.zeros_like(w), 1.0 - w) for (w, c, s) in zip(weight_0, updim_ceil, in_spatial_size)]
+
+        weight_1 = [tf.expand_dims(tf.where(f > s-1, tf.zeros_like(x), i + 1.0 - x), axis=-1) for (x, i, f, s) in zip(xy, base_coords, updim_floor, in_spatial_size)]
     else:
         weight_0 = [tf.expand_dims(x - i, -1) for (x, i) in zip(xy, base_coords)]
         weight_1 = [1.0 - w for w in weight_0]
 
-    batch_ids = tf.reshape( tf.range(batch_size), [batch_size] + [1] * out_spatial_rank )
-    batch_ids = tf.tile(batch_ids, [1] + out_spatial_size)
+    # TODO: apply sigmoid on the weights, so we are closer to cubic interpolation than linear without the extra datapoints
+
+    batch_ids = tf.reshape(tf.range(batch_size), [batch_size] + [1] * out_spatial_rank)
+    tile_shape = tf.pad(out_spatial_size, [[1,0]], constant_values=1)
+    batch_ids = tf.tile(batch_ids, tile_shape)
     sc = (floor_coords, ceil_coords)
     binary_neighbour_ids = [ [int(c) for c in format(i, '0%ib' % in_spatial_rank)] for i in range(2 ** in_spatial_rank)]
 
@@ -364,6 +434,7 @@ def _boundary_symmetric(sample_coords, input_size):
 SUPPORTED_BOUNDARY = {
     'ZERO': _boundary_replicate,
     'REPLICATE': _boundary_replicate,
+    'UPDIM': _boundary_replicate,
     'CIRCULAR': _boundary_circular,
     'SYMMETRIC': _boundary_symmetric
 }

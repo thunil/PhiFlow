@@ -107,7 +107,7 @@ Active cells are those for which physical properties such as pressure or velocit
         if extend is None or extend == 0:
             return self._active
         else:
-            return pad(self._active, [[0, 0]] + [[1, 1]] * self.rank + [[0, 0]], "constant")
+            return pad(self._active, [[0, 0]] + [[extend, extend]] * self.rank + [[0, 0]], "constant")
 
     def accessible(self, extend=0):
         """

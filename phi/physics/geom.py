@@ -99,7 +99,7 @@ class Grid(Struct):
 
     def cell_index(self, global_position):
         local_position = self._box.global_to_local(global_position) * self.dimensions
-        position = to_int(local_position - 0.5)
+        position = to_int(floor(local_position - 0.5))
         position = maximum(0, position)
         position = minimum(position, self.dimensions-1)
         return position

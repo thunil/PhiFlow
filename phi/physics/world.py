@@ -1,6 +1,7 @@
 from .collective import CollectiveState, CollectivePhysics
 from .smoke import *
 from .burger import *
+from .gridliquid import *
 
 
 class StateTracker(object):
@@ -50,7 +51,7 @@ class World(object):
         self.batch_size = None
 
         # Physics Shortcuts
-        for target,source in {'Smoke': Smoke, 'Burger': Burger}.items():
+        for target,source in {'Smoke': Smoke, 'Burger': Burger, 'GridLiquid': GridLiquid}.items():
             def wrapper(constructor):
                 def buildadd(*args, **kwargs):
                     state = constructor(*args, **kwargs)
@@ -72,6 +73,7 @@ class World(object):
 
     Smoke = Smoke
     Burger = Burger
+    GridLiquid = GridLiquid
 
     Inflow = Inflow
     Obstacle = Obstacle

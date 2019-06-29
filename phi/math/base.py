@@ -34,6 +34,12 @@ class Backend:
     def sum(self, value, axis=None):
         raise NotImplementedError()
 
+    def prod(self, value, axis=None):
+        raise NotImplementedError()
+    
+    def where(self, condition, x=None, y=None):
+        raise NotImplementedError()
+
     def mean(self, value, axis=None):
         raise NotImplementedError()
 
@@ -41,6 +47,9 @@ class Backend:
         raise NotImplementedError()
 
     def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
+        raise NotImplementedError()
+        
+    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
         raise NotImplementedError()
 
     def zeros_like(self, tensor):
@@ -60,6 +69,12 @@ class Backend:
         raise NotImplementedError()
 
     def abs(self, x):
+        raise NotImplementedError()
+
+    def sign(self, x):
+        raise NotImplementedError()
+
+    def round(self, x):
         raise NotImplementedError()
 
     def ceil(self, x):
@@ -107,6 +122,9 @@ class Backend:
     def gather(self, values, indices):
         raise NotImplementedError()
 
+    def gather_nd(self, values, indices):
+        raise NotImplementedError()
+
     def flatten(self, x):
         return self.reshape(x, (-1,) )
 
@@ -120,6 +138,19 @@ class Backend:
         raise NotImplementedError()
 
     def isfinite(self, x):
+        raise NotImplementedError()
+        
+    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+        """
+This method expects the first dimension of indices and values to be the batch dimension.
+The batch dimension need not be specified in the indices array.
+
+All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.
+        :param indices:
+        :param values:
+        :param shape:
+        :param duplicates_handling: one of ('undefined', 'add', 'mean', 'any', 'last', 'no duplicates')
+        """
         raise NotImplementedError()
 
     def any(self, boolean_tensor, axis=None, keepdims=False):
@@ -158,6 +189,9 @@ class DynamicBackend(Backend):
     def concat(self, values, axis):
         return self.choose_backend(values).concat(values, axis)
 
+    def tile(self, value, multiples):
+        return self.choose_backend(value).tile(value, multiples)
+
     def pad(self, value, pad_width, mode="constant", constant_values=0):
         return self.choose_backend(value).pad(value, pad_width, mode, constant_values)
 
@@ -170,6 +204,12 @@ class DynamicBackend(Backend):
     def sum(self, value, axis=None):
         return self.choose_backend(value).sum(value, axis)
 
+    def prod(self, value, axis=None):
+        return self.choose_backend(value).prod(value, axis)
+
+    def where(self, condition, x=None, y=None):
+        return self.choose_backend(condition).where(condition, x, y)
+
     def mean(self, value, axis=None):
         return self.choose_backend(value).mean(value, axis)
 
@@ -179,6 +219,10 @@ class DynamicBackend(Backend):
     def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
         return self.choose_backend((inputs, sample_coords)).resample(inputs, sample_coords, interpolation, boundary)
 
+    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
+        # Careful with argument ordering, limit before start in range_like because default arguments must be after non-default.
+        return self.choose_backend(tensor).range(limit, start=0, delta=1, dtype=None)
+        
     def zeros_like(self, tensor):
         return self.choose_backend(tensor).zeros_like(tensor)
 
@@ -198,6 +242,12 @@ class DynamicBackend(Backend):
 
     def abs(self, x):
         return self.choose_backend(x).abs(x)
+
+    def sign(self, x):
+        return self.choose_backend(x).sign(x)
+
+    def round(self, x):
+        return self.choose_backend(x).round(x)
 
     def ceil(self, x):
         return self.choose_backend(x).ceil(x)
@@ -241,6 +291,9 @@ class DynamicBackend(Backend):
     def gather(self, values, indices):
         return self.choose_backend([values, indices]).gather(values, indices)
 
+    def gather_nd(self, values, indices):
+        return self.choose_backend([values, indices]).gather_nd(values, indices)
+
     def unstack(self, tensor, axis=0):
         return self.choose_backend(tensor).unstack(tensor, axis)
 
@@ -252,6 +305,9 @@ class DynamicBackend(Backend):
 
     def isfinite(self, x):
         return self.choose_backend(x).isfinite(x)
+
+    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+        return self.choose_backend([indices, values]).scatter(indices, values, shape, duplicates_handling=duplicates_handling)
 
     def any(self, boolean_tensor, axis=None, keepdims=False):
         return self.choose_backend(boolean_tensor).any(boolean_tensor, axis=axis, keepdims=keepdims)
@@ -286,6 +342,7 @@ exp = backend.exp
 expand_dims = backend.expand_dims
 flatten = backend.flatten
 gather = backend.gather
+gather_nd = backend.gather_nd
 isfinite = backend.isfinite
 matmul = backend.matmul
 max = backend.max
@@ -296,16 +353,23 @@ name = backend.name
 ones_like = backend.ones_like
 pad = backend.pad
 py_func = backend.py_func
+range_like = backend.range_like
 resample = backend.resample
 reshape = backend.reshape
+round = backend.round
+sign = backend.sign
+scatter = backend.scatter
 shape = backend.shape
 sqrt = backend.sqrt
 stack = backend.stack
 std = backend.std
 sum = backend.sum
+prod = backend.prod
+tile = backend.tile
 to_float = backend.to_float
 to_int = backend.to_int
 unstack = backend.unstack
+where = backend.where
 while_loop = backend.while_loop
 with_custom_gradient = backend.with_custom_gradient
 zeros_like = backend.zeros_like

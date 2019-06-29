@@ -455,25 +455,65 @@ class StaggeredGrid(Struct):
             return self._advect_centered_field(field, dt, interpolation)
 
     def _advect_centered_field(self, field, dt, interpolation):
-        idx = indices_tensor(field)
         centered_velocity = self.at_centers()
-        sample_coords = idx - centered_velocity * dt
+        idx = indices_tensor(centered_velocity)
+
+        velocity_RK1 = centered_velocity
+        sample_coords = idx - 0.5 * velocity_RK1 * dt
+        velocity_RK2 = math.resample(centered_velocity, sample_coords, interpolation=interpolation, boundary='REPLICATE')
+
+        sample_coords = idx - 0.75 * velocity_RK2 * dt
+        velocity_RK3 = math.resample(centered_velocity, sample_coords, interpolation=interpolation, boundary='REPLICATE')
+
+        idx = indices_tensor(field)
+        # Runge Kutta 3rd order
+        sample_coords = idx - 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
         result = math.resample(field, sample_coords, interpolation=interpolation, boundary='REPLICATE')
         return result
 
+
+        # idx = indices_tensor(field)
+        # centered_velocity = self.at_centers()
+        # sample_coords = idx - centered_velocity * dt
+        # result = math.resample(field, sample_coords, interpolation=interpolation, boundary='REPLICATE')
+        # return result
+
     def _advect_mac(self, field_mac, dt, interpolation):  # TODO wrong component order
-        # resample in each dimension
+        # Runge Kutta instead of Backward Euler
         idx = indices_tensor(self.staggered)
         advected_component_fields = []
 
         for d in range(self.spatial_rank):
             velocity_at_staggered_points = self.at_faces(d)
-            sample_coords = idx - velocity_at_staggered_points * dt
+            velocity_RK1 = velocity_at_staggered_points
+
+            sample_coords = idx - 0.5 * velocity_RK1 * dt
+            velocity_RK2 = math.resample(velocity_at_staggered_points, sample_coords, interpolation=interpolation, boundary='REPLICATE')
+
+            sample_coords = idx - 0.75 * velocity_RK2 * dt
+            velocity_RK3 = math.resample(velocity_at_staggered_points, sample_coords, interpolation=interpolation, boundary='REPLICATE')
+            
+            # Runge Kutta 3rd order
+            sample_coords = idx - 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
             advected = math.resample(field_mac.staggered[..., d:d + 1], sample_coords, interpolation=interpolation, boundary='REPLICATE')
             advected_component_fields.append(advected)
 
         all_advected = math.concat(advected_component_fields, axis=-1)
         return StaggeredGrid(all_advected)
+
+        # # resample in each dimension
+        # idx = indices_tensor(self.staggered)
+        # advected_component_fields = []
+
+        # for d in range(self.spatial_rank):
+        #     velocity_at_staggered_points = self.at_faces(d)
+        #     sample_coords = idx - velocity_at_staggered_points * dt
+        #     advected = math.resample(field_mac.staggered[..., d:d + 1], sample_coords, interpolation=interpolation, boundary='REPLICATE')
+        #     advected_component_fields.append(advected)
+
+        # all_advected = math.concat(advected_component_fields, axis=-1)
+        # return StaggeredGrid(all_advected)
+        
 
     def curl(self):
         rank = spatial_rank(self.staggered)
