@@ -25,6 +25,9 @@ class GridBasedLiquid(FieldSequenceModel):
         self.add_field("Pressure", lambda: self.liquid.last_pressure)
 
 
+    def step(self):
+        world.step(dt=0.5)
+
     def action_reset(self):
         self.liquid.density = self.initial_density
         self.liquid.velocity = self.initial_velocity

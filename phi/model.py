@@ -42,12 +42,12 @@ class TimeDependentField(object):
 class FieldSequenceModel(object):
 
     def __init__(self,
-                 name='Φ-*flow* Application',
+                 name='*Φ-Flow* Application',
                  subtitle='',
                  fields=None,
                  stride=1,
                  record_images=False, record_data=False,
-                 base_dir=os.path.expanduser(os.path.join('~', 'model')),
+                 base_dir='~/phi/data/',
                  recorded_fields=None,
                  summary=None,
                  custom_properties=None,
@@ -147,6 +147,10 @@ class FieldSequenceModel(object):
 
     def add_field(self, name, generator):
         assert not self.prepared, 'Cannot add fields to a prepared model'
+        if not callable(generator):
+            assert isinstance(generator, numpy.ndarray)
+            array = generator
+            generator = lambda: array
         self.fields[name] = TimeDependentField(name, generator)
 
     @property
@@ -215,6 +219,7 @@ class FieldSequenceModel(object):
             source_files_to_save.add(inspect.getabsfile(object))
         for source_file in source_files_to_save:
             self.scene.copy_src(source_file)
+        return self
 
     def add_custom_property(self, key, value):
         self._custom_properties[key] = value
@@ -226,7 +231,7 @@ class FieldSequenceModel(object):
 
     def _update_scene_properties(self):
         if self.uses_existing_scene: return
-        app_name = inspect.getfile(self.__class__)
+        app_name = os.path.basename(inspect.getfile(self.__class__))
         app_path = inspect.getabsfile(self.__class__)
         properties = {
             'instigator': 'FieldSequenceModel',
@@ -240,7 +245,7 @@ class FieldSequenceModel(object):
             'controls': [{control.name: control.value} for control in self.controls],
             'summary': self.scene_summary(),
             'time_of_writing': self.time,
-            'physics': Struct.properties(self.world.state)
+            'world': Struct.properties(self.world.state)
         }
         properties.update(self.custom_properties())
         self.scene.properties = properties
