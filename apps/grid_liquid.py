@@ -20,7 +20,6 @@ class GridBasedLiquid(FieldSequenceModel):
 
         self.add_field("Fluid", lambda: self.liquid.domaincache.active())
         self.add_field("Density", lambda: self.liquid.density)
-        self.add_field("Gravity", lambda: self.liquid.velocity + self.liquid.gravity)
         self.add_field("Velocity", lambda: self.liquid.velocity.staggered)
         self.add_field("Pressure", lambda: self.liquid.last_pressure)
 

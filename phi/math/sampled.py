@@ -1,11 +1,10 @@
 from phi import math
 from phi.math.nd import *
-from phi.math.geom import *
 import numpy as np
 
 
 def grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
-    valid_indices = griddef.cell_index(points[...,::-1])
+    valid_indices = griddef.cell_index(points)
     # Correct format for math.scatter
     valid_indices = batch_indices(valid_indices)
 
@@ -17,10 +16,10 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
             result = []
             oneD_ones = math.unstack(math.ones_like(points), axis=-1)[0]
             staggered_shape = [i+1 for i in griddef.dimensions]
-            for d in dims:  # x, y, z
+            for d in dims: 
                 staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0 * oneD_ones) for i in dims], axis=-1)
 
-                indices = math.to_int(math.floor(points + staggered_offset))[..., ::-1]
+                indices = math.to_int(math.floor(points + staggered_offset))
                 
                 valid_indices = math.maximum(0, math.minimum(indices, griddef.dimensions))
                 valid_indices = batch_indices(valid_indices)
@@ -42,10 +41,10 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
             result = []
             oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
             staggered_shape = [i+1 for i in griddef.dimensions]
-            for d in dims:  # x, y, z
+            for d in dims: 
                 staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0 * oneD_ones) for i in dims], axis=-1)
 
-                indices = math.to_int(math.floor(points + staggered_offset))[..., ::-1]
+                indices = math.to_int(math.floor(points + staggered_offset))
                 
                 valid_indices = math.maximum(0, math.minimum(indices, griddef.dimensions))
                 valid_indices = batch_indices(valid_indices)
@@ -64,7 +63,7 @@ def active_centers(array):
     assert array.shape[-1] == 1
     index_array = []
     for batch in range(array.shape[0]):
-        indices = np.argwhere(array[batch,...,0] > 0)[:,::-1]
+        indices = np.argwhere(array[batch,...,0] > 0)
         index_array.append(indices)
     try:
         index_array = np.stack(index_array)
@@ -78,7 +77,7 @@ def random_grid_to_coords(array, particles_per_cell=1):
     index_array = []
     
     for batch in range(array.shape[0]):
-        indices = np.argwhere(array[batch,...,0] > 0)[:,::-1]
+        indices = np.argwhere(array[batch,...,0] > 0)
 
         temp = []
         for _ in range(particles_per_cell):
@@ -103,10 +102,10 @@ def grid_to_particles(griddef, points, values, staggered=False):
 
         result = []
         oneD_ones = math.unstack(math.ones_like(points), axis=-1)[0]
-        for d in dims:  # x, y, z
-            staggered_offset = math.stack([(0 * oneD_ones if i == d else -0.5 * oneD_ones) for i in dims], axis=-1)
+        for d in dims:
+            staggered_offset = math.stack([(0.0 * oneD_ones if i == d else -0.5 * oneD_ones) for i in dims], axis=-1)
 
-            indices = (points + staggered_offset)[..., ::-1]
+            indices = (points + staggered_offset)
             values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
 
             result.append(math.resample(values_d, indices, boundary="REPLICATE"))
@@ -114,10 +113,7 @@ def grid_to_particles(griddef, points, values, staggered=False):
         return math.concat(result, axis=-1)
 
     else:
-        # resample requires z,y,x ordered indices
-        indices = points[...,::-1]
-
-        return math.resample(values, indices, boundary="REPLICATE")
+        return math.resample(values, points, boundary="REPLICATE")
 
 
 def batch_indices(indices):
@@ -132,7 +128,5 @@ Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of partic
     batch_ids = math.reshape(math.range_like(indices, batch_size), [batch_size] + [1] * out_spatial_rank)
     tile_shape = math.pad(out_spatial_size, [[1,0]], constant_values=1)
     batch_ids = math.expand_dims(math.tile(batch_ids, tile_shape), axis=-1)
-
-    batch_ids = math.cast(batch_ids, indices.dtype)
 
     return math.concat((batch_ids, indices), axis=-1)

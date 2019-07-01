@@ -221,7 +221,7 @@ class DynamicBackend(Backend):
 
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
         # Careful with argument ordering, limit before start in range_like because default arguments must be after non-default.
-        return self.choose_backend(tensor).range(limit, start=0, delta=1, dtype=None)
+        return self.choose_backend(tensor).range_like(tensor, limit, start=0, delta=1, dtype=None)
         
     def zeros_like(self, tensor):
         return self.choose_backend(tensor).zeros_like(tensor)

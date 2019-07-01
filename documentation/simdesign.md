@@ -92,7 +92,7 @@ can add the states to a world (e.g. using `world.Smoke` instead of `Smoke`) and 
 `tf_bake_graph(session, world)` to automatically convert all physics objects to TensorFlow graph executions.
 
 
-## Simlified API with world
+## Simplified API with world
 
 Worlds provide a simplified interface in which states seem mutable (though in reality they are not).
 This is achieved in the following way:

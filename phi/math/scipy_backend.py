@@ -27,8 +27,8 @@ class SciPyBackend(Backend):
     def rank(self, value):
         return len(value.shape)
 
-    def range(self, limit, start=0, delta=1, dtype=None):
-        return np.arange(start, limit, delta, dtype)
+    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
+        return np.arange(start, limit, delta, dtype).astype(tensor.dtype)
 
     def tile(self, value, multiples):
         return np.tile(value, multiples)

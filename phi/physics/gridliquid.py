@@ -18,15 +18,15 @@ def initialize_field(value, shape):
         return value
 
 
-def domain(smoke, obstacles):
-    if smoke.domaincache is None or not smoke.domaincache.is_valid(obstacles):
-        mask = 1 - geometry_mask([o.geometry for o in obstacles], smoke.grid)
-        if smoke.domaincache is None:
+def domain(state, obstacles):
+    if state.domaincache is None or not state.domaincache.is_valid(obstacles):
+        mask = 1 - geometry_mask([o.geometry for o in obstacles], state.grid)
+        if state.domaincache is None:
             active_mask = mask
         else:
-            active_mask = mask * smoke.domaincache.active()
-        smoke.domaincache = DomainCache(smoke.domain, obstacles, active=active_mask, accessible=mask)
-    return smoke.domaincache
+            active_mask = mask * state.domaincache.active()
+        state.domaincache = DomainCache(state.domain, obstacles, active=active_mask, accessible=mask)
+    return state.domaincache
 
 
 class GridLiquidPhysics(Physics):
@@ -68,8 +68,8 @@ class GridLiquid(State):
                             ('_domain', '_gravity'))
 
     def __init__(self, domain=Open2D,
-                 density=0.0, velocity=zeros, gravity=-9.81):
-        State.__init__(self, tags=('liquid', 'velocityfield'))
+                 density=0.0, velocity=zeros, gravity=-9.81, batch_size=None):
+        State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
         self._domain = domain
         self._density = density
         self._velocity = velocity
@@ -194,7 +194,7 @@ def divergence_free(obj, domaincache, pressure_solver=None, state=None):
     pressure, iter = solve_pressure(ext_velocity, domaincache, pressure_solver)
     gradp = StaggeredGrid.gradient(pressure)
     # No need to multiply with dt here because we didn't divide divergence by dt in pressure solve.
-    velocity -= domaincache.with_hard_boundary_conditions(gradp)
+    velocity = domaincache.with_hard_boundary_conditions(velocity - gradp)
     if state is not None:
         state._last_pressure = pressure
         state._last_pressure_iterations = iter
@@ -268,8 +268,8 @@ Create a signed distance field for the grid, where negative signs are fluid cell
         particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * spatial_rank(input_field) + [[0,0]], "constant")
 
     dims = range(spatial_rank(input_field))
-    # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field, therefore * 1.5.
-    s_distance = -1.5 * distance * (2*particle_mask - 1)
+    # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
+    s_distance = -2.0 * (distance+1) * (2*particle_mask - 1)
     signs = -1 * (2*particle_mask - 1)
 
     surface_mask = create_surface_mask(particle_mask)
@@ -302,7 +302,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             if (d.dot(d) == 1) and (d >= 0).all():
                 # Pure axis direction (1,0,0), (0,1,0), (0,0,1)
                 updates = (math.abs(d_dist) < math.abs(s_distance)) & (signs >= 0)
-                ext_field = math.where(math.concat([(math.zeros_like(updates) if d[i] == 1 else updates) for i in dims], axis=-1)[...,::-1], d_field, ext_field)
+                ext_field = math.where(math.concat([(math.zeros_like(updates) if d[i] == 1 else updates) for i in dims], axis=-1), d_field, ext_field)
                 s_distance = math.where(updates, d_dist, s_distance)
             else:
                 # Mixed axis direction (1,1,0), (1,1,-1), etc.
