@@ -51,7 +51,9 @@ class GridLiquidPhysics(Physics):
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
 
         #max_vel = math.max(math.abs(velocity.staggered))
-        _, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=30)
+        #distance = int(5 * abs(state.gravity[-2]) * dt + 1)
+        distance = 30
+        state.signed_distance, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=distance)
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
 
         density = ext_velocity.advect(density, dt=dt)
@@ -76,6 +78,7 @@ class GridLiquid(State):
         self.domaincache = None
         self._last_pressure = None
         self._last_pressure_iterations = None
+        self.signed_distance = None
 
         if isinstance(gravity, (tuple, list)):
             assert len(gravity) == domain.rank
@@ -265,7 +268,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     ext_field = 1. * input_field    # Copy the original field, so we don't edit it.
     if isinstance(input_field, StaggeredGrid):
         ext_field = input_field.staggered
-        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * spatial_rank(input_field) + [[0,0]], "constant")
+        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * spatial_rank(input_field) + [[0,0]], "symmetric")
 
     dims = range(spatial_rank(input_field))
     # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
@@ -275,7 +278,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     surface_mask = create_surface_mask(particle_mask)
     # surface_mask == 1 doesn't output a tensor, just a scalar, but >= works.
     # Initialize the distance with 0 at the surface
-    s_distance = math.where((surface_mask >= 1), 0.0 * math.ones_like(s_distance), s_distance)
+    s_distance = math.where((surface_mask >= 1), -0.5*dx * math.ones_like(s_distance), s_distance)
     
         
     directions = np.array(list(itertools.product(
@@ -301,8 +304,9 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
             if (d.dot(d) == 1) and (d >= 0).all():
                 # Pure axis direction (1,0,0), (0,1,0), (0,0,1)
-                updates = (math.abs(d_dist) < math.abs(s_distance)) & (signs >= 0)
-                ext_field = math.where(math.concat([(math.zeros_like(updates) if d[i] == 1 else updates) for i in dims], axis=-1), d_field, ext_field)
+                updates = math.abs(d_dist) < math.abs(s_distance)
+                updates_velocity = updates & (signs >= 0)
+                ext_field = math.where(math.concat([(math.zeros_like(updates_velocity) if d[i] == 1 else updates_velocity) for i in dims], axis=-1), d_field, ext_field)
                 s_distance = math.where(updates, d_dist, s_distance)
             else:
                 # Mixed axis direction (1,1,0), (1,1,-1), etc.
@@ -324,9 +328,10 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
-            # TODO: we also want negative distance inside fluid
-            updates = (math.abs(d_dist) < math.abs(s_distance)) & (signs >= 0)
-            ext_field = math.where(math.concat([updates] * spatial_rank(ext_field), axis=-1), d_field, ext_field)
+            # We only want to update velocity that is outside of fluid
+            updates = math.abs(d_dist) < math.abs(s_distance)
+            updates_velocity = updates & (signs >= 0)
+            ext_field = math.where(math.concat([updates_velocity] * spatial_rank(ext_field), axis=-1), d_field, ext_field)
             s_distance = math.where(updates, d_dist, s_distance)
             
     if isinstance(input_field, StaggeredGrid):

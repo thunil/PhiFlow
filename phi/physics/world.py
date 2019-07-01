@@ -3,6 +3,7 @@ from .smoke import *
 from .burger import *
 from .gridliquid import *
 from .flipliquid import *
+from .sdfliquid import *
 
 
 class StateTracker(object):
@@ -61,7 +62,7 @@ class World(object):
         self.batch_size = None
         # Physics Shortcuts
         for target,source in {'Smoke': Smoke, 'Burger': Burger, 
-                              'GridLiquid': GridLiquid, 'FlipLiquid': FlipLiquid, 
+                              'GridLiquid': GridLiquid, 'FlipLiquid': FlipLiquid, 'SDFLiquid': SDFLiquid,
                               'Inflow': Inflow, 'Obstacle': Obstacle}.items():
             setattr(self, target, _wrapper(self, source))
 
@@ -69,6 +70,7 @@ class World(object):
     Burger = Burger
     GridLiquid = GridLiquid
     FlipLiquid = FlipLiquid
+    SDFLiquid = SDFLiquid
     Inflow = Inflow
     Obstacle = Obstacle
 
