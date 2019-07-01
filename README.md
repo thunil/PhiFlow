@@ -28,9 +28,7 @@ The following commands will get you Φ<sub>*Flow*</sub> + browser-GUI + NumPy ex
 
 ```
 $ git clone https://gitlab.lrz.de/ga67fet/phiflow.git
-$ cd phiflow
-$ python setup.py cuda
-$ pip install .[gui]
+$ pip install phiflow/[gui]
 ```
 
 See the [detailed installation instructions](documentation/install.md) on how to install Φ<sub>*Flow*</sub>
