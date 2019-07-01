@@ -99,7 +99,7 @@ class Grid(Struct):
 
     def cell_index(self, global_position):
         local_position = self._box.global_to_local(global_position) * self.dimensions
-        position = to_int(floor(local_position))
+        position = to_int(floor(local_position - 0.5))
         position = maximum(0, position)
         position = minimum(position, self.dimensions-1)
         return position
@@ -127,4 +127,6 @@ class Grid(Struct):
 
 
 def tensor_shape(batch_size, dimensions, components):
+    if batch_size is None:
+        batch_size = 1
     return np.concatenate([[batch_size], dimensions, [components]])

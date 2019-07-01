@@ -4,34 +4,16 @@ import numpy as np
 
 
 def grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
-    valid_indices = griddef.cell_index(points)
+    valid_indices = math.to_int(math.floor(points))
+    valid_indices = math.minimum(math.maximum(0, valid_indices), griddef.dimensions-1)
     # Correct format for math.scatter
     valid_indices = batch_indices(valid_indices)
 
     # Assume no out of bounds indices exist in the list
     if values is None:
-        if staggered:
-            # Create a multidimensional density used mainly for extrapolation with MAC grid
-            dims = range(len(griddef.dimensions))
-            result = []
-            oneD_ones = math.unstack(math.ones_like(points), axis=-1)[0]
-            staggered_shape = [i+1 for i in griddef.dimensions]
-            for d in dims: 
-                staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0 * oneD_ones) for i in dims], axis=-1)
+        ones = math.expand_dims(math.prod(math.ones_like(valid_indices), axis=-1), axis=-1)
 
-                indices = math.to_int(math.floor(points + staggered_offset))
-                
-                valid_indices = math.maximum(0, math.minimum(indices, griddef.dimensions))
-                valid_indices = batch_indices(valid_indices)
-
-                result.append(math.scatter(valid_indices, math.expand_dims(oneD_ones, axis=-1), [indices.shape[0]] + staggered_shape + [1], duplicates_handling='add'))
-            
-            return StaggeredGrid(math.concat(result, axis=-1))
-        
-        else:
-            ones = math.expand_dims(math.prod(math.ones_like(valid_indices), axis=-1), axis=-1)
-
-            return math.scatter(valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
+        return math.scatter(valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
     else:
         if staggered:
             dims = range(len(griddef.dimensions))
@@ -42,7 +24,7 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
             oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
             staggered_shape = [i+1 for i in griddef.dimensions]
             for d in dims: 
-                staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0 * oneD_ones) for i in dims], axis=-1)
+                staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0.0 * oneD_ones) for i in dims], axis=-1)
 
                 indices = math.to_int(math.floor(points + staggered_offset))
                 
@@ -113,7 +95,7 @@ def grid_to_particles(griddef, points, values, staggered=False):
         return math.concat(result, axis=-1)
 
     else:
-        return math.resample(values, points, boundary="REPLICATE")
+        return math.resample(values, points-0.5, boundary="REPLICATE")
 
 
 def batch_indices(indices):

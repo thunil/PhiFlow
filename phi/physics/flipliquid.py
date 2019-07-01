@@ -60,8 +60,12 @@ class FlipLiquidPhysics(Physics):
         _, ext_velocity = extrapolate(div_free_velocity_field, domaincache.active(), dx=1.0, distance=30)
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
 
-        grid_advection_velocity = grid_to_particles(state.grid, points, ext_velocity, staggered=True)
-        points += dt * grid_advection_velocity
+        # Runge Kutta 3rd order advection scheme
+        velocity_RK1 = grid_to_particles(state.grid, points, ext_velocity, staggered=True)
+        velocity_RK2 = grid_to_particles(state.grid, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
+        velocity_RK3 = grid_to_particles(state.grid, (points + 0.75 * dt * velocity_RK2), ext_velocity, staggered=True)
+
+        points += 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
 
         state.advection_velocity = ext_velocity
 
