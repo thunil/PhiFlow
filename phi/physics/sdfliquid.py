@@ -16,30 +16,42 @@ class SDFLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
 
-        #max_vel = math.max(math.abs(state.velocity.staggered))
-        _, ext_velocity = extrapolate(state.velocity, domaincache.active(), dx=1.0, distance=state._distance)
+        sdf, velocity = self.advect(state, domaincache, dt)
+        # Update active mask for pressure solve
+        active_mask = self.update_active_mask(sdf, inflows, domaincache)
+        velocity = self.apply_forces(state, velocity, dt)
+        velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
+        sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
+        
+        return state.copied_with(sdf=sdf, velocity=velocity, age=state.age + dt)
+
+
+    def advect(self, state, domaincache, dt):
+        dx = 1.0
+        #max_vel = math.max(math.abs(state.velocity.staggered))     # Extrapolate based on max velocity
+        _, ext_velocity = extrapolate(state.velocity, domaincache.active(), dx=dx, distance=state._distance)
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
         sdf = ext_velocity.advect(state.sdf, dt=dt)
         velocity = ext_velocity.advect(ext_velocity, dt=dt)
 
+        return sdf, velocity
+
+    def update_active_mask(self, sdf, inflows, domaincache):
         # Find the active cells from the Signed Distance Field
+        
+        dx = 1.0    # In case dx is used later
         ones = math.ones_like(sdf)
-        # In case dx is used later
-        dx=1.0
         active_mask = math.where(sdf < 0.5*dx, ones, 0.0 * ones)
-        inflow_mask = create_binary_mask(inflow(inflows, state.grid), threshold=0)
+        inflow_mask = create_binary_mask(inflow(inflows, domaincache.grid), threshold=0)
         # Logical OR between the masks
         active_mask = active_mask + inflow_mask - active_mask * inflow_mask
+        # Set the new active mask in domaincache
         domaincache._active = active_mask
 
-        forces = dt * state.gravity
-        velocity = velocity + forces
+        return active_mask
 
-        velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
-
-        sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
-        
-        return state.copied_with(sdf=sdf, velocity=velocity, age=state.age + dt)
+    def apply_forces(self, state, velocity, dt):
+        return velocity + (dt * state.gravity)
 
 
 SDFLIQUID = SDFLiquidPhysics()

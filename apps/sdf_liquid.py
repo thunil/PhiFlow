@@ -28,7 +28,7 @@ class SDFBasedLiquid(FieldSequenceModel):
 
 
     def step(self):
-        world.step(dt=0.1)
+        world.step(dt=0.6)
 
     def action_reset(self):
         particle_mask = create_binary_mask(self.initial_density, threshold=0)
