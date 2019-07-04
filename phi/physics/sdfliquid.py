@@ -17,7 +17,7 @@ class SDFLiquidPhysics(Physics):
         domaincache = domain(state, obstacles)
 
         #max_vel = math.max(math.abs(state.velocity.staggered))
-        _, ext_velocity = extrapolate(state.velocity, domaincache.active(), dx=1.0, distance=30)
+        _, ext_velocity = extrapolate(state.velocity, domaincache.active(), dx=1.0, distance=state._distance)
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
         sdf = ext_velocity.advect(state.sdf, dt=dt)
         velocity = ext_velocity.advect(ext_velocity, dt=dt)
@@ -37,7 +37,7 @@ class SDFLiquidPhysics(Physics):
 
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
 
-        sdf = recompute_sdf(sdf, active_mask, distance=30)
+        sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
         
         return state.copied_with(sdf=sdf, velocity=velocity, age=state.age + dt)
 
@@ -49,26 +49,31 @@ class SDFLiquid(State):
     __struct__ = State.__struct__.extend(('_sdf', '_velocity'),
                             ('_domain', '_gravity'))
 
-    def __init__(self, domain=Open2D,
-                 density=0.0, velocity=zeros, gravity=-9.81, batch_size=None):
+    def __init__(self, state_domain=Open2D,
+                 density=0.0, velocity=zeros, gravity=-9.81, batch_size=None, distance=30):
         State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
-        self._domain = domain
+        self._domain = state_domain
+        self._distance = distance
         self._density = density
         self._velocity = velocity
         particle_mask = create_binary_mask(self._density, threshold=0)
-        self._sdf, _ = extrapolate(self.velocity, particle_mask, distance=30)
-        self.domaincache = None
+        self._sdf, _ = extrapolate(self.velocity, particle_mask, distance=distance)
         self._last_pressure = None
         self._last_pressure_iterations = None
 
+        # Initialize the active mask for the first step. First step advection will ignore obstacles. But there shouldn't be any velocity in the obstacles anyway, so there should be no difference.
+        self.domaincache = None
+        self.domaincache = domain(self, ())
+        self.domaincache._active = particle_mask
+
         if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == domain.rank
+            assert len(gravity) == state_domain.rank
             self._gravity = np.array(gravity)
-        elif domain.rank == 1:
+        elif state_domain.rank == 1:
             self._gravity = np.array([gravity])
         else:
-            assert domain.rank >= 2
-            gravity = ([0] * (domain.rank - 2)) + [gravity] + [0]
+            assert state_domain.rank >= 2
+            gravity = ([0] * (state_domain.rank - 2)) + [gravity] + [0]
             self._gravity = np.array(gravity)
 
     def default_physics(self):
@@ -146,6 +151,8 @@ def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
     s_distance = -2.0 * (distance+1) * (2*active_mask - 1)
     signs = -1 * (2*active_mask - 1)
     surface_mask = create_surface_mask(active_mask)
+    # Prevent updating the distance at the surface
+    signs = math.where(surface_mask >= 1, math.zeros_like(signs), signs)
 
     # For new active cells via inflow (cells that were outside fluid in old sdf) we want to initialize their signed distance to the default
     sdf = math.where((active_mask >= 1) & (sdf >= 0.5*dx), -0.5*dx * math.ones_like(sdf), sdf)
@@ -158,6 +165,8 @@ def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
         )))
 
     for _ in range(distance):
+        # Create a copy of current distance
+        buffered_distance = 1.0 * s_distance
         for d in directions:
             if (d==0).all():
                 continue
@@ -169,7 +178,12 @@ def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
             d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
-            updates = math.abs(d_dist) < math.abs(s_distance)
-            s_distance = math.where(updates, d_dist, s_distance)
+            updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (signs != 0)
+            buffered_distance = math.where(updates, d_dist, buffered_distance)
+
+        s_distance = buffered_distance
+
+    distance_limit = -distance * (2*active_mask - 1)
+    s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
 
     return s_distance

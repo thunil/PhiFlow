@@ -274,8 +274,10 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
     s_distance = -2.0 * (distance+1) * (2*particle_mask - 1)
     signs = -1 * (2*particle_mask - 1)
-
     surface_mask = create_surface_mask(particle_mask)
+    # Prevent updating the distance at the surface
+    signs = math.where(surface_mask >= 1, math.zeros_like(signs), signs)
+
     # surface_mask == 1 doesn't output a tensor, just a scalar, but >= works.
     # Initialize the distance with 0 at the surface
     s_distance = math.where((surface_mask >= 1), -0.5*dx * math.ones_like(s_distance), s_distance)
@@ -304,7 +306,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
             if (d.dot(d) == 1) and (d >= 0).all():
                 # Pure axis direction (1,0,0), (0,1,0), (0,0,1)
-                updates = math.abs(d_dist) < math.abs(s_distance)
+                updates = (math.abs(d_dist) < math.abs(s_distance)) & (signs != 0)
                 updates_velocity = updates & (signs >= 0)
                 ext_field = math.where(math.concat([(math.zeros_like(updates_velocity) if d[i] == 1 else updates_velocity) for i in dims], axis=-1), d_field, ext_field)
                 s_distance = math.where(updates, d_dist, s_distance)
@@ -314,6 +316,8 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
 
     for _ in range(distance):
+        # Create a copy of current distance
+        buffered_distance = 1.0 * s_distance
         for d in directions:
             if (d==0).all():
                 continue
@@ -329,11 +333,16 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
             # We only want to update velocity that is outside of fluid
-            updates = math.abs(d_dist) < math.abs(s_distance)
+            updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (signs != 0)
             updates_velocity = updates & (signs >= 0)
             ext_field = math.where(math.concat([updates_velocity] * spatial_rank(ext_field), axis=-1), d_field, ext_field)
-            s_distance = math.where(updates, d_dist, s_distance)
+            buffered_distance = math.where(updates, d_dist, buffered_distance)
             
+        s_distance = buffered_distance
+    
+    distance_limit = -distance * (2*particle_mask - 1)
+    s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
+
     if isinstance(input_field, StaggeredGrid):
         ext_field = StaggeredGrid(ext_field)
         stagger_slice = [slice(0,-1) for i in dims]
