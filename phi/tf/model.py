@@ -24,7 +24,7 @@ class FieldSequenceModel(nontf.FieldSequenceModel):
         self.info('Initializing variables')
         self.session.initialize_variables()
         if self.auto_bake:
-            tf_bake_graph(self.session)
+            tf_bake_graph(self.world, self.session)
         return self
 
     def add_scalar(self, name, node):
@@ -109,7 +109,7 @@ class TFModel(FieldSequenceModel):
         self._placeholders = placeholders
         # Train
         if self._training_set is not None:
-            fields = Struct.flatmap(lambda s: s.replace('.', '_'), Struct.mapnames(placeholders))  # TODO this is already defined in fluidformat
+            fields = struct.map(lambda s: s.replace('.', '_'), struct.names(placeholders))  # TODO this is already defined in fluidformat
             self._train_reader = BatchReader(self._training_set, fields)
             self._train_iterator = self._train_reader.all_batches(batch_size=1, loop=True)
         else:
@@ -117,7 +117,7 @@ class TFModel(FieldSequenceModel):
             self._train_iterator = None
         # Val
         if self._validation_set is not None:
-            fields = Struct.flatmap(lambda s: s.replace('.', '_'), Struct.mapnames(placeholders))  # TODO this is already defined in fluidformat
+            fields = struct.map(lambda s: s.replace('.', '_'), struct.names(placeholders))  # TODO this is already defined in fluidformat
             self.value_view_training_data = False
             self._val_reader = BatchReader(self._validation_set, fields)
         else:
@@ -145,7 +145,7 @@ class TFModel(FieldSequenceModel):
 
     def step(self):
         self.optimization_step(self.all_optimizers)
-        if self.time % self.sequence_stride == 0:
+        if self.steps % self.sequence_stride == 0:
             self.validation_step(create_checkpoint=True)
         return self
 
@@ -156,7 +156,7 @@ class TFModel(FieldSequenceModel):
             optim_nodes = [optim_nodes]
         batch = next(self._train_iterator) if self._train_iterator is not None else None
         scalar_values = self.session.run(optim_nodes + self.scalars, self._feed_dict(batch, True),
-                                         summary_key='train', merged_summary=self.merged_scalars, time=self.time)[1:]
+                                         summary_key='train', merged_summary=self.merged_scalars, time=self.steps)[1:]
         if log_loss:
             self.info('Optimization: ' + ', '.join([self.scalar_names[i]+': '+str(scalar_values[i]) for i in range(len(self.scalars))]))
 
@@ -165,7 +165,7 @@ class TFModel(FieldSequenceModel):
             return
         batch = self._val_reader[0:self.validation_batch_size]
         self.session.run(self.scalars, self._feed_dict(batch, False),
-                         summary_key='val', merged_summary=self.merged_scalars, time=self.time)
+                         summary_key='val', merged_summary=self.merged_scalars, time=self.steps)
         if create_checkpoint:
             self.save_model()
         self.info('Validation Done.')
@@ -210,7 +210,7 @@ class TFModel(FieldSequenceModel):
         return get_attribute(batch)
 
     def save_model(self):
-        dir = self.scene.subpath('checkpoint_%08d'%self.time)
+        dir = self.scene.subpath('checkpoint_%08d' % self.steps)
         self.session.save(dir)
         return dir
 

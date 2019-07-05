@@ -78,6 +78,10 @@ class World(object):
     def state(self):
         return self._state
 
+    @property
+    def age(self):
+        return self._state.age
+
     @state.setter
     def state(self, state):
         assert state is not None
@@ -86,7 +90,6 @@ class World(object):
 
     def step(self, state=None, dt=1.0):
         if state is None:
-            self.physics.dt = dt
             self.state = self.physics.step(self._state, dt)
         else:
             if isinstance(state, StateTracker):
