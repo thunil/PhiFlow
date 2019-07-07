@@ -89,7 +89,7 @@ This aligns with the typical TensorFlow workflow where `tf.Session.run` is used 
 
 While this extra code is unavoidable for machine learning applications, if you are simply running a simulation, you
 can add the states to a world (e.g. using `world.Smoke` instead of `Smoke`) and call the function
-`tf_bake_graph(session, world)` to automatically convert all physics objects to TensorFlow graph executions.
+`tf_bake_graph(world, session)` to automatically convert all physics objects to TensorFlow graph executions.
 
 
 ## Simplified API with world

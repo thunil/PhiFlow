@@ -1,6 +1,7 @@
 from .domain import *
 from phi.math import *
-from operator import itemgetter
+from phi.math.initializers import _is_python_shape
+#from operator import itemgetter
 import itertools
 
 
@@ -11,7 +12,8 @@ def initialize_field(value, shape):
         return value(shape)
     if isinstance(shape, Struct):
         if type(shape) == type(value):
-            return Struct.zippedmap(lambda val, sh: initialize_field(val, sh), value, shape)
+            zipped = struct.zip([value, shape], leaf_condition=_is_python_shape)
+            return struct.map(lambda val, sh: initialize_field(val, sh), zipped)
         else:
             return type(shape)(value)
     else:
