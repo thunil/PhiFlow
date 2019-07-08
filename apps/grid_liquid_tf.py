@@ -9,7 +9,6 @@ class GridBasedLiquid(TFModel):
 
         size = [80,64]
         domain = Domain(size, SLIPPERY)
-        self.i = 0 
 
         self.initial_density = zeros(domain.grid.shape())
         self.initial_velocity = zeros(domain.grid.staggered_shape())
@@ -32,7 +31,7 @@ class GridBasedLiquid(TFModel):
 
     def step(self):
         world.step(dt=0.05)
-        
+
 
     def action_reset(self):
         self.liquid.density = self.initial_density

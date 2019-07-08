@@ -16,21 +16,25 @@ class SDFLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
 
-        sdf, velocity = self.advect(state, domaincache, dt)
+        sdf, velocity = self.advect(state, dt)
         # Update active mask for pressure solve
         active_mask = self.update_active_mask(sdf, inflows, domaincache)
+        domaincache._active = active_mask
         velocity = self.apply_forces(state, velocity, dt)
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
+        state.mask_before = domaincache._active
+        #state.mask_before = active_mask
         sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
+        state.mask_after = sdf
         
-        return state.copied_with(sdf=sdf, velocity=velocity, age=state.age + dt)
+        return state.copied_with(sdf=sdf, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
 
-    def advect(self, state, domaincache, dt):
+    def advect(self, state, dt):
         dx = 1.0
         #max_vel = math.max(math.abs(state.velocity.staggered))     # Extrapolate based on max velocity
-        _, ext_velocity = extrapolate(state.velocity, domaincache.active(), dx=dx, distance=state._distance)
-        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
+        _, ext_velocity = extrapolate(state.velocity, state.active_mask, dx=dx, distance=state._distance)
+        ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity)
         sdf = ext_velocity.advect(state.sdf, dt=dt)
         velocity = ext_velocity.advect(ext_velocity, dt=dt)
 
@@ -58,7 +62,7 @@ SDFLIQUID = SDFLiquidPhysics()
 
 
 class SDFLiquid(State):
-    __struct__ = State.__struct__.extend(('_sdf', '_velocity'),
+    __struct__ = State.__struct__.extend(('_sdf', '_velocity', '_active_mask', '_pressure', 'mask_before', 'mask_after'),
                             ('_domain', '_gravity'))
 
     def __init__(self, state_domain=Open2D,
@@ -68,15 +72,19 @@ class SDFLiquid(State):
         self._distance = distance
         self._density = density
         self._velocity = velocity
-        particle_mask = create_binary_mask(self._density, threshold=0)
-        self._sdf, _ = extrapolate(self.velocity, particle_mask, distance=distance)
-        self._last_pressure = None
+        self._active_mask = create_binary_mask(self._density, threshold=0)
+        self._sdf, _ = extrapolate(self.velocity, self._active_mask, distance=distance)
+        # Initialize correct shape
+        self._last_pressure = math.zeros_like(self._density)
         self._last_pressure_iterations = None
 
         # Initialize the active mask for the first step. First step advection will ignore obstacles. But there shouldn't be any velocity in the obstacles anyway, so there should be no difference.
         self.domaincache = None
         self.domaincache = domain(self, ())
-        self.domaincache._active = particle_mask
+        self.domaincache._active = self._active_mask
+
+        self.mask_before = math.zeros_like(self._density)
+        self.mask_after = math.zeros_like(self._density)
 
         if isinstance(gravity, (tuple, list)):
             assert len(gravity) == state_domain.rank
@@ -99,6 +107,14 @@ class SDFLiquid(State):
     def sdf(self):
         return self._sdf
 
+    # @property
+    # def _sdf(self):
+    #     return self._sdf
+
+    # @_sdf.setter
+    # def _sdf(self, value):
+    #     self._sdf = value
+
     @property
     def _density(self):
         return self._density_field
@@ -118,6 +134,30 @@ class SDFLiquid(State):
     @_velocity.setter
     def _velocity(self, value):
         self._velocity_field = initialize_field(value, self.grid.staggered_shape())
+
+    @property
+    def active_mask(self):
+        return self._active_mask
+
+    # @property
+    # def _active_mask(self):
+    #     return self._active_mask
+
+    # @_active_mask.setter
+    # def _active_mask(self, value):
+    #     self._active_mask = value
+
+    @property
+    def pressure(self):
+        return self._last_pressure
+
+    @property
+    def _pressure(self):
+        return self._last_pressure
+
+    @_pressure.setter
+    def _pressure(self, value):
+        self._last_pressure = value
 
     @property
     def domain(self):
@@ -144,7 +184,7 @@ class SDFLiquid(State):
         return self._last_pressure_iterations
 
     def __repr__(self):
-        return "Liquid[SDF: %s, velocity: %s]" % (self._sdf, self.velocity)
+        return "Liquid[SDF: %s, velocity: %s, active mask: %s]" % (self._sdf, self.velocity, self.active_mask)
 
     def __add__(self, other):
         if isinstance(other, StaggeredGrid):
@@ -163,8 +203,6 @@ def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
     s_distance = -2.0 * (distance+1) * (2*active_mask - 1)
     signs = -1 * (2*active_mask - 1)
     surface_mask = create_surface_mask(active_mask)
-    # Prevent updating the distance at the surface
-    signs = math.where(surface_mask >= 1, math.zeros_like(signs), signs)
 
     # For new active cells via inflow (cells that were outside fluid in old sdf) we want to initialize their signed distance to the default
     sdf = math.where((active_mask >= 1) & (sdf >= 0.5*dx), -0.5*dx * math.ones_like(sdf), sdf)
@@ -190,7 +228,8 @@ def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
             d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
-            updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (signs != 0)
+            # Prevent updating the distance at the surface
+            updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (surface_mask <= 0)
             buffered_distance = math.where(updates, d_dist, buffered_distance)
 
         s_distance = buffered_distance

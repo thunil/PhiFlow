@@ -4,7 +4,7 @@ from phi.flow import *
 class GridBasedLiquid(FieldSequenceModel):
 
     def __init__(self):
-        FieldSequenceModel.__init__(self, "Grid-based Liquid", stride=3)
+        FieldSequenceModel.__init__(self, "Grid-based Liquid", stride=1)
 
         size = [80,64]
         domain = Domain(size, SLIPPERY)
@@ -15,7 +15,7 @@ class GridBasedLiquid(FieldSequenceModel):
         self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
         #self.initial_velocity.staggered[:, size[-2] * 5 // 8 : size[-2] * 7 // 8 + 0, size[-1] * 2 // 8 : size[-1] * 6 // 8 + 1, :] = [0, -0.5]
 
-        self.liquid = world.GridLiquid(domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-2.0)
+        self.liquid = world.GridLiquid(domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-4.0)
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
         self.add_field("Fluid", lambda: self.liquid.domaincache.active())
@@ -26,7 +26,7 @@ class GridBasedLiquid(FieldSequenceModel):
 
 
     def step(self):
-        world.step(dt=0.3)
+        world.step(dt=0.05)
 
     def action_reset(self):
         self.liquid.density = self.initial_density

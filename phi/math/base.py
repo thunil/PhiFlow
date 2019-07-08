@@ -208,7 +208,8 @@ class DynamicBackend(Backend):
         return self.choose_backend(value).prod(value, axis)
 
     def where(self, condition, x=None, y=None):
-        return self.choose_backend(condition).where(condition, x, y)
+        # For Tensorflow x,y the condition can be a Numpy array, but not the other way around. If possible, choose backend based on first input, otherwise based on condition.
+        return self.choose_backend((x, condition)).where(condition, x, y)
 
     def mean(self, value, axis=None):
         return self.choose_backend(value).mean(value, axis)
