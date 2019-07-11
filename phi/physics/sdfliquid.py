@@ -16,27 +16,69 @@ class SDFLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
 
+        #state.mask_before = state.velocity
         sdf, velocity = self.advect(state, dt)
+
         # Update active mask for pressure solve
         active_mask = self.update_active_mask(sdf, inflows, domaincache)
         domaincache._active = active_mask
+
         velocity = self.apply_forces(state, velocity, dt)
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
-        state.mask_before = domaincache._active
-        #state.mask_before = active_mask
+
+        #state.mask_before = domaincache._active
         sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
-        state.mask_after = sdf
+
+        vel_active = self.staggered_active_mask(active_mask)
+        velocity = velocity * vel_active
+        #state.mask_after = velocity
         
         return state.copied_with(sdf=sdf, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
 
     def advect(self, state, dt):
         dx = 1.0
+        state.mask_before = 1.0 * state.velocity
         #max_vel = math.max(math.abs(state.velocity.staggered))     # Extrapolate based on max velocity
-        _, ext_velocity = extrapolate(state.velocity, state.active_mask, dx=dx, distance=state._distance)
-        ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity)
-        sdf = ext_velocity.advect(state.sdf, dt=dt)
-        velocity = ext_velocity.advect(ext_velocity, dt=dt)
+        _, ext_velocity_free = extrapolate(state.velocity, state.active_mask, dx=dx, distance=state._distance)
+        ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity_free)
+
+        state.mask_after = ext_velocity_free
+
+
+        # When advecting SDF we don't want to replicate boundary values when the sample coordinates are out of bounds, we want the fluid to move further away from the boundary. We increase the distance when sampling outside of the boundary.
+        rank = state.rank
+        padded_sdf = math.pad(state.sdf, [[0,0]] + [[1,1]]*rank + [[0,0]], "symmetric")
+        padded_ext_v = StaggeredGrid(math.pad(ext_velocity.staggered, [[0,0]] + [[1,1]]*rank + [[0,0]], "symmetric"))
+
+        zero = math.zeros_like(state.sdf)
+        #padded_cells = math.pad(zero, [[0,0]] + [[1,1]]*rank + [[0,0]], "constant", constant_values=dx)
+        padded_cells = 0
+
+        updim = True
+        if updim:
+            # For just upper dimension
+            padded = math.pad(zero, [[0,0]] + [([1,0] if i == (rank-2) else [1,1]) for i in range(rank)] + [[0,0]], "constant", constant_values=0)
+            padded_cells = math.pad(padded, [[0,0]] + [([0,1] if i == (rank-2) else [0,0]) for i in range(rank)] + [[0,0]], "constant", constant_values=dx)
+        else:
+            for d in range(rank):
+                padded = math.pad(zero, [[0,0]] + [([0,0] if d == i else [1,1]) for i in range(rank)] + [[0,0]], "constant", constant_values=0)
+                padded = math.pad(padded, [[0,0]] + [([1,1] if d == i else [0,0]) for i in range(rank)] + [[0,0]], "constant", constant_values=1)
+                
+                padded_cells += padded
+
+            padded_cells = dx * math.sqrt(padded_cells)
+
+        # Increase distance outside of boundaries by dx, this will make sure that during advection we have proper wall separation
+        padded_sdf += padded_cells
+
+        padded_sdf = padded_ext_v.advect(padded_sdf, dt=dt)
+        stagger_slice = [slice(1,-1) for i in range(rank)]
+        sdf = padded_sdf[[slice(None)] + stagger_slice + [slice(None)]]
+
+        #sdf = ext_velocity.advect(state.sdf, dt=dt)
+        # Advect the extrapolated velocity that hasn't had BC applied. This will make sure no interpolation occurs with 0 from BC.
+        velocity = ext_velocity.advect(ext_velocity_free, dt=dt)
 
         return sdf, velocity
 
@@ -53,6 +95,18 @@ class SDFLiquidPhysics(Physics):
         domaincache._active = active_mask
 
         return active_mask
+
+    def staggered_active_mask(self, active_mask):
+        rank = spatial_rank(active_mask)
+        center = math.pad(active_mask, [[0,0]] + [[0,1]]*rank + [[0,0]], "constant")
+        mask = []
+
+        for d in range(rank):
+            upper = math.pad(active_mask, [[0,0]] + [([1,0] if d == i else [0,1]) for i in range(rank)] + [[0,0]], "constant")
+
+            mask.append(math.maximum(center, upper))
+        
+        return math.concat(mask, axis=-1)
 
     def apply_forces(self, state, velocity, dt):
         return velocity + (dt * state.gravity)
@@ -200,8 +254,8 @@ class SDFLiquid(State):
 
 
 def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
-    s_distance = -2.0 * (distance+1) * (2*active_mask - 1)
     signs = -1 * (2*active_mask - 1)
+    s_distance = 2.0 * (distance+1) * signs
     surface_mask = create_surface_mask(active_mask)
 
     # For new active cells via inflow (cells that were outside fluid in old sdf) we want to initialize their signed distance to the default
