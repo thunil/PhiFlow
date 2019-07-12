@@ -1,3 +1,6 @@
+# Because division is different in Python 2 and 3
+from __future__ import division
+
 import numpy as np
 from . import base as math
 from . import struct

@@ -1,3 +1,6 @@
+# Because division is different in Python 2 and 3
+#from __future__ import division
+
 from .domain import *
 from phi.math import *
 from phi.math.initializers import _is_python_shape
