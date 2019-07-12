@@ -71,7 +71,7 @@ def l1_loss(tensor, batch_norm=True, reduce_batches=True):
 def l2_loss(tensor, batch_norm=True):
     if isinstance(tensor, StaggeredGrid):
         tensor = tensor.staggered
-    total_loss = math.sum(tensor ** 2) / 2
+    total_loss = math.sum(tensor ** 2)
     if batch_norm:
         batch_size = math.shape(tensor)[0]
         return total_loss / math.to_float(batch_size)

@@ -201,7 +201,7 @@ def divergence_free(obj, domaincache, pressure_solver=None, state=None):
     # No need to multiply with dt here because we didn't divide divergence by dt in pressure solve.
     velocity = domaincache.with_hard_boundary_conditions(velocity - gradp)
     if state is not None:
-        #state.mask_before = ext_velocity.divergence()
+        state.mask_before = gradp
         state._last_pressure = pressure
         state._last_pressure_iterations = iter
     return velocity
@@ -271,9 +271,9 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     ext_field = 1. * input_field    # Copy the original field, so we don't edit it.
     if isinstance(input_field, StaggeredGrid):
         ext_field = input_field.staggered
-        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * spatial_rank(input_field) + [[0,0]], "constant")
+        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * spatial_rank(ext_field) + [[0,0]], "constant")
 
-    dims = range(spatial_rank(input_field))
+    dims = range(spatial_rank(ext_field))
     # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
     signs = -1 * (2*particle_mask - 1)
     s_distance = 2.0 * (distance+1) * signs
@@ -344,7 +344,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     
     # Cut off unaccurate values
     distance_limit = -distance * (2*particle_mask - 1)
-    #s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
+    s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
 
     if isinstance(input_field, StaggeredGrid):
         ext_field = StaggeredGrid(ext_field)

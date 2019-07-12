@@ -30,7 +30,7 @@ class TrainingTest(TFModel):
         smoke = world.Smoke(Domain([64] * 2), density=placeholder, velocity=placeholder)
 
         with self.model_scope():
-            pred_force = network(smoke.density, smoke.devlocity)
+            pred_force = network(smoke.density, smoke.velocity)
         loss = l2_loss(pred_force - true_force)
         self.add_objective("Supervised_Loss", loss)
         

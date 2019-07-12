@@ -38,7 +38,7 @@ class SDFLiquidPhysics(Physics):
 
     def advect(self, state, dt):
         dx = 1.0
-        state.mask_before = 1.0 * state.velocity
+        #state.mask_before = 1.0 * state.velocity
         #max_vel = math.max(math.abs(state.velocity.staggered))     # Extrapolate based on max velocity
         _, ext_velocity_free = extrapolate(state.velocity, state.active_mask, dx=dx, distance=state._distance)
         ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity_free)
@@ -109,6 +109,7 @@ class SDFLiquidPhysics(Physics):
         return math.concat(mask, axis=-1)
 
     def apply_forces(self, state, velocity, dt):
+        #return velocity + (dt * state.gravity) + (dt * state.trained_forces)
         return velocity + (dt * state.gravity)
 
 
@@ -150,6 +151,8 @@ class SDFLiquid(State):
             gravity = ([0] * (state_domain.rank - 2)) + [gravity] + [0]
             self._gravity = np.array(gravity)
 
+        self.trained_forces = None
+
     def default_physics(self):
         return SDFLIQUID
 
@@ -160,14 +163,6 @@ class SDFLiquid(State):
     @property
     def sdf(self):
         return self._sdf
-
-    # @property
-    # def _sdf(self):
-    #     return self._sdf
-
-    # @_sdf.setter
-    # def _sdf(self, value):
-    #     self._sdf = value
 
     @property
     def _density(self):
@@ -192,14 +187,6 @@ class SDFLiquid(State):
     @property
     def active_mask(self):
         return self._active_mask
-
-    # @property
-    # def _active_mask(self):
-    #     return self._active_mask
-
-    # @_active_mask.setter
-    # def _active_mask(self, value):
-    #     self._active_mask = value
 
     @property
     def pressure(self):
