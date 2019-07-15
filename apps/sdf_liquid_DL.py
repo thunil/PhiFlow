@@ -28,7 +28,6 @@ class SDFBasedLiquid(TFModel):
         self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
 
         self.session = Session(Scene.create('liquid'))
-        self.world_steps = 0
 
         self.state_in = placeholder_like(self.liquid.state)
         self.state_in.trained_forces = self.forces
@@ -57,12 +56,12 @@ class SDFBasedLiquid(TFModel):
         # Run optimization step
         self.base_feed_dict.update({self.state_in.active_mask: self.liquid.state.active_mask, self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered})
         TFModel.step(self)
-        loss = self.session.run(self.loss, self.base_feed_dict)
-        print("Our loss: " + str(loss))
+        self.current_loss = self.session.run(self.loss, self.base_feed_dict)
         # Use trained forces to do a step when loss is small enough
-        if loss < 0.5:
+        if self.current_loss < 0.5 or self.steps > 100:
+            self.steps = 0
             self.world_steps += 1
-            print("World step number: " + str(self.world_steps))
+            self.liquid.trained_forces = self.session.run(self.forces)
             world.step(dt=self.dt)
 
 

@@ -112,6 +112,9 @@ class FieldSequenceModel(object):
         self.figures = PlotlyFigureBuilder()
         self.info('Setting up model...')
 
+        self.world_steps = 0
+        self.current_loss = 0.0
+
     def new_scene(self):
         self.scene = Scene.create(self.base_dir, self.scene_summary(),
                                   count=1 if self.world.batch_size is None else self.world.batch_size, mkdir=True)
@@ -281,7 +284,7 @@ class FieldSequenceModel(object):
         pausing = '/Pausing' if self._pause and self.current_action else ''
         action = self.current_action if self.current_action else 'Idle'
         message = (' - %s'%self.message) if self.message else ''
-        return '{}{} ({}){}'.format(action, pausing, self.steps, message)
+        return '{}{} ({}) ({}) - Loss: {:.5f}{}'.format(action, pausing, self.steps, self.world_steps, self.current_loss, message)
 
     def run_step(self, framerate=None, allow_recording=True):
         self.current_action = 'Running'
