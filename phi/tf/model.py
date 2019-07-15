@@ -77,6 +77,7 @@ class TFModel(FieldSequenceModel):
         self.model_scope_name = model_scope_name
         self.auto_bake = False
         self.set_data(None, None)
+        self.base_feed_dict = {}
 
     def prepare(self):
         scalars = [tf.summary.scalar(self.scalar_names[i], self.scalars[i]) for i in range(len(self.scalars))]
@@ -170,11 +171,8 @@ class TFModel(FieldSequenceModel):
             self.save_model()
         self.info('Validation Done.')
 
-    def base_feed_dict(self):
-        return {}
-
     def _feed_dict(self, batch, training):
-        feed_dict = self.base_feed_dict()
+        feed_dict = self.base_feed_dict
         feed_dict.update(self.editable_values_dict())
         feed_dict[self.training] = training
         if batch is not None:

@@ -17,30 +17,30 @@ class SDFLiquidPhysics(Physics):
         domaincache = domain(state, obstacles)
 
         #state.mask_before = state.velocity
-        sdf, velocity = self.advect(state, dt)
+        active_mask = self.update_active_mask(state.sdf, inflows, domaincache)
+        domaincache._active = active_mask
 
-        # Update active mask for pressure solve
+        velocity = self.apply_forces(state, dt)
+        velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
+
+        sdf, velocity = self.advect(state, velocity, dt)
         active_mask = self.update_active_mask(sdf, inflows, domaincache)
         domaincache._active = active_mask
 
-        velocity = self.apply_forces(state, velocity, dt)
-        velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
-
-        #state.mask_before = domaincache._active
         sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
 
-        vel_active = self.staggered_active_mask(active_mask)
-        velocity = velocity * vel_active
+        #vel_active = self.staggered_active_mask(domaincache._active)
+        #velocity = velocity * vel_active
         #state.mask_after = velocity
         
         return state.copied_with(sdf=sdf, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
 
-    def advect(self, state, dt):
+    def advect(self, state, velocity, dt):
         dx = 1.0
         #state.mask_before = 1.0 * state.velocity
         #max_vel = math.max(math.abs(state.velocity.staggered))     # Extrapolate based on max velocity
-        _, ext_velocity_free = extrapolate(state.velocity, state.active_mask, dx=dx, distance=state._distance)
+        _, ext_velocity_free = extrapolate(velocity, state.active_mask, dx=dx, distance=state._distance)
         ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity_free)
 
         state.mask_after = ext_velocity_free
@@ -108,16 +108,15 @@ class SDFLiquidPhysics(Physics):
         
         return math.concat(mask, axis=-1)
 
-    def apply_forces(self, state, velocity, dt):
-        #return velocity + (dt * state.gravity) + (dt * state.trained_forces)
-        return velocity + (dt * state.gravity)
+    def apply_forces(self, state, dt):
+            return state.velocity + (dt * state.gravity) + (dt * state.trained_forces)
 
 
 SDFLIQUID = SDFLiquidPhysics()
 
 
 class SDFLiquid(State):
-    __struct__ = State.__struct__.extend(('_sdf', '_velocity', '_active_mask', '_pressure', 'mask_before', 'mask_after'),
+    __struct__ = State.__struct__.extend(('_sdf', '_velocity', '_active_mask', '_pressure', 'mask_before', 'mask_after', 'trained_forces'),
                             ('_domain', '_gravity'))
 
     def __init__(self, state_domain=Open2D,
@@ -144,14 +143,12 @@ class SDFLiquid(State):
         if isinstance(gravity, (tuple, list)):
             assert len(gravity) == state_domain.rank
             self._gravity = np.array(gravity)
-        elif state_domain.rank == 1:
-            self._gravity = np.array([gravity])
         else:
-            assert state_domain.rank >= 2
-            gravity = ([0] * (state_domain.rank - 2)) + [gravity] + [0]
+            assert state_domain.rank >= 1
+            gravity = [gravity] + ([0] * (state_domain.rank - 1))
             self._gravity = np.array(gravity)
 
-        self.trained_forces = None
+        self.trained_forces = math.zeros_like(self._velocity.staggered)
 
     def default_physics(self):
         return SDFLIQUID
@@ -237,10 +234,10 @@ class SDFLiquid(State):
         if isinstance(other, StaggeredGrid):
             return self.copied_with(velocity=self.velocity - other)
         else:
-            return self.copied_with(sdf=math.min(self._sdf, -other))
+            return self.copied_with(sdf=math.max(self._sdf, -other))
 
 
-def recompute_sdf(sdf, active_mask, dx=1.0, distance=10):
+def recompute_sdf(sdf, active_mask, distance=10, dx=1.0):
     signs = -1 * (2*active_mask - 1)
     s_distance = 2.0 * (distance+1) * signs
     surface_mask = create_surface_mask(active_mask)

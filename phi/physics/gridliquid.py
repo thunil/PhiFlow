@@ -88,11 +88,9 @@ class GridLiquid(State):
         if isinstance(gravity, (tuple, list)):
             assert len(gravity) == domain.rank
             self._gravity = np.array(gravity)
-        elif domain.rank == 1:
-            self._gravity = np.array([gravity])
         else:
-            assert domain.rank >= 2
-            gravity = ([0] * (domain.rank - 2)) + [gravity] + [0]
+            assert domain.rank >= 1
+            gravity = [gravity] + ([0] * (domain.rank - 1))
             self._gravity = np.array(gravity)
 
     def default_physics(self):
@@ -263,7 +261,7 @@ def create_surface_mask(particle_mask):
     return bcs
 
 
-def extrapolate(input_field, particle_mask, dx=1.0, distance=10):
+def extrapolate(input_field, particle_mask, distance=10, dx=1.0):
     """
 Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
     :param input_field: Field to be extrapolated
