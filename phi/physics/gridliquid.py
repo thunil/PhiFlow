@@ -282,7 +282,8 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
     # surface_mask == 1 doesn't output a tensor, just a scalar, but >= works.
     # Initialize the distance with 0 at the surface
-    s_distance = math.where((surface_mask >= 1), -0.5*dx * math.ones_like(s_distance), s_distance)
+    # Previously initialized with -0.5*dx, i.e. the cell is completely full (center is 0.5*dx inside the fluid surface). For stability and looks this was changed to 0 * dx, i.e. the cell is only half full. This way small changes to the SDF won't directly change neighbouring empty cells to fluidcells.
+    s_distance = math.where((surface_mask >= 1), -0.0*dx * math.ones_like(s_distance), s_distance)
     
         
     directions = np.array(list(itertools.product(

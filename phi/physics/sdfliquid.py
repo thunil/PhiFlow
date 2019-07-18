@@ -243,7 +243,8 @@ def recompute_sdf(sdf, active_mask, distance=10, dx=1.0):
     surface_mask = create_surface_mask(active_mask)
 
     # For new active cells via inflow (cells that were outside fluid in old sdf) we want to initialize their signed distance to the default
-    sdf = math.where((active_mask >= 1) & (sdf >= 0.5*dx), -0.5*dx * math.ones_like(sdf), sdf)
+    # Previously initialized with -0.5*dx, i.e. the cell is completely full (center is 0.5*dx inside the fluid surface). For stability and looks this was changed to 0 * dx, i.e. the cell is only half full. This way small changes to the SDF won't directly change neighbouring empty cells to fluidcells.
+    sdf = math.where((active_mask >= 1) & (sdf >= 0.5*dx), -0.0*dx * math.ones_like(sdf), sdf)
     # Use old Signed Distance values at the surface, then completely recompute the Signed Distance Field
     s_distance = math.where((surface_mask >= 1), sdf, s_distance)
 

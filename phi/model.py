@@ -281,6 +281,11 @@ class FieldSequenceModel(object):
 
     @property
     def status(self):
+        if self.current_loss is None:
+            self.current_loss = 0.0
+        if self.world_steps is None:
+            self.world_steps = 0
+
         pausing = '/Pausing' if self._pause and self.current_action else ''
         action = self.current_action if self.current_action else 'Idle'
         message = (' - %s'%self.message) if self.message else ''
