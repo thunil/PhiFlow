@@ -59,7 +59,7 @@ box = BoxGenerator()
 
 
 class Sphere(Geometry):
-    __struct__ = struct.Def((), ('_center', '_radius'))
+    __struct__ = struct.Def(('_center', '_radius'), ())
 
     def __init__(self, center, radius):
         self._center = as_tensor(center)
@@ -74,8 +74,8 @@ class Sphere(Geometry):
         return self._center
 
     def value_at(self, location):
-        bool_inside = np.expand_dims(sum((location - self._center)**2, axis=-1) <= self._radius ** 2, -1)
-        return to_float(bool_inside)
+        bool_inside = math.expand_dims(math.sum((location - self._center)**2, axis=-1) <= self._radius ** 2, -1)
+        return math.to_float(bool_inside)
 
 
 class Grid(Struct):

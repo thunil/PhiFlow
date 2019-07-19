@@ -26,10 +26,10 @@ def ball_movement(previous_ball, dt, **dependent_states):
     return Sphere(center_coords, radius)
 
 
-class SDFBasedLiquid(FieldSequenceModel):
+class SDFBasedLiquid(TFModel):
 
     def __init__(self):
-        FieldSequenceModel.__init__(self, "Signed Distance based Liquid", stride=3)
+        TFModel.__init__(self, "Signed Distance based Liquid", stride=3)
 
         size = [80,64]
         domain = Domain(size, SLIPPERY)
@@ -51,8 +51,8 @@ class SDFBasedLiquid(FieldSequenceModel):
         self.ball.physics = GeometryMovement(ball_movement)
         self.ball.physics.dependencies.update({'velocity_state': 'velocityfield'})
 
-        #session = Session(Scene.create('test'))
-        #tf_bake_graph(world, session)
+        session = Session(Scene.create('test'))
+        tf_bake_graph(world, session)
 
         self.add_field("Ball Location", lambda: self.ball.geometry.value_at(indices_tensor(self.initial_density)))
 

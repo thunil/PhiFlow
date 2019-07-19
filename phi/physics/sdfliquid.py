@@ -29,9 +29,10 @@ class SDFLiquidPhysics(Physics):
 
         sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
 
-        #vel_active = self.staggered_active_mask(domaincache._active)
-        #velocity = velocity * vel_active
-        #state.mask_after = velocity
+        # Necessary for obstacle advection (so they don't move using extrapolated velocity in air)
+        vel_active = self.staggered_active_mask(domaincache._active)
+        velocity = velocity * vel_active
+        state.mask_after = velocity
         
         return state.copied_with(sdf=sdf, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 

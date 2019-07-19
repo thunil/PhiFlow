@@ -17,7 +17,7 @@ def placeholder(shape, dtype=np.float32, basename=None):
     return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True)
 
 def placeholder_like(obj, dtype=np.float32, basename=None):
-    f = lambda attr: tf.placeholder(dtype, attr.value.shape, _tf_name(attr, basename))
+    f = lambda attr: tf.placeholder(dtype, math.shape(attr.value), _tf_name(attr, basename))
     return struct.map(f, obj, leaf_condition=_is_python_shape, trace=True)
 
 def variable(initializer, dtype=np.float32, basename=None, trainable=True):

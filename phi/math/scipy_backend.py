@@ -3,6 +3,7 @@ import numpy as np
 import numbers
 import collections
 import scipy.sparse, scipy.signal
+from numbers import Number
 
 class SciPyBackend(Backend):
 
@@ -197,6 +198,8 @@ class SciPyBackend(Backend):
         return np.expand_dims(a, axis)
 
     def shape(self, tensor):
+        if isinstance(tensor, Number):
+            return ()
         return tensor.shape
 
     def to_float(self, x):

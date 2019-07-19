@@ -11,6 +11,14 @@ class GeometryMovement(Physics):
         self.geometry_at = geometry_function
 
     def step(self, obj, dt=1.0, **dependent_states):
+        for key, value in dependent_states.items():
+            if not value:
+                break
+            else:
+                next_geometry = self.geometry_at(obj.geometry, dt,**dependent_states)
+                # We don't need velocity, but I don't know if the copied with works without it.
+                return obj.copied_with(geometry=next_geometry, age=obj.age + dt)
+
         next_geometry = self.geometry_at(obj.age + dt)
         h = 1e-2 * dt if dt > 0 else 1e-2
         perturbed_geometry = self.geometry_at(obj.age + dt + h)
@@ -20,7 +28,7 @@ class GeometryMovement(Physics):
 
 
 class ObjectState(State):
-    __struct__ = State.__struct__.extend((), ('_geometry', '_velocity'))
+    __struct__ = State.__struct__.extend(('_geometry', '_velocity'), ())
 
     def __init__(self, geometry, velocity=0, tags=(), batch_size=None):
         State.__init__(self, tags=tags, batch_size=batch_size)
