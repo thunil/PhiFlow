@@ -250,13 +250,13 @@ def create_surface_mask(particle_mask):
         )))
     
     for d in directions:
-        d_slice = [(slice(2, None) if d[i] == -1 else slice(0, -2) if d[i] == 1 else slice(1,-1)) for i in dims]
-        center_slice = [slice(1, -1) for _ in dims]
+        d_slice = tuple([(slice(2, None) if d[i] == -1 else slice(0, -2) if d[i] == 1 else slice(1,-1)) for i in dims])
+        center_slice = tuple([slice(1, -1) for _ in dims])
         
         # Create inner contour of particles
-        bc_d = math.maximum (mask[[slice(None)] + d_slice + [slice(None)]],
-                                mask[[slice(None)] + center_slice + [slice(None)]]) - \
-                            mask[[slice(None)] + d_slice + [slice(None)]]
+        bc_d = math.maximum (mask[(slice(None),) + d_slice + (slice(None),)],
+                                mask[(slice(None),) + center_slice + (slice(None),)]) - \
+                            mask[(slice(None),) + d_slice + (slice(None),)]
         bcs = math.maximum (bcs, bc_d)
     return bcs
 
@@ -297,13 +297,13 @@ Create a signed distance field for the grid, where negative signs are fluid cell
                 continue
                     
             # Shift the field in direction d, compare new distances to old ones.
-            d_slice = [(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims]
+            d_slice = tuple([(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims])
 
             d_field = math.pad(ext_field, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
-            d_field = d_field[[slice(None)] + d_slice + [slice(None)]]
+            d_field = d_field[(slice(None),) + d_slice + (slice(None),)]
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
-            d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
+            d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
 
@@ -327,13 +327,13 @@ Create a signed distance field for the grid, where negative signs are fluid cell
                 continue
                 
             # Shift the field in direction d, compare new distances to old ones.
-            d_slice = [(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims]
+            d_slice = tuple([(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims])
 
             d_field = math.pad(ext_field, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
-            d_field = d_field[[slice(None)] + d_slice + [slice(None)]]
+            d_field = d_field[(slice(None),) + d_slice + (slice(None),)]
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
-            d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
+            d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
             # We only want to update velocity that is outside of fluid
@@ -350,7 +350,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
     if isinstance(input_field, StaggeredGrid):
         ext_field = StaggeredGrid(ext_field)
-        stagger_slice = [slice(0,-1) for i in dims]
-        s_distance = s_distance[[slice(None)] + stagger_slice + [slice(None)]]
+        stagger_slice = tuple([slice(0,-1) for i in dims])
+        s_distance = s_distance[(slice(None),) + stagger_slice + (slice(None),)]
 
     return s_distance, ext_field

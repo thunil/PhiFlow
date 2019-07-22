@@ -29,7 +29,7 @@ def ball_movement(previous_ball, dt, **dependent_states):
 class SDFBasedLiquid(TFModel):
 
     def __init__(self):
-        TFModel.__init__(self, "Signed Distance based Liquid", stride=3)
+        TFModel.__init__(self, "Signed Distance based Liquid", stride=10)
 
         size = [80,64]
         domain = Domain(size, SLIPPERY)
@@ -46,15 +46,15 @@ class SDFBasedLiquid(TFModel):
         self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-4.0, distance=self.distance)
         #world.Inflow(Sphere((70,32), 8), rate=0.2)
 
-        # We don't want the tag obstacle as this will influence the velocity field, we just want an object that moves with the flow and doesn't change the flow.
-        self.ball = world.Obstacle(Sphere([40.0, 32.0], 3.0), tags=())
-        self.ball.physics = GeometryMovement(ball_movement)
-        self.ball.physics.dependencies.update({'velocity_state': 'velocityfield'})
+        self.ball = world.Obstacle(Sphere([40.0, 32.0], 3.0))
+        #self.ball.physics = GeometryMovement(ball_movement)
+        #self.ball.physics.dependencies.update({'velocity_state': 'velocityfield'})
 
         session = Session(Scene.create('test'))
         tf_bake_graph(world, session)
 
-        self.add_field("Ball Location", lambda: self.ball.geometry.value_at(indices_tensor(self.initial_density)))
+        #self.ball_location = self.ball.geometry.value_at(indices_tensor(self.initial_density))
+        #self.add_field("Ball Location", lambda: self.ball_location)
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Mask Before", lambda: self.liquid.mask_before.staggered)

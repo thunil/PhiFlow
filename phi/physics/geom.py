@@ -59,7 +59,7 @@ box = BoxGenerator()
 
 
 class Sphere(Geometry):
-    __struct__ = struct.Def(('_center', '_radius'), ())
+    __struct__ = struct.Def(('_center',), ('_radius',))
 
     def __init__(self, center, radius):
         self._center = as_tensor(center)

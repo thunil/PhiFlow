@@ -26,7 +26,7 @@ class SDFBasedLiquid(TFModel):
             self.forces = tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True)
         self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
 
-        self.session = Session(Scene.create('liquid'))
+        self.sess = Session(Scene.create('liquid'))
 
         self.state_in = placeholder_like(self.liquid.state)
         self.state_in.trained_forces = self.forces
@@ -40,9 +40,9 @@ class SDFBasedLiquid(TFModel):
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
 
-        self.add_field("Trained Forces", lambda: self.session.run(self.forces)) # feed_dict=self._feed_dict(None, False)
-        self.add_field("State in SDF", lambda: self.session.run(self.state_in.sdf, self.base_feed_dict))
-        self.add_field("State out SDF", lambda: self.session.run(self.state_out.sdf, self.base_feed_dict))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces)) # feed_dict=self._feed_dict(None, False)
+        self.add_field("State in SDF", lambda: self.sess.run(self.state_in.sdf, self.base_feed_dict))
+        self.add_field("State out SDF", lambda: self.sess.run(self.state_out.sdf, self.base_feed_dict))
         
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
@@ -55,12 +55,12 @@ class SDFBasedLiquid(TFModel):
         # Run optimization step
         self.base_feed_dict.update({self.state_in.active_mask: self.liquid.state.active_mask, self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered})
         TFModel.step(self)
-        self.current_loss = self.session.run(self.loss, self.base_feed_dict)
+        self.current_loss = self.sess.run(self.loss, self.base_feed_dict)
         # Use trained forces to do a step when loss is small enough
         if self.current_loss < self.loss_threshold or self.steps > self.step_threshold:
             self.steps = 0
             self.world_steps += 1
-            self.liquid.trained_forces = self.session.run(self.forces)
+            self.liquid.trained_forces = self.sess.run(self.forces)
             world.step(dt=self.dt)
 
 
@@ -69,11 +69,11 @@ class SDFBasedLiquid(TFModel):
         # self.liquid._sdf, _ = extrapolate(self.initial_velocity_data, particle_mask, distance=self.distance)
         # self.liquid.domaincache._active = particle_mask
         # self.liquid.velocity = self.initial_velocity_data
-        # self.session.run(self.reset_forces)
+        # self.sess.run(self.reset_forces)
         # self.time = 0
 
         #Temporary: Make this button do a step using the pretrained forces
-        self.liquid.trained_forces = self.session.run(self.forces)
+        self.liquid.trained_forces = self.sess.run(self.forces)
         world.step(dt=self.dt)
 
 
