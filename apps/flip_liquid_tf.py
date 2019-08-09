@@ -1,14 +1,14 @@
-from phi.flow import *
+from phi.tf.flow import *
 from phi.math.sampled import *
 
-class ParticleBasedLiquid(FieldSequenceModel):
+class ParticleBasedLiquid(TFModel):
 
     def __init__(self):
-        FieldSequenceModel.__init__(self, "Particle-based Liquid", stride=3)
+        TFModel.__init__(self, "Particle-based Liquid TF", stride=3)
 
         size = [64, 80]
         domain = Domain(size, SLIPPERY)
-        self.particles_per_cell = 8
+        self.particles_per_cell = 4
 
         self.initial_density = zeros(domain.grid.shape())
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
@@ -17,10 +17,13 @@ class ParticleBasedLiquid(FieldSequenceModel):
         #self.initial_velocity = [1.42, 0]
         self.initial_velocity = 0.0
         
-        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-0.5, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-2.0, particles_per_cell=self.particles_per_cell)
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
-        self.add_field("Fluid", lambda: self.liquid.domaincache.active())
+        session = Session(Scene.create('liquid'))
+        tf_bake_graph(world, session)
+
+        self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)
         self.add_field("Points", lambda: grid(self.liquid.grid, self.liquid.points, self.liquid.points))
         self.add_field("Velocity", lambda: self.liquid.velocity_field.staggered)
@@ -28,7 +31,7 @@ class ParticleBasedLiquid(FieldSequenceModel):
 
 
     def step(self):
-        world.step(dt=0.5)
+        world.step(dt=0.1)
 
     def action_reset(self):
         self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)

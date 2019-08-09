@@ -16,6 +16,9 @@ class Backend:
     def is_applicable(self, values):
         return False
 
+    def random_like(self, array):
+        raise NotImplementedError()
+
     def stack(self, values, axis=0):
         raise NotImplementedError()
 
@@ -182,6 +185,9 @@ class DynamicBackend(Backend):
             if backend.is_applicable(values):
                 return True
         return False
+
+    def random_like(self, tensor):
+        return self.choose_backend(tensor).random(shape(tensor))
 
     def stack(self, values, axis=0):
         return self.choose_backend(values).stack(values, axis)
@@ -354,6 +360,7 @@ name = backend.name
 ones_like = backend.ones_like
 pad = backend.pad
 py_func = backend.py_func
+random_like = backend.random_like
 range_like = backend.range_like
 resample = backend.resample
 reshape = backend.reshape

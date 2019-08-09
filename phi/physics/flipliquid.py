@@ -27,20 +27,18 @@ class FlipLiquidPhysics(Physics):
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         active_mask = self.update_active_mask(domaincache, points, velocity)
 
-        # TODO: try putting this before update active and see if there;s a difference. There shouldn't be.
-
-        # Create a velocity field based on the particle velocities
+        # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
         velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
-        
-
         div_free_velocity_field = divergence_free(velocity_field, domaincache, self.pressure_solver, state=state)
-
         velocity += self.particle_velocity_change(domaincache, points, (div_free_velocity_field - velocity_field))
 
+        # Advect the points and remove the particles that went out of the simulation boundaries.
         points = self.advect_points(domaincache, points, div_free_velocity_field, dt)
-
         points, velocity = self.remove_out_of_bounds(state, points, velocity)
+        
+        # Update new active mask after advection
+        active_mask = self.update_active_mask(domaincache, points, velocity)
         
         return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
@@ -69,7 +67,7 @@ class FlipLiquidPhysics(Physics):
 
 
     def apply_forces(self, state, velocity, dt):
-        forces = dt * (state.gravity + state.trained_forces)
+        forces = dt * (state.gravity + 0.0 * state.trained_forces)
         return velocity + forces
 
     
@@ -136,11 +134,6 @@ class FlipLiquid(State):
 
         self._last_pressure = None
         self._last_pressure_iterations = None
-        self.advection_velocity = None
-        self.div_before = None
-        self.vel_before = None
-        self.vel_after = None
-        self.ext_gradp = None
 
         # Density only used to initialize the particle array, afterwards density is never used for calculations again.
         # points has dimensions (batch, particle_number, spatial_rank), when we concatenate we always add to the "particle_number" dimension.

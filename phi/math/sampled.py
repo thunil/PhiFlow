@@ -1,6 +1,5 @@
 from phi import math
 from phi.math.nd import *
-import numpy as np
 
 
 def grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
@@ -11,7 +10,7 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
 
     # Assume no out of bounds indices exist in the list
     if values is None:
-        ones = math.expand_dims(math.prod(math.ones_like(valid_indices), axis=-1), axis=-1)
+        ones = math.expand_dims(math.prod(math.ones_like(points), axis=-1), axis=-1)
 
         return math.scatter(valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
     else:
@@ -45,10 +44,10 @@ def active_centers(array):
     assert array.shape[-1] == 1
     index_array = []
     for batch in range(array.shape[0]):
-        indices = np.argwhere(array[batch,...,0] > 0)
+        indices = math.where(array[batch,...,0] > 0)
         index_array.append(indices)
     try:
-        index_array = np.stack(index_array)
+        index_array = math.stack(index_array)
     except ValueError:
         raise ValueError("all arrays in the batch must have the same number of active cells.")
     return index_array + 0.5
@@ -59,16 +58,17 @@ def random_grid_to_coords(array, particles_per_cell=1):
     index_array = []
     
     for batch in range(array.shape[0]):
-        indices = np.argwhere(array[batch,...,0] > 0)
+        indices = math.where(array[batch,...,0] > 0)
+        indices = math.to_float(indices)
 
         temp = []
         for _ in range(particles_per_cell):
             # Uniform distribution over cell
-            temp.append(indices + np.random.random(indices.shape))
-        index_array.append(np.concatenate(temp, axis=0))
+            temp.append(indices + math.random_like(indices))
+        index_array.append(math.concat(temp, axis=0))
 
     try:
-        index_array = np.stack(index_array)
+        index_array = math.stack(index_array)
     except ValueError:
         raise ValueError("all arrays in the batch must have the same number of active cells.")
     

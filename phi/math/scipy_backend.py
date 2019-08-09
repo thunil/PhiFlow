@@ -25,6 +25,9 @@ class SciPyBackend(Backend):
                 return False
         return False
 
+    def random(self, shape):
+        return np.random.random(shape)
+
     def rank(self, value):
         return len(value.shape)
 
@@ -64,7 +67,7 @@ class SciPyBackend(Backend):
 
     def where(self, condition, x=None, y=None):
         if x is None or y is None:
-            return np.where(condition)
+            return np.argwhere(condition)
         return np.where(condition, x, y)
 
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
