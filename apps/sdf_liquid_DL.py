@@ -5,7 +5,7 @@ class SDFBasedLiquid(TFModel):
     def __init__(self):
         TFModel.__init__(self, "Signed Distance based Liquid", stride=3, learning_rate=1e-1)
 
-        size = [80,64]
+        size = [64,80]
         domain = Domain(size, SLIPPERY)
 
         self.distance = 80
@@ -26,6 +26,8 @@ class SDFBasedLiquid(TFModel):
             self.forces = tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True)
         self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
 
+        # Set up the Tensorflow state and step
+        # We do this manually because we need to add the trained forces
         self.sess = Session(Scene.create('liquid'))
 
         self.state_in = placeholder_like(self.liquid.state)

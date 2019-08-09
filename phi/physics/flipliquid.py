@@ -36,7 +36,7 @@ class FlipLiquidPhysics(Physics):
         # Advect the points and remove the particles that went out of the simulation boundaries.
         points = self.advect_points(domaincache, points, div_free_velocity_field, dt)
         points, velocity = self.remove_out_of_bounds(state, points, velocity)
-        
+
         # Update new active mask after advection
         active_mask = self.update_active_mask(domaincache, points, velocity)
         
@@ -45,6 +45,7 @@ class FlipLiquidPhysics(Physics):
 
 
     def advect_points(self, domaincache, points, velocity, dt):
+        # For now the distance is fixed, we could make it dependent on velocity later on.
         #max_vel = math.max(math.abs(velocity.staggered))
         _, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=30)
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
@@ -67,7 +68,7 @@ class FlipLiquidPhysics(Physics):
 
 
     def apply_forces(self, state, velocity, dt):
-        forces = dt * (state.gravity + 0.0 * state.trained_forces)
+        forces = dt * (state.gravity + state.trained_forces)
         return velocity + forces
 
     
@@ -143,11 +144,9 @@ class FlipLiquid(State):
         if isinstance(gravity, (tuple, list)):
             assert len(gravity) == state_domain.rank
             self._gravity = np.array(gravity)
-        elif state_domain.rank == 1:
-            self._gravity = np.array([gravity])
         else:
-            assert state_domain.rank >= 2
-            gravity = ([0] * (state_domain.rank - 2)) + [gravity] + [0]
+            assert state_domain.rank >= 1
+            gravity = [gravity] + ([0] * (state_domain.rank - 1))
             self._gravity = np.array(gravity)
 
         self.trained_forces = math.zeros_like(self.velocity)
