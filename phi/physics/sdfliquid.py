@@ -18,14 +18,14 @@ class SDFLiquidPhysics(Physics):
 
         #state.mask_before = state.velocity
         active_mask = self.update_active_mask(state.sdf, inflows, domaincache)
-        domaincache._active = active_mask
+        #domaincache._active = active_mask
 
         velocity = self.apply_forces(state, dt)
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
 
         sdf, velocity = self.advect(state, velocity, dt)
         active_mask = self.update_active_mask(sdf, inflows, domaincache)
-        domaincache._active = active_mask
+        #domaincache._active = active_mask
 
         sdf = recompute_sdf(sdf, active_mask, distance=state._distance)
 

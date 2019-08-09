@@ -17,7 +17,7 @@ class ParticleBasedLiquid(FieldSequenceModel):
         #self.initial_velocity = [1.42, 0]
         self.initial_velocity = 0.0
         
-        self.liquid = world.FlipLiquid(domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-0.5, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-0.5, particles_per_cell=self.particles_per_cell)
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
         self.add_field("Fluid", lambda: self.liquid.domaincache.active())

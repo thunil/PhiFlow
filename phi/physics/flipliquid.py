@@ -1,3 +1,5 @@
+from __future__ import division
+
 from .domain import *
 from phi.math import *
 from operator import itemgetter
@@ -14,61 +16,89 @@ class FlipLiquidPhysics(Physics):
         self.pressure_solver = pressure_solver
 
     def step(self, state, dt=1.0, obstacles=(), inflows=(), **dependent_states):
+        # Not really needed, but here just to be sure
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
-        # step
+        
+        # Inflow and forces
+        points, velocity = self.add_inflow(state, inflows, dt)
+        velocity = self.apply_forces(state, velocity, dt)
+
+        # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
+        active_mask = self.update_active_mask(domaincache, points, velocity)
+
+        # TODO: try putting this before update active and see if there;s a difference. There shouldn't be.
+
+        # Create a velocity field based on the particle velocities
+        velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
+        velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
+        
+
+        div_free_velocity_field = divergence_free(velocity_field, domaincache, self.pressure_solver, state=state)
+
+        velocity += self.particle_velocity_change(domaincache, points, (div_free_velocity_field - velocity_field))
+
+        points = self.advect_points(domaincache, points, div_free_velocity_field, dt)
+
+        points, velocity = self.remove_out_of_bounds(state, points, velocity)
+        
+        return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, age=state.age + dt)
+
+
+
+    def advect_points(self, domaincache, points, velocity, dt):
+        #max_vel = math.max(math.abs(velocity.staggered))
+        _, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=30)
+        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
+
+        # Runge Kutta 3rd order advection scheme
+        velocity_RK1 = grid_to_particles(domaincache.grid, points, ext_velocity, staggered=True)
+        velocity_RK2 = grid_to_particles(domaincache.grid, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
+        velocity_RK3 = grid_to_particles(domaincache.grid, (points + 0.75 * dt * velocity_RK2), ext_velocity, staggered=True)
+
+        new_points = points + 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
+        return new_points
+
+
+    def add_inflow(self, state, inflows, dt):
         inflow_density = dt * inflow(inflows, state.grid)
         inflow_points = random_grid_to_coords(inflow_density, state.particles_per_cell)
         points = math.concat([state.points, inflow_points], axis=1)
         velocity = math.concat([state.velocity, math.zeros_like(inflow_points)], axis=1)
-        forces = dt * state.gravity
-        velocity += forces
+        return points, velocity
 
-        # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        density = grid(state.grid, points)
-        velocity_field = grid(state.grid, points, velocity, staggered=True)
-        velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
+
+    def apply_forces(self, state, velocity, dt):
+        forces = dt * (state.gravity + state.trained_forces)
+        return velocity + forces
+
+    
+    def update_active_mask(self, domaincache, points, velocity):
+        density = grid(domaincache.grid, points)
         active_mask = create_binary_mask(density, threshold=0.0)
         domaincache._active = active_mask
 
-        _, ext_velocity = extrapolate(velocity_field, domaincache.active(), dx=1.0, distance=2)
-        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
+        return active_mask
 
-        state.vel_before = velocity_field
-        state.div_before = ext_velocity.divergence()
 
-        div_free_velocity_field = divergence_free(velocity_field, domaincache, self.pressure_solver, state=state)
-
-        state.vel_after = div_free_velocity_field
-
+    def particle_velocity_change(self, domaincache, points, velocity_field_change):
         solid_paddings, open_paddings = domaincache.domain._get_paddings(lambda material: material.solid)
-        active_mask = domaincache.active()
+        active_mask = domaincache._active
         mask = active_mask[(slice(None),) + tuple([slice(1,-1)] * domaincache.rank) + (slice(None),)]
         mask = math.pad(mask, solid_paddings, "constant", 0)
         mask = math.pad(mask, open_paddings, "constant", 1)
 
-        # We redefine the borders, when there is a solid wall we want to extrapolate to these cells.
+        # We redefine the borders, when there is a solid wall we want to extrapolate to these cells. (Even if there is fluid in the solid wall, we overwrite it with the extrapolated value)
         extrapolate_mask = mask * active_mask
         
         # Interpolate the change from the grid and add it to the particle velocity
-        _, ext_gradp = extrapolate((div_free_velocity_field - velocity_field), extrapolate_mask, dx=1.0, distance=2)
-        state.ext_gradp = ext_gradp
-        gradp_particles = grid_to_particles(state.grid, points, ext_gradp, staggered=True)
-        velocity += gradp_particles
+        _, ext_gradp = extrapolate(velocity_field_change, extrapolate_mask, dx=1.0, distance=2)
+        gradp_particles = grid_to_particles(domaincache.grid, points, ext_gradp, staggered=True)
 
-        #max_vel = math.max(math.abs(velocity.staggered))
-        _, ext_velocity = extrapolate(div_free_velocity_field, domaincache.active(), dx=1.0, distance=30)
-        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
+        return gradp_particles
 
-        # Runge Kutta 3rd order advection scheme
-        velocity_RK1 = grid_to_particles(state.grid, points, ext_velocity, staggered=True)
-        velocity_RK2 = grid_to_particles(state.grid, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
-        velocity_RK3 = grid_to_particles(state.grid, (points + 0.75 * dt * velocity_RK2), ext_velocity, staggered=True)
-
-        points += 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
-
-        state.advection_velocity = ext_velocity
-
+    
+    def remove_out_of_bounds(self, state, points, velocity):
         # Remove out of bounds
         indices = math.to_int(math.floor(points))
         shape = [points.shape[0], -1, points.shape[-1]]
@@ -81,25 +111,29 @@ class FlipLiquidPhysics(Physics):
 
         velocity = math.boolean_mask(velocity, mask)
         velocity = math.reshape(velocity, shape)
-        
-        return state.copied_with(points=points, velocity=velocity, age=state.age + dt)
+
+        return points, velocity
 
 
 FLIPLIQUID = FlipLiquidPhysics()
 
 
 class FlipLiquid(State):
-    __struct__ = State.__struct__.extend(('points', 'velocity'),
+    __struct__ = State.__struct__.extend(('points', 'velocity', '_active_mask', 'trained_forces'),
                             ('_domain', '_gravity'))
 
-    def __init__(self, domain=Open2D,
+    def __init__(self, state_domain=Open2D,
                  density=0.0, velocity=0.0, gravity=-9.81, batch_size=None, particles_per_cell=1):
         State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
-        self._domain = domain
+        self._domain = state_domain
         self._density = density
         self.particles_per_cell = particles_per_cell
         self.batch_size = batch_size
+        self._active_mask = create_binary_mask(self._density, threshold=0)
         self.domaincache = None
+        self.domaincache = domain(self, ())
+        self.domaincache._active = self._active_mask
+
         self._last_pressure = None
         self._last_pressure_iterations = None
         self.advection_velocity = None
@@ -114,14 +148,16 @@ class FlipLiquid(State):
         self.velocity = zeros_like(self.points) + velocity
 
         if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == domain.rank
+            assert len(gravity) == state_domain.rank
             self._gravity = np.array(gravity)
-        elif domain.rank == 1:
+        elif state_domain.rank == 1:
             self._gravity = np.array([gravity])
         else:
-            assert domain.rank >= 2
-            gravity = ([0] * (domain.rank - 2)) + [gravity] + [0]
+            assert state_domain.rank >= 2
+            gravity = ([0] * (state_domain.rank - 2)) + [gravity] + [0]
             self._gravity = np.array(gravity)
+
+        self.trained_forces = math.zeros_like(self.velocity)
 
     def default_physics(self):
         return FLIPLIQUID
@@ -141,6 +177,10 @@ class FlipLiquid(State):
     @property
     def velocity_field(self):
         return grid(self.grid, self.points, self.velocity, staggered=True)
+
+    @property
+    def active_mask(self):
+        return self._active_mask
 
     @property
     def domain(self):
