@@ -74,8 +74,8 @@ class SDFLiquidPhysics(Physics):
         padded_sdf += padded_cells
 
         padded_sdf = padded_ext_v.advect(padded_sdf, dt=dt)
-        stagger_slice = [slice(1,-1) for i in range(rank)]
-        sdf = padded_sdf[[slice(None)] + stagger_slice + [slice(None)]]
+        stagger_slice = tuple([slice(1,-1) for i in range(rank)])
+        sdf = padded_sdf[(slice(None),) + stagger_slice + (slice(None),)]
 
         #sdf = ext_velocity.advect(state.sdf, dt=dt)
         # Advect the extrapolated velocity that hasn't had BC applied. This will make sure no interpolation occurs with 0 from BC.
@@ -262,10 +262,10 @@ def recompute_sdf(sdf, active_mask, distance=10, dx=1.0):
                 continue
                 
             # Shift the field in direction d, compare new distances to old ones.
-            d_slice = [(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims]
+            d_slice = tuple([(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims])
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
-            d_dist = d_dist[[slice(None)] + d_slice + [slice(None)]]
+            d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
             # Prevent updating the distance at the surface
