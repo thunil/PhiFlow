@@ -224,7 +224,7 @@ class SciPyBackend(Backend):
             raise ValueError("Illegal axis value")
         result = []
         for i in range(tensor.shape[axis]):
-            result.append(tensor[[i if d==axis else slice(None) for d in range(len(tensor.shape))]])
+            result.append(tensor[tuple([i if d==axis else slice(None) for d in range(len(tensor.shape))])])
         return result
 
     def std(self, x, axis=None):
@@ -246,11 +246,11 @@ class SciPyBackend(Backend):
         indices = self.unstack(indices, axis=-1)
         array = np.zeros(shape, np.float32)
         if duplicates_handling == 'add':
-            np.add.at(array, indices, values)
+            np.add.at(array, tuple(indices), values)
         elif duplicates_handling == 'mean':
             count = np.zeros(shape, np.int32)
-            np.add.at(array, indices, values)
-            np.add.at(count, indices, 1)
+            np.add.at(array, tuple(indices), values)
+            np.add.at(count, tuple(indices), 1)
             count = np.maximum(1, count)
             return array / count
         else: # last, any, undefined
