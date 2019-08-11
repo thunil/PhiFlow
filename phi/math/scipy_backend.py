@@ -26,7 +26,7 @@ class SciPyBackend(Backend):
         return False
 
     def random(self, shape):
-        return np.random.random(shape)
+        return np.random.random(shape).astype('f')
 
     def rank(self, value):
         return len(value.shape)
@@ -205,8 +205,8 @@ class SciPyBackend(Backend):
             return ()
         return tensor.shape
 
-    def to_float(self, x):
-        return np.array(x).astype(np.float32)
+    def to_float(self, x, float64=False):
+        return np.array(x).astype(np.float64 if float64 else np.float32)
 
     def to_int(self, x, int64=False):
         return np.array(x).astype(np.int64 if int64 else np.int32)

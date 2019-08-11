@@ -6,7 +6,7 @@ class ParticleBasedLiquid(TFModel):
     def __init__(self):
         TFModel.__init__(self, "Particle-based Liquid DL", stride=3, learning_rate=1e-1)
 
-        size = [64, 80]
+        size = [32, 40]
         domain = Domain(size, SLIPPERY)
         self.particles_per_cell = 4
         self.dt = 0.1

@@ -182,8 +182,8 @@ class TFBackend(Backend):
     def shape(self, tensor):
         return tf.shape(tensor)
 
-    def to_float(self, x):
-        return tf.to_float(x)
+    def to_float(self, x, float64=False):
+        return tf.cast(x, tf.float64) if float64 else tf.cast(x, tf.float32)
 
     def to_int(self, x, int64=False):
         return tf.cast(x, tf.int64) if int64 else tf.cast(x, tf.int32)

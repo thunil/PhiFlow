@@ -289,8 +289,8 @@ class DynamicBackend(Backend):
     def shape(self, tensor):
         return self.choose_backend(tensor).shape(tensor)
 
-    def to_float(self, x):
-        return self.choose_backend(x).to_float(x)
+    def to_float(self, x, float64=False):
+        return self.choose_backend(x).to_float(x, float64=float64)
 
     def to_int(self, x, int64=False):
         return self.choose_backend(x).to_int(x, int64=int64)

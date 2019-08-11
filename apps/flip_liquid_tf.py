@@ -17,7 +17,7 @@ class ParticleBasedLiquid(TFModel):
         #self.initial_velocity = [1.42, 0]
         self.initial_velocity = 0.0
         
-        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-2.0, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-5.0, particles_per_cell=self.particles_per_cell)
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
         session = Session(Scene.create('liquid'))
@@ -31,7 +31,7 @@ class ParticleBasedLiquid(TFModel):
 
 
     def step(self):
-        world.step(dt=0.1)
+        world.step(dt=0.3)
 
     def action_reset(self):
         self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
