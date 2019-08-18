@@ -85,15 +85,14 @@ class TFModel(FieldSequenceModel):
 
         FieldSequenceModel.prepare(self)  # initializes global variables
 
-        # FOR NOW: unknown tensorshape for particles
-        # model_parameter_count = 0
-        # for var in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.model_scope_name):
-        #     if not 'Adam' in var.name:
-        #         model_parameter_count += int(np.prod(var.get_shape().as_list()))
-        #         # if 'conv' in var.name and 'kernel' in var.name:
-        #         #     tf.summary.image(var.name, var)
-        # self.add_custom_property('parameter_count', model_parameter_count)
-        # self.info('Model variables contain %d total parameters.' % model_parameter_count)
+        model_parameter_count = 0
+        for var in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.model_scope_name):
+            if not 'Adam' in var.name:
+                model_parameter_count += int(np.prod(var.get_shape().as_list()))
+                # if 'conv' in var.name and 'kernel' in var.name:
+                #     tf.summary.image(var.name, var)
+        self.add_custom_property('parameter_count', model_parameter_count)
+        self.info('Model variables contain %d total parameters.' % model_parameter_count)
 
         if self.world.batch_size is not None:
             self.training_batch_size = self.world.batch_size
