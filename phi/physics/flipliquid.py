@@ -21,8 +21,8 @@ class FlipLiquidPhysics(Physics):
         domaincache = domain(state, obstacles)
         
         # Inflow and forces
-        points, velocity = self.add_inflow(state, inflows, dt)
-        velocity = self.apply_forces(state, velocity, dt)
+        points, velocity, trained_forces = self.add_inflow(state, inflows, dt)
+        velocity = self.apply_forces(state, velocity, trained_forces, dt)
 
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         active_mask = self.update_active_mask(domaincache, points)
@@ -35,12 +35,12 @@ class FlipLiquidPhysics(Physics):
 
         # Advect the points and remove the particles that went out of the simulation boundaries.
         points = self.advect_points(domaincache, points, div_free_velocity_field, dt)
-        points, velocity = self.remove_out_of_bounds(state, points, velocity)
+        points, velocity, trained_forces = self.remove_out_of_bounds(state, points, velocity, trained_forces)
 
         # Update new active mask after advection
         active_mask = self.update_active_mask(domaincache, points)
         
-        return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, age=state.age + dt)
+        return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, trained_forces=trained_forces, age=state.age + dt)
 
 
 
@@ -65,15 +65,13 @@ class FlipLiquidPhysics(Physics):
         points = math.concat([state.points, inflow_points], axis=1)
         velocity = math.concat([state.velocity, 0.0 * (inflow_points)], axis=1)
 
-        return points, velocity
+        trained_forces = math.concat([state.trained_forces, 0.0 * inflow_points], axis=1)
+
+        return points, velocity, trained_forces
 
 
-    def apply_forces(self, state, velocity, dt):
-        import tensorflow as tf
-        if isinstance(state.trained_forces, tf.Variable):
-            forces = dt * (state.gravity + tf.slice(state.trained_forces, [0,0,0], tf.shape(velocity)))
-        else:
-            forces = dt * (state.gravity + state.trained_forces)
+    def apply_forces(self, state, velocity, trained_forces, dt):
+        forces = dt * (state.gravity + trained_forces)
         return velocity + forces
 
     
@@ -102,7 +100,7 @@ class FlipLiquidPhysics(Physics):
         return gradp_particles
 
     
-    def remove_out_of_bounds(self, state, points, velocity):
+    def remove_out_of_bounds(self, state, points, velocity, trained_forces):
         # Remove out of bounds
         indices = math.to_int(math.floor(points))
         shape = [points.shape[0], -1, points.shape[-1]]
@@ -115,8 +113,11 @@ class FlipLiquidPhysics(Physics):
 
         velocity = math.boolean_mask(velocity, mask)
         velocity = math.reshape(velocity, shape)
+        
+        trained_forces = math.boolean_mask(trained_forces, mask)
+        trained_forces = math.reshape(trained_forces, shape)
 
-        return points, velocity
+        return points, velocity, trained_forces
 
 
 FLIPLIQUID = FlipLiquidPhysics()
