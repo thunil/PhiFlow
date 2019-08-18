@@ -4,6 +4,7 @@ from .domain import *
 from phi.math import *
 from operator import itemgetter
 import itertools
+import tensorflow as tf
 from phi.math.sampled import *
 # Many functions used from gridliquid
 from .gridliquid import *
@@ -69,11 +70,10 @@ class FlipLiquidPhysics(Physics):
 
 
     def apply_forces(self, state, velocity, dt):
-        import tensorflow as tf
         if isinstance(state.trained_forces, tf.Variable):
             return velocity + dt * (state.gravity + tf.slice(state.trained_forces, [0,0,0], tf.shape(velocity)))
         else:
-            return velocity + dt * (state.gravity + state.trained_forces[:velocity.shape[0], :velocity.shape[1], :velocity.shape[2]])
+            return velocity + dt * (state.gravity + state.trained_forces[:,:velocity.shape[1],:])
         #return velocity + forces
 
     
@@ -155,7 +155,11 @@ class FlipLiquid(State):
             self._gravity = np.array(gravity)
 
         # When you want to train a force, you need to overwrite this value with a tf.Variable that is trainable. This initialization is only a dummy value.
-        self.trained_forces = math.zeros_like(self.velocity)
+        full_grid_shape = [
+                self.points.shape[0], 
+                particles_per_cell * np.product(self.grid.dimensions), self.points.shape[2]
+                ]
+        self.trained_forces = np.zeros(full_grid_shape)
 
     def default_physics(self):
         return FLIPLIQUID

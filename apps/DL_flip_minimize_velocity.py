@@ -23,8 +23,12 @@ class ParticleBasedLiquid(TFModel):
 
         # Forces to be trained are directly added onto velocity, therefore should have same shape.
         with self.model_scope():
-            self.forces = tf.Variable(tf.zeros(self.liquid.points.shape), name="TrainedForces", trainable=True)
-        self.reset_forces = self.forces.assign(tf.zeros(self.liquid.points.shape))
+            full_grid_shape = [
+                self.liquid.points.shape[0], 
+                self.particles_per_cell * np.product(size), self.liquid.points.shape[2]
+                ]
+            self.forces = tf.Variable(tf.zeros(full_grid_shape), name="TrainedForces", trainable=True)
+        self.reset_forces = self.forces.assign(tf.zeros(full_grid_shape))
 
         # Set up the Tensorflow state and step
         # We do this manually because we need to add the trained forces
@@ -62,7 +66,7 @@ class ParticleBasedLiquid(TFModel):
         if self.current_loss < self.loss_threshold or self.steps > self.step_threshold:
             self.steps = 0
             self.world_steps += 1
-            self.liquid.trained_forces = self.sess.run(tf.slice(self.forces, [0,0,0], self.liquid.points.shape))
+            self.liquid.trained_forces = self.sess.run(self.forces)
             world.step(dt=self.dt)
 
 
