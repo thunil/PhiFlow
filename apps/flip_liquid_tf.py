@@ -32,6 +32,7 @@ class ParticleBasedLiquid(TFModel):
 
     def step(self):
         world.step(dt=0.3)
+        print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
 
     def action_reset(self):
         self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)

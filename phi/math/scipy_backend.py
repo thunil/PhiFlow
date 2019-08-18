@@ -257,7 +257,6 @@ class SciPyBackend(Backend):
             array[indices] = values
         return array
 
-
 def clamp(coordinates, shape):
     assert coordinates.shape[-1] == len(shape)
     for i in range(len(shape)):

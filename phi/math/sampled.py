@@ -40,12 +40,19 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
             return math.scatter(valid_indices, values, griddef.shape(math.shape(values)[-1]), duplicates_handling=duplicate_handling)
 
 
-def active_centers(array):
+def active_centers(array, particles_per_cell=1):
     assert array.shape[-1] == 1
     index_array = []
     for batch in range(array.shape[0]):
         indices = math.where(array[batch,...,0] > 0)
-        index_array.append(indices)
+        indices = math.to_float(indices)
+
+        # For Deep Learning simulations where the target state needs to have same particle count as initial state. For all other purposes this method should be called with particles_per_cell set to the default 1.
+        temp = []
+        for _ in range(particles_per_cell):
+            # Uniform distribution over cell
+            temp.append(indices)
+        index_array.append(math.concat(temp, axis=0))
     try:
         index_array = math.stack(index_array)
     except ValueError:
@@ -66,7 +73,6 @@ def random_grid_to_coords(array, particles_per_cell=1):
             # Uniform distribution over cell
             temp.append(indices + math.random_like(indices))
         index_array.append(math.concat(temp, axis=0))
-
     try:
         index_array = math.stack(index_array)
     except ValueError:
