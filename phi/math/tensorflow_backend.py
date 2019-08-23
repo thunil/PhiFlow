@@ -4,6 +4,7 @@ from numpy import ndarray
 import collections
 import uuid
 from phi.math.base import Backend
+from phi.math.nd import *
 
 
 class TFBackend(Backend):
@@ -212,14 +213,25 @@ class TFBackend(Backend):
 
     def all(self, boolean_tensor, axis=None, keepdims=False):
         return tf.reduce_all(boolean_tensor, axis=axis, keepdims=keepdims)
-    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+    
+    def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
         # Input indices only has the 2D coordinates.
         # EDIT: This formatting should be already done before calling scatter.
         z = tf.zeros(shape, dtype=values.dtype)
         
         if duplicates_handling == 'add':
-            return tf.tensor_scatter_add(z, indices, values)
+            #Only for Tensorflow with custom gradient
+            @tf.custom_gradient
+            def scatter_density(points, indices, values):
+                result = tf.tensor_scatter_add(z, indices, values)
+
+                def grad(dr):
+                    return self.resample(gradient(dr, difference='central'), points), None, None
+
+                return result, grad
+
+            return scatter_density(points, indices, values)
         elif duplicates_handling == 'mean':
             # Won't entirely work with out of bounds particles (still counted in mean)
             count = tf.tensor_scatter_add(z, indices, tf.ones_like(values))

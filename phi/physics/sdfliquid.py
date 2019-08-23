@@ -110,7 +110,7 @@ class SDFLiquidPhysics(Physics):
         return math.concat(mask, axis=-1)
 
     def apply_forces(self, state, dt):
-            return state.velocity + (dt * state.gravity) + (dt * state.trained_forces)
+            return state.velocity + dt * (state.gravity + state.trained_forces.staggered)
 
 
 SDFLIQUID = SDFLiquidPhysics()

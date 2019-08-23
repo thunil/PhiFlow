@@ -242,7 +242,7 @@ class SciPyBackend(Backend):
     def all(self, boolean_tensor, axis=None, keepdims=False):
         return np.all(boolean_tensor, axis=axis, keepdims=keepdims)
 
-    def scatter(self, indices, values, shape, duplicates_handling='undefined'):
+    def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         indices = self.unstack(indices, axis=-1)
         array = np.zeros(shape, np.float32)
         if duplicates_handling == 'add':

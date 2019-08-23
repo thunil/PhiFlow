@@ -10,9 +10,10 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
 
     # Assume no out of bounds indices exist in the list
     if values is None:
+        # Duplicate Handling always add except for active mask, but we can construct that from the density mask.
         ones = math.expand_dims(math.prod(math.ones_like(points), axis=-1), axis=-1)
 
-        return math.scatter(valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
+        return math.scatter(points, valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
     else:
         if staggered:
             dims = range(len(griddef.dimensions))
@@ -32,12 +33,12 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
 
                 # No need to manually 'mean', Out of Bounds particles aren't handled here, need to implement that somewhere else.
                 values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
-                result.append(math.scatter(valid_indices, values_d, [indices.shape[0]] + staggered_shape + [1], duplicates_handling='mean'))
+                result.append(math.scatter(points, valid_indices, values_d, [indices.shape[0]] + staggered_shape + [1], duplicates_handling='mean'))
             
             return StaggeredGrid(math.concat(result, axis=-1))
 
         else:
-            return math.scatter(valid_indices, values, griddef.shape(math.shape(values)[-1]), duplicates_handling=duplicate_handling)
+            return math.scatter(points, valid_indices, values, griddef.shape(math.shape(values)[-1]), duplicates_handling=duplicate_handling)
 
 
 def active_centers(array, particles_per_cell=1):

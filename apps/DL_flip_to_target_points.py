@@ -6,7 +6,7 @@ class ParticleBasedLiquid(TFModel):
     def __init__(self):
         TFModel.__init__(self, "Particle-based Liquid DL", stride=3, learning_rate=1e-1)
 
-        size = [32, 32]
+        size = [32, 40]
         domain = Domain(size, SLIPPERY)
         self.particles_per_cell = 4
         self.dt = 0.1
@@ -23,12 +23,8 @@ class ParticleBasedLiquid(TFModel):
 
         # Forces to be trained are directly added onto velocity, therefore should have same shape.
         with self.model_scope():
-            full_grid_shape = [
-                self.liquid.points.shape[0], 
-                self.particles_per_cell * np.product(size), self.liquid.points.shape[2]
-                ]
-            self.forces = tf.Variable(tf.zeros(full_grid_shape), name="TrainedForces", trainable=True)
-        self.reset_forces = self.forces.assign(tf.zeros(full_grid_shape))
+            self.forces = tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True)
+        self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
 
         # Set up the Tensorflow state and step
         # We do this manually because we need to add the trained forces
@@ -40,19 +36,18 @@ class ParticleBasedLiquid(TFModel):
 
         # Try to find a force to bring it to the target state
         target_density_data = zeros(domain.grid.shape())
-        target_density_data[:, size[-2] * 2 // 8 : size[-2] * 6 // 8 - 0, size[-1] * 6 // 8 : size[-1] * 8 // 8 - 1, :] = 1
-        target_points_data = active_centers(target_density_data, self.particles_per_cell)
-        #self.target_state_density = tf.constant(target_density_data)
+        target_density_data[:, size[-2] * 2 // 8 : size[-2] * 6 // 8 - 0, size[-1] * 6 // 8 : size[-1] * 8 // 8 - 1, :] = self.particles_per_cell
+        #target_points_data = active_centers(target_density_data, self.particles_per_cell)
 
         self.force_weight = self.editable_float('Force_Weight', 1.0, (1e-5, 1e3))
-        self.loss = l2_loss(self.state_out.points - target_points_data) + self.force_weight * l2_loss(self.forces)
+        self.loss = l2_loss(self.state_out.density_field - target_density_data) + self.force_weight * l2_loss(self.forces)
         self.add_objective(self.loss, "Unsupervised_Loss")
 
         # Two thresholds for the world_step
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
-        self.add_field("Trained Forces", lambda: grid(self.liquid.grid, self.liquid.points, self.sess.run(tf.slice(self.forces, [0,0,0], self.liquid.points.shape)), staggered=True))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)

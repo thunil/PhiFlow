@@ -23,13 +23,13 @@ class FlipLiquidPhysics(Physics):
         
         # Inflow and forces
         points, velocity = self.add_inflow(state, inflows, dt)
-        velocity = self.apply_forces(state, velocity, dt)
 
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         active_mask = self.update_active_mask(domaincache, points)
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
+        velocity_field = self.apply_field_forces(state, velocity_field, dt)
         velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
         div_free_velocity_field = divergence_free(velocity_field, domaincache, self.pressure_solver, state=state)
         velocity += self.particle_velocity_change(domaincache, points, (div_free_velocity_field - velocity_field))
@@ -69,12 +69,9 @@ class FlipLiquidPhysics(Physics):
         return points, velocity
 
 
-    def apply_forces(self, state, velocity, dt):
-        if isinstance(state.trained_forces, tf.Variable):
-            return velocity + dt * (state.gravity + tf.slice(state.trained_forces, [0,0,0], tf.shape(velocity)))
-        else:
-            return velocity + dt * (state.gravity + state.trained_forces[:,:velocity.shape[1],:])
-        #return velocity + forces
+    def apply_field_forces(self, state, velocity, dt):
+        forces = dt * (state.gravity + state.trained_forces)
+        return velocity + forces
 
     
     def update_active_mask(self, domaincache, points):
@@ -155,11 +152,7 @@ class FlipLiquid(State):
             self._gravity = np.array(gravity)
 
         # When you want to train a force, you need to overwrite this value with a tf.Variable that is trainable. This initialization is only a dummy value.
-        full_grid_shape = [
-                self.points.shape[0], 
-                particles_per_cell * np.product(self.grid.dimensions), self.points.shape[2]
-                ]
-        self.trained_forces = np.zeros(full_grid_shape)
+        self.trained_forces = zeros(self.grid.staggered_shape().staggered)
 
     def default_physics(self):
         return FLIPLIQUID

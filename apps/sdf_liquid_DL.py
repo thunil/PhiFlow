@@ -31,7 +31,7 @@ def conv_net(x, weights, biases, dropout):
     # MNIST data input is a 1-D vector of 784 features (28*28 pixels)
     # Reshape to match picture format [Height x Width x Channel]
     # Tensor input become 4-D: [Batch Size, Height, Width, Channel]
-    x = tf.reshape(x, shape=[-1, size[0], size[1], 1])
+    x = tf.reshape(x, shape=[-1, size[0]+1, size[1]+1, 2])
 
     # Convolution Layer
     conv1 = conv2d(x, weights['wc1'], biases['bc1'])
@@ -73,18 +73,18 @@ class SDFBasedLiquid(TFModel):
         #self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
         #self.initial_velocity_data.staggered[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 0, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = [-2.0, 0.0]
 
-        self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density_data, velocity=self.initial_velocity_data, gravity=-0.0, distance=self.distance)
+        self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density_data, velocity=self.initial_velocity_data, gravity=-5.0, distance=self.distance)
         #world.Inflow(Sphere((70,32), 8), rate=0.2)
 
 
         # Store layers weight & bias
         weights = {
             # 5x5 conv, 1 input, 32 outputs
-            'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
+            'wc1': tf.Variable(tf.random_normal([5, 5, 2, 32])),
             # 5x5 conv, 32 inputs, 64 outputs
             'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
             # fully connected, 7*7*64 inputs, 1024 outputs
-            'wd1': tf.Variable(tf.random_normal([8*10*1*64, 1024])),
+            'wd1': tf.Variable(tf.random_normal([9*11*1*64, 1024])),
             # 1024 inputs, 10 outputs (class prediction)
             'out': tf.Variable(tf.random_normal([1024, 2]))
         }
@@ -100,7 +100,7 @@ class SDFBasedLiquid(TFModel):
 
         # Construct model
         self.state_in = placeholder_like(self.liquid.state) # Forces based on input SDF
-        self.forces = conv_net(self.state_in.sdf, weights, biases, keep_prob)
+        self.forces = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
         
@@ -113,14 +113,15 @@ class SDFBasedLiquid(TFModel):
 
 
         self.force_weight = self.editable_float('Force_Weight', 1.0)
-        self.loss = l2_loss(self.state_out.sdf - self.target_state_sdf) + self.force_weight * l2_loss(self.forces)
+        #self.loss = l2_loss(self.state_out.sdf - self.target_state_sdf) + self.force_weight * l2_loss(self.forces)
+        self.loss = l2_loss(self.state_out.velocity.staggered)
         self.add_objective(self.loss, "Unsupervised_Loss")
 
         # Two thresholds for the world_step
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
-        self.add_field("Trained Forces", lambda: self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf}))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered}))
         self.add_field("State in SDF", lambda: self.sess.run(self.state_in.sdf, self.base_feed_dict))
         self.add_field("State out SDF", lambda: self.sess.run(self.state_out.sdf, self.base_feed_dict))
         
@@ -141,7 +142,7 @@ class SDFBasedLiquid(TFModel):
         if self.current_loss < self.loss_threshold or self.steps > self.step_threshold:
             self.steps = 0
             self.world_steps += 1
-            self.liquid.trained_forces = self.sess.run(self.forces)
+            self.liquid.trained_forces = self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered})
             world.step(dt=self.dt)
 
 
@@ -154,7 +155,7 @@ class SDFBasedLiquid(TFModel):
         # self.time = 0
 
         #Temporary: Make this button do a step using the pretrained forces
-        self.liquid.trained_forces = self.sess.run(self.forces)
+        self.liquid.trained_forces = self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered})
         world.step(dt=self.dt)
 
 

@@ -180,8 +180,8 @@ The gradient vectors are in reverse order, lowest dimension first.
 def _backward_diff_nd(field, dims):
     df_dq = []
     for dimension in dims:
-        upper_slices = [(slice(1, None) if i==dimension else slice(None)) for i in dims]
-        lower_slices = [(slice(-1)      if i==dimension else slice(None)) for i in dims]
+        upper_slices = tuple([(slice(1, None) if i==dimension else slice(None)) for i in dims])
+        lower_slices = tuple([(slice(-1)      if i==dimension else slice(None)) for i in dims])
         diff = field[(slice(None),)+upper_slices] - field[(slice(None),)+lower_slices]
         padded = math.pad(diff, [[0,0]]+[([1,0] if i == dimension else [0,0]) for i in dims])
         df_dq.append(padded)
@@ -191,9 +191,9 @@ def _backward_diff_nd(field, dims):
 def _forward_diff_nd(field, dims):
     df_dq = []
     for dimension in dims:
-        upper_slices = [(slice(1, None) if i==dimension else slice(None)) for i in dims]
-        lower_slices = [(slice(-1)      if i==dimension else slice(None)) for i in dims]
-        diff = field[(slice(None),)+upper_slices] - field[(slice(None),)+lower_slices]
+        upper_slices = tuple([(slice(1, None) if i==dimension else slice(None)) for i in dims])
+        lower_slices = tuple([(slice(-1)      if i==dimension else slice(None)) for i in dims])
+        diff = field[(slice(None),) + upper_slices] - field[(slice(None),) + lower_slices]
         padded = math.pad(diff, [[0,0]]+[([0,1] if i == dimension else [0,0]) for i in dims])
         df_dq.append(padded)
     return math.stack(df_dq, axis=-1)
@@ -203,9 +203,9 @@ def _central_diff_nd(field, dims):
     field = math.pad(field, [[0,0]] + [[1,1]]*spatial_rank(field) + [[0, 0]], 'symmetric')
     df_dq = []
     for dimension in dims:
-        upper_slices = [(slice(2, None) if i==dimension else slice(1,-1)) for i in dims]
-        lower_slices = [(slice(-2)      if i==dimension else slice(1,-1)) for i in dims]
-        diff = field[(slice(None),) + upper_slices + [0]] - field[(slice(None),) + lower_slices + [0]]
+        upper_slices = tuple([(slice(2, None) if i==dimension else slice(1,-1)) for i in dims])
+        lower_slices = tuple([(slice(-2)      if i==dimension else slice(1,-1)) for i in dims])
+        diff = field[(slice(None),) + upper_slices + (0,)] - field[(slice(None),) + lower_slices + (0,)]
         df_dq.append(diff)
     return math.stack(df_dq, axis=-1)
 
