@@ -31,7 +31,7 @@ def conv_net(x, weights, biases, dropout):
     # MNIST data input is a 1-D vector of 784 features (28*28 pixels)
     # Reshape to match picture format [Height x Width x Channel]
     # Tensor input become 4-D: [Batch Size, Height, Width, Channel]
-    x = tf.reshape(x, shape=[-1, size[0]+1, size[1]+1, 2])
+    #x = tf.reshape(x, shape=[-1, size[0]+1, size[1]+1, 2])
 
     # Convolution Layer
     conv1 = conv2d(x, weights['wc1'], biases['bc1'])
@@ -49,7 +49,7 @@ def conv_net(x, weights, biases, dropout):
     fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
     fc1 = tf.nn.relu(fc1)
     # Apply Dropout
-    fc1 = tf.nn.dropout(fc1, dropout)
+    fc1 = tf.nn.dropout(fc1, rate=1-dropout)
 
     # Output, class prediction
     out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
@@ -64,7 +64,7 @@ class SDFBasedLiquid(TFModel):
 
         domain = Domain(size, SLIPPERY)
 
-        self.distance = 80
+        self.distance = 40
         self.dt = 0.1
 
         self.initial_density_data = zeros(domain.grid.shape())
@@ -76,31 +76,63 @@ class SDFBasedLiquid(TFModel):
         self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density_data, velocity=self.initial_velocity_data, gravity=-5.0, distance=self.distance)
         #world.Inflow(Sphere((70,32), 8), rate=0.2)
 
-
-        # Store layers weight & bias
-        weights = {
-            # 5x5 conv, 1 input, 32 outputs
-            'wc1': tf.Variable(tf.random_normal([5, 5, 2, 32])),
-            # 5x5 conv, 32 inputs, 64 outputs
-            'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-            # fully connected, 7*7*64 inputs, 1024 outputs
-            'wd1': tf.Variable(tf.random_normal([9*11*1*64, 1024])),
-            # 1024 inputs, 10 outputs (class prediction)
-            'out': tf.Variable(tf.random_normal([1024, 2]))
-        }
-
-        biases = {
-            'bc1': tf.Variable(tf.random_normal([32])),
-            'bc2': tf.Variable(tf.random_normal([64])),
-            'bd1': tf.Variable(tf.random_normal([1024])),
-            'out': tf.Variable(tf.random_normal([2]))
-        }
-
         self.sess = Session(Scene.create('liquid'))
 
         # Construct model
         self.state_in = placeholder_like(self.liquid.state) # Forces based on input SDF
-        self.forces = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
+
+        with self.model_scope():
+            # Store layers weight & bias
+            weights = {
+                # 5x5 conv, 1 input, 32 outputs
+                'wc1': tf.Variable(tf.random_normal([5, 5, 2, 32])),
+                # 5x5 conv, 32 inputs, 64 outputs
+                'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+                # fully connected, 7*7*64 inputs, 1024 outputs
+                'wd1': tf.Variable(tf.random_normal([9*11*1*64, 1024])),
+                # 1024 inputs, 10 outputs (class prediction)
+                'out': tf.Variable(tf.random_normal([1024, 2]))
+            }
+
+            biases = {
+                'bc1': tf.Variable(tf.random_normal([32])),
+                'bc2': tf.Variable(tf.random_normal([64])),
+                'bd1': tf.Variable(tf.random_normal([1024])),
+                'out': tf.Variable(tf.random_normal([2]))
+            }
+
+            #self.forces = StaggeredGrid(conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob))
+
+            #self.forces = StaggeredGrid(tf.Variable(tf.random_normal(domain.grid.staggered_shape().staggered), trainable=True))
+
+            # weight = tf.Variable(tf.random_normal(domain.grid.staggered_shape().staggered), trainable=True)
+            # self.forces = weight * self.state_in.velocity
+
+            # kernel = tf.Variable(tf.random_normal([5,5,2,2]))
+            # self.forces = tf.nn.conv2d(self.state_in.velocity.staggered, kernel, strides=[1,1,1,1], padding='SAME')
+            # self.forces = StaggeredGrid(self.forces)
+
+            kernel1 = tf.Variable(tf.random_normal([5,5,2,32]))
+            kernel2 = tf.Variable(tf.random_normal([5,5,32,64]))
+            kernel3 = tf.Variable(tf.random_normal([33*41*64, 33*41*2]))
+            bias1 = tf.Variable(tf.random_normal([32]))
+            bias2 = tf.Variable(tf.random_normal([64]))
+            bias3 = tf.Variable(tf.random_normal([33*41*2]))
+
+            # Convolution Layer
+            conv1 = conv2d(self.state_in.velocity.staggered, kernel1, bias1)
+            conv2 = conv2d(conv1, kernel2, bias2)
+
+            # conv2 shape: [1,33,41,64]
+
+            fc1 = tf.reshape(conv2, [-1, kernel3.get_shape().as_list()[0]])
+            fc1 = tf.add(tf.matmul(fc1, kernel3), bias3)
+            fc1 = tf.nn.relu(fc1)
+            fc1 = tf.reshape(fc1, [-1, 33, 41, 2])
+
+            self.forces = StaggeredGrid(fc1)
+
+            
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
         
@@ -121,7 +153,7 @@ class SDFBasedLiquid(TFModel):
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
-        self.add_field("Trained Forces", lambda: self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered}))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces.staggered, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered}))
         self.add_field("State in SDF", lambda: self.sess.run(self.state_in.sdf, self.base_feed_dict))
         self.add_field("State out SDF", lambda: self.sess.run(self.state_out.sdf, self.base_feed_dict))
         
