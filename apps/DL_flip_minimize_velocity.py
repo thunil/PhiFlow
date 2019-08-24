@@ -13,7 +13,7 @@ class ParticleBasedLiquid(TFModel):
 
         self.initial_density = zeros(domain.grid.shape())
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
-        self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
+        #self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
 
         #self.initial_velocity = [1.42, 0]
         self.initial_velocity = 0.0
@@ -23,18 +23,14 @@ class ParticleBasedLiquid(TFModel):
 
         # Forces to be trained are directly added onto velocity, therefore should have same shape.
         with self.model_scope():
-            full_grid_shape = [
-                self.liquid.points.shape[0], 
-                self.particles_per_cell * np.product(size), self.liquid.points.shape[2]
-                ]
-            self.forces = tf.Variable(tf.zeros(full_grid_shape), name="TrainedForces", trainable=True)
-        self.reset_forces = self.forces.assign(tf.zeros(full_grid_shape))
+            self.forces = tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True)
+        self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
 
         # Set up the Tensorflow state and step
         # We do this manually because we need to add the trained forces
         self.sess = Session(Scene.create('liquid'))
 
-        self.state_in = placeholder_like(self.liquid.state, particles=True)
+        self.state_in = placeholder_like(self.liquid.state)
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
@@ -46,7 +42,7 @@ class ParticleBasedLiquid(TFModel):
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
-        self.add_field("Trained Forces", lambda: grid(self.liquid.grid, self.liquid.points, self.sess.run(tf.slice(self.forces, [0,0,0], self.liquid.points.shape)), staggered=True))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)

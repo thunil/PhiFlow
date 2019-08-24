@@ -29,9 +29,11 @@ class FlipLiquidPhysics(Physics):
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
-        velocity_field = self.apply_field_forces(state, velocity_field, dt)
         velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
-        div_free_velocity_field = divergence_free(velocity_field, domaincache, self.pressure_solver, state=state)
+
+        velocity_field_with_forces = self.apply_field_forces(state, velocity_field, dt)
+        div_free_velocity_field = divergence_free(velocity_field_with_forces, domaincache, self.pressure_solver, state=state)
+        
         velocity += self.particle_velocity_change(domaincache, points, (div_free_velocity_field - velocity_field))
 
         # Advect the points and remove the particles that went out of the simulation boundaries.

@@ -17,9 +17,8 @@ def placeholder(shape, dtype=np.float32, basename=None):
     return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True)
 
 # int type is not handled by shape, and for the ball_movement demo we require a placeholder for an int, therefore we isolate that case here. (attr.value.shape doesn't return () for int)
-# For FLIP simulations we want the shape to be dynamic, so we set it to None in that case.
-def placeholder_like(obj, dtype=np.float32, basename=None, particles=False):
-    f = lambda attr: tf.placeholder(dtype, (() if isinstance(attr.value, int) else None if particles else attr.value.shape), _tf_name(attr, basename))
+def placeholder_like(obj, dtype=np.float32, basename=None):
+    f = lambda attr: tf.placeholder(dtype, (() if isinstance(attr.value, int) else attr.value.shape), _tf_name(attr, basename))
     return struct.map(f, obj, leaf_condition=_is_python_shape, trace=True)
 
 def variable(initializer, dtype=np.float32, basename=None, trainable=True):

@@ -30,7 +30,7 @@ class ParticleBasedLiquid(TFModel):
         # We do this manually because we need to add the trained forces
         self.sess = Session(Scene.create('liquid'))
 
-        self.state_in = placeholder_like(self.liquid.state, particles=True)
+        self.state_in = placeholder_like(self.liquid.state)
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
