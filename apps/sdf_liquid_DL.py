@@ -83,25 +83,28 @@ class SDFBasedLiquid(TFModel):
 
         with self.model_scope():
             # Store layers weight & bias
-            # weights = {
-            #     # 5x5 conv, 1 input, 32 outputs
-            #     'wc1': tf.Variable(tf.random_normal([5, 5, 2, 32])),
-            #     # 5x5 conv, 32 inputs, 64 outputs
-            #     'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-            #     # fully connected, 7*7*64 inputs, 1024 outputs
-            #     'wd1': tf.Variable(tf.random_normal([9*11*1*64, 1024])),
-            #     # 1024 inputs, 10 outputs (class prediction)
-            #     'out': tf.Variable(tf.random_normal([1024, 2]))
-            # }
+            weights = {
+                # 5x5 conv, 1 input, 32 outputs
+                'wc1': tf.Variable(tf.zeros([5, 5, 2, 32])),
+                # 5x5 conv, 32 inputs, 64 outputs
+                'wc2': tf.Variable(tf.zeros([5, 5, 32, 64])),
+                # fully connected, 7*7*64 inputs, 1024 outputs
+                'wd1': tf.Variable(tf.zeros([9*11*1*64, 1024])),
+                # 1024 inputs, 10 outputs (class prediction)
+                'out': tf.Variable(tf.zeros([1024, 33*41*2]))
+            }
 
-            # biases = {
-            #     'bc1': tf.Variable(tf.random_normal([32])),
-            #     'bc2': tf.Variable(tf.random_normal([64])),
-            #     'bd1': tf.Variable(tf.random_normal([1024])),
-            #     'out': tf.Variable(tf.random_normal([2]))
-            # }
+            biases = {
+                'bc1': tf.Variable(tf.zeros([32])),
+                'bc2': tf.Variable(tf.zeros([64])),
+                'bd1': tf.Variable(tf.zeros([1024])),
+                'out': tf.Variable(tf.zeros([33*41*2]))
+            }
 
-            #self.forces = StaggeredGrid(conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob))
+            out = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
+            out = tf.reshape(out, [1,33,41,2])
+
+            self.forces = StaggeredGrid(out)
 
             #self.forces = StaggeredGrid(tf.Variable(tf.random_normal(domain.grid.staggered_shape().staggered), trainable=True))
 
@@ -133,29 +136,29 @@ class SDFBasedLiquid(TFModel):
             #self.forces = StaggeredGrid(fc1)
 
 
-            kernel1 = tf.Variable(tf.zeros([5,5,2,32]))
-            kernel2 = tf.Variable(tf.zeros([5,5,32,64]))
-            kernel3 = tf.Variable(tf.zeros([33*41*64, 1024])/(33*41*64))
-            kernel4 = tf.Variable(tf.zeros([1024, 33*41*2])/(33*41*2))
-            bias1 = tf.Variable(tf.zeros([32]))
-            bias2 = tf.Variable(tf.zeros([64]))
-            bias3 = tf.Variable(tf.zeros([1024]))
-            bias4 = tf.Variable(tf.zeros([33*41*2]))
+            # kernel1 = tf.Variable(tf.zeros([5,5,2,32]))
+            # kernel2 = tf.Variable(tf.zeros([5,5,32,64]))
+            # kernel3 = tf.Variable(tf.zeros([33*41*64, 1024])/(33*41*64))
+            # kernel4 = tf.Variable(tf.zeros([1024, 33*41*2])/(33*41*2))
+            # bias1 = tf.Variable(tf.zeros([32]))
+            # bias2 = tf.Variable(tf.zeros([64]))
+            # bias3 = tf.Variable(tf.zeros([1024]))
+            # bias4 = tf.Variable(tf.zeros([33*41*2]))
 
-            # Convolution Layer
-            conv1 = conv2d(self.state_in.velocity.staggered, kernel1, bias1)
-            conv2 = conv2d(conv1, kernel2, bias2)
+            # # Convolution Layer
+            # conv1 = conv2d(self.state_in.velocity.staggered, kernel1, bias1)
+            # conv2 = conv2d(conv1, kernel2, bias2)
 
-            # conv2 shape: [1,33,41,64]
+            # # conv2 shape: [1,33,41,64]
 
-            fc1 = tf.reshape(conv2, [1, 33*41*64])
-            fc1 = tf.add(tf.matmul(fc1, kernel3), bias3)
-            #fc1 = tf.nn.relu(fc1)
+            # fc1 = tf.reshape(conv2, [1, 33*41*64])
+            # fc1 = tf.add(tf.matmul(fc1, kernel3), bias3)
+            # fc1 = tf.nn.relu(fc1)
 
-            out = tf.add(tf.matmul(fc1, kernel4), bias4)
-            out = tf.reshape(out, [1,33,41,2])
+            # out = tf.add(tf.matmul(fc1, kernel4), bias4)
+            # out = tf.reshape(out, [1,33,41,2])
 
-            self.forces = StaggeredGrid(out)
+            # self.forces = StaggeredGrid(out)
 
             
         self.state_in.trained_forces = self.forces
