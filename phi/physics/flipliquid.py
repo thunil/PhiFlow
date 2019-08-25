@@ -72,7 +72,7 @@ class FlipLiquidPhysics(Physics):
 
 
     def apply_field_forces(self, state, velocity, dt):
-        forces = dt * (state.gravity + state.trained_forces)
+        forces = dt * (state.gravity + state.trained_forces.staggered)
         return velocity + forces
 
     
@@ -154,7 +154,7 @@ class FlipLiquid(State):
             self._gravity = np.array(gravity)
 
         # When you want to train a force, you need to overwrite this value with a tf.Variable that is trainable. This initialization is only a dummy value.
-        self.trained_forces = zeros(self.grid.staggered_shape().staggered)
+        self.trained_forces = zeros(self.grid.staggered_shape())
 
     def default_physics(self):
         return FLIPLIQUID
@@ -196,7 +196,7 @@ class FlipLiquid(State):
         return self._gravity
 
     @property
-    def last_pressure(self):
+    def pressure(self):
         return self._last_pressure
 
     @property

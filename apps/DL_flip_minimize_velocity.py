@@ -4,7 +4,7 @@ from phi.math.sampled import *
 class ParticleBasedLiquid(TFModel):
 
     def __init__(self):
-        TFModel.__init__(self, "Particle-based Liquid DL", stride=3, learning_rate=1e-1)
+        TFModel.__init__(self, "Particle-based Liquid DL: minimize liquid velocity", stride=3, learning_rate=1e-1)
 
         size = [32, 40]
         domain = Domain(size, SLIPPERY)
@@ -23,8 +23,7 @@ class ParticleBasedLiquid(TFModel):
 
         # Forces to be trained are directly added onto velocity, therefore should have same shape.
         with self.model_scope():
-            self.forces = tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True)
-        self.reset_forces = self.forces.assign(tf.zeros(domain.grid.staggered_shape().staggered))
+            self.forces = StaggeredGrid(tf.Variable(tf.zeros(domain.grid.staggered_shape().staggered), name="TrainedForces", trainable=True))
 
         # Set up the Tensorflow state and step
         # We do this manually because we need to add the trained forces
@@ -67,14 +66,13 @@ class ParticleBasedLiquid(TFModel):
 
 
     def action_reset(self):
-        # self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
-        # self.liquid.velocity = zeros_like(self.liquid.points) + self.initial_velocity
-        # self.sess.run(self.reset_forces)
-        # self.time = 0
+        self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
+        self.liquid.velocity = zeros_like(self.liquid.points) + self.initial_velocity
+        self.time = 0
 
         #Temporary: Make this button do a step using the pretrained forces
-        self.liquid.trained_forces = self.sess.run(self.forces)
-        world.step(dt=self.dt)
+        #self.liquid.trained_forces = self.sess.run(self.forces)
+        #world.step(dt=self.dt)
 
 
 app = ParticleBasedLiquid().show(production=__name__ != "__main__", framerate=3, display=("Density", "Trained Forces"))

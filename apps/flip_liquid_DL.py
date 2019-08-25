@@ -66,7 +66,7 @@ class ParticleBasedLiquid(TFModel):
         self.state_in = placeholder_like(self.liquid.state, particles=True)
 
         with self.model_scope():
-            self.forces = forcenet2d_3x_16(tf.constant(self.liquid.density_field)).staggered
+            self.forces = forcenet2d_3x_16(tf.constant(self.liquid.density_field))
 
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
