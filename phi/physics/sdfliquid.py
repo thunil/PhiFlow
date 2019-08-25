@@ -149,7 +149,7 @@ class SDFLiquid(State):
             gravity = [gravity] + ([0] * (state_domain.rank - 1))
             self._gravity = np.array(gravity)
 
-        self.trained_forces = math.zeros_like(self._velocity.staggered)
+        self.trained_forces = zeros(self.grid.staggered_shape())
 
     def default_physics(self):
         return SDFLIQUID
