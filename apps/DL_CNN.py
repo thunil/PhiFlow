@@ -101,18 +101,10 @@ class SDFBasedLiquid(TFModel):
                 'out': tf.Variable(tf.zeros([33*41*2]))
             }
 
-            conv1 = tf.layers.conv2d(self.state_in.velocity.staggered, 32, 5, padding='same')
-            #conv1 = tf.layers.max_pooling2d(conv1, ksize=2, strides=1, padding='same')
+            out = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
+            out = tf.reshape(out, [1,33,41,2])
 
-            conv2 = tf.layers.conv2d(conv1, 2, 5, padding='same')
-            #conv2 = tf.layers.max_pooling2d(conv2, ksize=2, strides=1, padding='same')
-
-            #out = tf.layers.dense(conv2, units=2, activation=tf.nn.relu)
-
-            # out = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
-            # out = tf.reshape(out, [1,33,41,2])
-
-            self.forces = StaggeredGrid(conv2)
+            self.forces = StaggeredGrid(out)
 
             
         self.state_in.trained_forces = self.forces

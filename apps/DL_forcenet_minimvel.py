@@ -7,53 +7,48 @@ batch_size = 1
 display_step = 10
 
 # Network Parameters
-size = [32,40]
+
 dropout = 0.75 # Dropout, probability to keep units
 keep_prob = tf.constant(dropout) # dropout (keep probability)
 
-
-# Create some wrappers for simplicity
-def conv2d(x, W, b, strides=1):
-    # Conv2D wrapper, with bias and relu activation
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
-    x = tf.nn.bias_add(x, b)
-    return tf.nn.relu(x)
+from phi.tf.util import residual_block
+import inspect, os
 
 
-def maxpool2d(x, k=2):
-    # MaxPool2D wrapper
-    return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
-                          padding='SAME')
+def forcenet2d_3x_16(initial_density, initial_velocity, target_velocity, training=False, trainable=True, reuse=tf.AUTO_REUSE):
+    with tf.variable_scope("ForceNet"):
+        y = tf.concat([initial_velocity.staggered[:, :-1, :-1, :], initial_density, target_velocity.staggered[:, :-1, :-1, :]], axis=-1)
+        downres_steps = 3
+        downres_padding = sum([2 ** i for i in range(downres_steps)])
+        y = tf.pad(y, [[0, 0], [0, downres_padding], [0, downres_padding], [0, 0]])
+        resolutions = [ y ]
+        filter_count = 16
+        res_block_count = 2
+        for i in range(downres_steps): # 1/2, 1/4
+            y = tf.layers.conv2d(resolutions[0], filter_count, 2, strides=2, activation=tf.nn.relu, padding="valid", name="downconv_%d"%i, trainable=trainable, reuse=reuse)
+            for j, nb_channels in enumerate([filter_count] * res_block_count):
+                y = residual_block(y, nb_channels, name="downrb_%d_%d" % (i,j), training=training, trainable=trainable, reuse=reuse)
+            resolutions.insert(0, y)
 
+        for j, nb_channels in enumerate([filter_count] * res_block_count):
+            y = residual_block(y, nb_channels, name="centerrb_%d" % j, training=training, trainable=trainable, reuse=reuse)
 
-# Create model
-def conv_net(x, weights, biases, dropout):
-    # MNIST data input is a 1-D vector of 784 features (28*28 pixels)
-    # Reshape to match picture format [Height x Width x Channel]
-    # Tensor input become 4-D: [Batch Size, Height, Width, Channel]
-    #x = tf.reshape(x, shape=[-1, size[0]+1, size[1]+1, 2])
-
-    # Convolution Layer
-    conv1 = conv2d(x, weights['wc1'], biases['bc1'])
-    # Max Pooling (down-sampling)
-    conv1 = maxpool2d(conv1, k=2)
-
-    # Convolution Layer
-    conv2 = conv2d(conv1, weights['wc2'], biases['bc2'])
-    # Max Pooling (down-sampling)
-    conv2 = maxpool2d(conv2, k=2)
-
-    # Fully connected layer
-    # Reshape conv2 output to fit fully connected layer input
-    fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
-    fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
-    fc1 = tf.nn.relu(fc1)
-    # Apply Dropout
-    fc1 = tf.nn.dropout(fc1, rate=1-dropout)
-
-    # Output, class prediction
-    out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
-    return out
+        for i in range(1, len(resolutions)):
+            y = upsample2x(y)
+            res_in = resolutions[i][:, 0:y.shape[1], 0:y.shape[2], :]
+            y = tf.concat([y, res_in], axis=-1)
+            if i < len(resolutions)-1:
+                y = tf.pad(y, [[0, 0], [0, 1], [0, 1], [0, 0]], mode="SYMMETRIC")
+                y = tf.layers.conv2d(y, filter_count, 2, 1, activation=tf.nn.relu, padding="valid", name="upconv_%d" % i, trainable=trainable, reuse=reuse)
+                for j, nb_channels in enumerate([filter_count] * res_block_count):
+                    y = residual_block(y, nb_channels, 2, name="uprb_%d_%d" % (i, j), training=training, trainable=trainable, reuse=reuse)
+            else:
+                # Last iteration
+                y = tf.pad(y, [[0,0], [1,1], [1,1], [0,0]], mode="SYMMETRIC")
+                y = tf.layers.conv2d(y, 2, 2, 1, activation=None, padding="valid", name="upconv_%d"%i, trainable=trainable, reuse=reuse)
+    force = StaggeredGrid(y)
+    path = os.path.join(os.path.dirname(inspect.getabsfile(forcenet2d_3x_16)), "forcenet2d_3x_16")
+    return force, path
 
 
 
@@ -62,6 +57,7 @@ class SDFBasedLiquid(TFModel):
     def __init__(self):
         TFModel.__init__(self, "Signed Distance based Liquid", stride=3, learning_rate=1e-1)
 
+        size = [32,40]
         domain = Domain(size, SLIPPERY)
 
         self.distance = 40
@@ -76,45 +72,15 @@ class SDFBasedLiquid(TFModel):
         self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density_data, velocity=self.initial_velocity_data, gravity=-5.0, distance=self.distance)
         #world.Inflow(Sphere((70,32), 8), rate=0.2)
 
+
         self.sess = Session(Scene.create('liquid'))
 
         # Construct model
         self.state_in = placeholder_like(self.liquid.state) # Forces based on input SDF
 
         with self.model_scope():
-            # Store layers weight & bias
-            weights = {
-                # 5x5 conv, 1 input, 32 outputs
-                'wc1': tf.Variable(tf.zeros([5, 5, 2, 32])),
-                # 5x5 conv, 32 inputs, 64 outputs
-                'wc2': tf.Variable(tf.zeros([5, 5, 32, 64])),
-                # fully connected, 7*7*64 inputs, 1024 outputs
-                'wd1': tf.Variable(tf.zeros([9*11*1*64, 1024])),
-                # 1024 inputs, 10 outputs (class prediction)
-                'out': tf.Variable(tf.zeros([1024, 33*41*2]))
-            }
+            self.forces, _ = forcenet2d_3x_16(self.state_in.sdf, self.state_in.velocity, zeros_like(self.state_in.velocity))
 
-            biases = {
-                'bc1': tf.Variable(tf.zeros([32])),
-                'bc2': tf.Variable(tf.zeros([64])),
-                'bd1': tf.Variable(tf.zeros([1024])),
-                'out': tf.Variable(tf.zeros([33*41*2]))
-            }
-
-            conv1 = tf.layers.conv2d(self.state_in.velocity.staggered, 32, 5, padding='same')
-            #conv1 = tf.layers.max_pooling2d(conv1, ksize=2, strides=1, padding='same')
-
-            conv2 = tf.layers.conv2d(conv1, 2, 5, padding='same')
-            #conv2 = tf.layers.max_pooling2d(conv2, ksize=2, strides=1, padding='same')
-
-            #out = tf.layers.dense(conv2, units=2, activation=tf.nn.relu)
-
-            # out = conv_net(self.state_in.velocity.staggered, weights, biases, keep_prob)
-            # out = tf.reshape(out, [1,33,41,2])
-
-            self.forces = StaggeredGrid(conv2)
-
-            
         self.state_in.trained_forces = self.forces
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
         
@@ -127,15 +93,15 @@ class SDFBasedLiquid(TFModel):
 
 
         self.force_weight = self.editable_float('Force_Weight', 1.0)
-        self.loss = l2_loss(self.state_out.sdf - self.target_state_sdf) + self.force_weight * l2_loss(self.forces)
-        #self.loss = l2_loss(self.state_out.velocity.staggered)
+        #self.loss = l2_loss(self.state_out.sdf - self.target_state_sdf) + self.force_weight * l2_loss(self.forces)
+        self.loss = l2_loss(self.state_out.velocity.staggered)
         self.add_objective(self.loss, "Unsupervised_Loss")
 
         # Two thresholds for the world_step
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
-        self.add_field("Trained Forces", lambda: self.sess.run(self.forces.staggered, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered}))
+        self.add_field("Trained Forces", lambda: self.sess.run(self.forces, feed_dict={self.state_in.sdf: self.liquid.state.sdf, self.state_in.velocity.staggered: self.liquid.state.velocity.staggered}))
         self.add_field("State in SDF", lambda: self.sess.run(self.state_in.sdf, self.base_feed_dict))
         self.add_field("State out SDF", lambda: self.sess.run(self.state_out.sdf, self.base_feed_dict))
         
