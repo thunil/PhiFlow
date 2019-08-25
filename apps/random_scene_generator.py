@@ -2,19 +2,23 @@ from phi.tf.flow import *
 from phi.math.sampled import *
 
 
-def insert_circle(field, center, radius):
+def insert_circle(field, centers, radii):
     """
 Field should be a density/active mask field with shape [batch, coordinate_dimensions, 1]
-Center should be given in index format (highest dimension first) and values should be integers that index into the field. 
+Centers should be given in index format (highest dimension first) and values should be integers that index into the field. Can be a list of coordinates.
+Radii can be a single value if it is the same for all centers, otherwise specify a radius for every center value in the list of centers.
     """
     assert field.shape[-1] == 1
-    # TODO: Add support for center and radius to be arrays, so multiple circles can be drawn in one iteration.
+
     indices = indices_tensor(field).astype(int)
     indices = math.reshape(indices, [indices.shape[0], -1, indices.shape[-1]])[0]
 
+    # Both index and centers need to be np arrays (or TF tensors?) in order for the subtraction to work properly
+    centers = np.array(centers)
+
     # Loop through entire field and mark the cells that are in the circle
     for index in indices:
-        if math.sum((index - center)**2) <= radius**2:
+        if (math.sum((index - centers)**2, axis=-1) <= radii**2).any():
             field_index = [slice(None)] + math.unstack(index) + [0]
             field[field_index] = 1
 
@@ -36,7 +40,8 @@ class RandomLiquid(TFModel):
         # self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
         # self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
 
-        self.initial_density = insert_circle(self.initial_density, [20, 20], 4.0)
+        centers = [[20, 10], [20, 30]]
+        self.initial_density = insert_circle(self.initial_density, centers, 4.0)
 
 
         self.sess = Session(Scene.create('liquid'))
