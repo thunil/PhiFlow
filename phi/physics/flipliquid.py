@@ -176,6 +176,14 @@ class FlipLiquid(State):
         return grid(self.grid, self.points, self.velocity, staggered=True)
 
     @property
+    def _velocity(self):
+        return self.velocity_field
+    
+    @_velocity.setter
+    def _velocity(self, value):
+        self.velocity = zeros_like(self.points) + value
+
+    @property
     def active_mask(self):
         return self._active_mask
 

@@ -102,7 +102,7 @@ class RandomLiquid(TFModel):
             self.particles_per_cell = 4
             self.initial_velocity = np.random.uniform(-min(self.size)/4, min(self.size)/4, size=len(self.size))
             
-            self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
+            self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=0.0, gravity=0.0, particles_per_cell=self.particles_per_cell)
 
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Density", lambda: self.liquid.density_field)
@@ -114,7 +114,7 @@ class RandomLiquid(TFModel):
             # SDF simulation
             self.distance = max(self.size)
 
-            self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity, distance=self.distance)
+            self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=zeros(domain.grid.staggered_shape()), gravity=0.0, distance=self.distance)
 
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Signed Distance Field", lambda: self.liquid.sdf)
@@ -139,7 +139,13 @@ class RandomLiquid(TFModel):
 
         # Target state being random number of steps in the future of initial
         state = self.liquid.state
-        self.target_steps = np.random.randint(1, 50)
+
+        # Set the gravity and velocities during the steps
+        state._gravity = self.gravity
+        state._velocity = self.initial_velocity
+
+        self.target_steps = np.random.randint(1, 20)
+        print("Target steps:" + str(self.target_steps)) 
         for _ in range(self.target_steps):
             state = self.liquid.default_physics().step(state, dt=self.dt)
 
@@ -153,6 +159,9 @@ class RandomLiquid(TFModel):
 
         else:
             # SDF simulation
+            self.target_active = state.active_mask
+            self.add_field("Target Active Mask", lambda: self.target_active)
+
             self.target_data = state.sdf
             self.target = placeholder_like(self.target_data)
 
@@ -165,7 +174,6 @@ class RandomLiquid(TFModel):
 
 
     def step(self):
-        print("Target steps:" + str(self.target_steps)) 
         if self.flip:
             print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
 
@@ -179,7 +187,7 @@ class RandomLiquid(TFModel):
             self.state_in.active_mask: self.liquid.active_mask,self.state_in.velocity: self.liquid.velocity,
             self.target: self.target_data
             })
-            
+
         TFModel.step(self)
         self.current_loss = self.sess.run(self.loss, self.base_feed_dict)
 
@@ -219,7 +227,13 @@ class RandomLiquid(TFModel):
 
         # Target state being random number of steps in the future of initial
         state = self.liquid.state
-        self.target_steps = np.random.randint(1, 50)
+
+        # Set the gravity and velocities during the steps
+        state._gravity = self.gravity
+        state._velocity = self.initial_velocity
+
+        self.target_steps = np.random.randint(1, 20)
+        print("Target steps:" + str(self.target_steps)) 
         for i in range(self.target_steps):
             state = self.liquid.default_physics().step(state, dt=self.dt)
         
@@ -227,6 +241,7 @@ class RandomLiquid(TFModel):
             self.target_data = state.density_field
         else:
             self.target_data = state.sdf
+            self.target_active = state.active_mask
 
         self.time = 0
 
