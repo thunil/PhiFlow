@@ -36,16 +36,20 @@ Values should specify the vector that goes into the entry of the corresponding c
     return field
 
 
+#world.batch_size = 4
+
 
 class RandomLiquid(TFModel):
 
     def __init__(self):
-        TFModel.__init__(self, "Random Liquid simulation generator", stride=3, learning_rate=1e-3)
+        TFModel.__init__(self, "Random Liquid simulation generator", stride=1, learning_rate=1e-3)
 
         self.size = [32, 40]
         domain = Domain(self.size, SLIPPERY)
         self.dt = 0.1
         self.gravity = -4.0
+
+        self.record_steps = 16
 
         self.initial_density = zeros(domain.grid.shape())
         # Initial velocity different for FLIP, so set it separately over there
@@ -73,6 +77,8 @@ class RandomLiquid(TFModel):
             self.state_in = placeholder_like(self.liquid.state, particles=True)
             self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
+            self.scene.write_sim_frame([self.liquid.points], ['target_points'], frame=self.steps)
+
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Density", lambda: self.liquid.density_field)
             self.add_field("Points", lambda: grid(self.liquid.grid, self.liquid.points, self.liquid.points))
@@ -88,6 +94,8 @@ class RandomLiquid(TFModel):
             self.state_in = placeholder_like(self.liquid.state)
             self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
+            self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=self.steps)
+
 
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Signed Distance Field", lambda: self.liquid.sdf)
@@ -98,7 +106,33 @@ class RandomLiquid(TFModel):
     def step(self):
         if self.flip:
             print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
-        world.step(dt=self.dt)
+
+            if self.steps >= self.record_steps:
+                self.scene.write_sim_frame([self.liquid.points, self.liquid.velocity], ['initial_points', 'initial_velocity'], frame=self.steps)
+
+                self.new_scene()
+                self.steps = 0
+                self.action_reset()
+                self.info('Starting data generation in scene %s' % self.scene)
+                self.record_steps = np.random.randint(2, 40)
+
+                self.scene.write_sim_frame([self.liquid.points], ['target_points'], frame=self.steps)
+            else:
+                world.step(dt=self.dt)
+
+        else:
+            if self.steps >= self.record_steps:
+                self.scene.write_sim_frame([self.liquid.sdf, self.liquid.velocity], ['initial_sdf', 'initial_velocity'], frame=self.steps)
+
+                self.new_scene()
+                self.steps = 0
+                self.action_reset()
+                self.info('Starting data generation in scene %s' % self.scene)
+                self.record_steps = np.random.randint(2, 20)
+
+                self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=self.steps)
+            else:
+                world.step(dt=self.dt)
 
 
     def action_reset(self):
