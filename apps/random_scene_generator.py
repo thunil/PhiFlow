@@ -42,7 +42,13 @@ Values should specify the vector that goes into the entry of the corresponding c
 class RandomLiquid(TFModel):
 
     def __init__(self):
-        TFModel.__init__(self, "Random Liquid simulation generator", stride=1, learning_rate=1e-3)
+        # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
+        self.flip = True
+        
+        if self.flip:
+            TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)
+        else:
+            TFModel.__init__(self, "SDF datagen", stride=1, learning_rate=1e-3)
 
         self.size = [32, 40]
         domain = Domain(self.size, SLIPPERY)
@@ -65,8 +71,6 @@ class RandomLiquid(TFModel):
 
 
         self.sess = Session(Scene.create('liquid'))
-        # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = True
         if self.flip:
             # FLIP simulation
             self.particles_per_cell = 4
@@ -77,7 +81,7 @@ class RandomLiquid(TFModel):
             self.state_in = placeholder_like(self.liquid.state, particles=True)
             self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
-            self.scene.write_sim_frame([self.liquid.points], ['target_points'], frame=self.steps)
+            self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
 
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Density", lambda: self.liquid.density_field)
@@ -94,8 +98,7 @@ class RandomLiquid(TFModel):
             self.state_in = placeholder_like(self.liquid.state)
             self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
-            self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=self.steps)
-
+            self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
 
             self.add_field("Fluid", lambda: self.liquid.active_mask)
             self.add_field("Signed Distance Field", lambda: self.liquid.sdf)
@@ -104,11 +107,12 @@ class RandomLiquid(TFModel):
 
 
     def step(self):
+        # TODO: record_steps doesn't quite work with "Run Sequence" button of Dash GUI
         if self.flip:
             print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
 
             if self.steps >= self.record_steps:
-                self.scene.write_sim_frame([self.liquid.points, self.liquid.velocity], ['initial_points', 'initial_velocity'], frame=self.steps)
+                self.scene.write_sim_frame([self.liquid.density_field, self.liquid.velocity_field], ['initial_density', 'initial_velocity'], frame=1)
 
                 self.new_scene()
                 self.steps = 0
@@ -116,13 +120,13 @@ class RandomLiquid(TFModel):
                 self.info('Starting data generation in scene %s' % self.scene)
                 self.record_steps = np.random.randint(2, 40)
 
-                self.scene.write_sim_frame([self.liquid.points], ['target_points'], frame=self.steps)
+                self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
             else:
                 world.step(dt=self.dt)
 
         else:
             if self.steps >= self.record_steps:
-                self.scene.write_sim_frame([self.liquid.sdf, self.liquid.velocity], ['initial_sdf', 'initial_velocity'], frame=self.steps)
+                self.scene.write_sim_frame([self.liquid.sdf, self.liquid.velocity], ['initial_sdf', 'initial_velocity'], frame=1)
 
                 self.new_scene()
                 self.steps = 0
@@ -130,7 +134,7 @@ class RandomLiquid(TFModel):
                 self.info('Starting data generation in scene %s' % self.scene)
                 self.record_steps = np.random.randint(2, 20)
 
-                self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=self.steps)
+                self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
             else:
                 world.step(dt=self.dt)
 
