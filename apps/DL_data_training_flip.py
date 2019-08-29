@@ -51,20 +51,25 @@ class LiquidNetworkTraining(TFModel):
         self.dt = 0.1
         self.gravity = -0.0
 
+        self.initial_density = placeholder(domain.grid.shape())
+        self.initial_velocity = placeholder(domain.grid.staggered_shape())
+
+        particle_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
+        particle_velocity = grid_to_particles(domain.grid, particle_points, self.initial_velocity, staggered=True)
+
         # Initialization doesn't matter, training data is fed later
         # Question: Do we want gravity at all.
-        self.liquid = world.FlipLiquid(state_domain=domain, density=0.0, velocity=0.0, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=particle_velocity, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
 
         # Train Neural Network to find forces
         self.sess = Session(Scene.create('liquid'))
 
-        self.target_density = placeholder_like(self.liquid.density_field)
-        self.state_in = placeholder_like(self.liquid.state, particles=True)
+        self.target_density = placeholder(domain.grid.shape())
 
-        self.forces = forcenet2d_3x_16(self.state_in.density_field, self.state_in.velocity_field, self.target_density)
-        self.state_in.trained_forces = self.forces
+        self.forces = forcenet2d_3x_16(self.initial_density, self.initial_velocity, self.target_density)
+        self.liquid.trained_forces = self.forces
 
-        self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
+        self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
 
         # Two thresholds for the world_step and editable float force_weight
         self.force_weight = self.editable_float('Force_Weight', 1.0, (1e-5, 1e3))
@@ -77,7 +82,7 @@ class LiquidNetworkTraining(TFModel):
         self.add_objective(self.loss, "Unsupervised_Loss")
 
         self.add_field("Trained Forces", lambda: self.sess.run(self.forces))
-        self.add_field("Target", lambda: self.target_data)
+        self.add_field("Target", lambda: self.sess.run(self.target_density))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)
@@ -86,9 +91,9 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Pressure", lambda: self.liquid.pressure)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/flip-datagen', range(10,30)), 
+            train = Dataset.load('~/phi/model/flip-datagen', range(10,20)), 
             val = Dataset.load('~/phi/model/flip-datagen', range(10)), 
-            placeholders = {'initial_points': self.state_in.points, 'initial_velocity': self.state_in.velocity, 'target_density': self.target_density}
+            placeholders = {'initial_density': self.initial_density, 'initial_velocity_staggered': self.initial_velocity.staggered, 'target_density': self.target_density}
             )
 
 

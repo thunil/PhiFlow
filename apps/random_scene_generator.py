@@ -112,7 +112,7 @@ class RandomLiquid(TFModel):
             print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
 
             if self.steps >= self.record_steps:
-                self.scene.write_sim_frame([self.liquid.density_field, self.liquid.velocity_field], ['initial_density', 'initial_velocity'], frame=1)
+                self.scene.write_sim_frame([self.liquid.density_field, self.liquid.velocity_field.staggered], ['initial_density', 'initial_velocity_staggered'], frame=1)
 
                 self.new_scene()
                 self.steps = 0
@@ -126,7 +126,7 @@ class RandomLiquid(TFModel):
 
         else:
             if self.steps >= self.record_steps:
-                self.scene.write_sim_frame([self.liquid.sdf, self.liquid.velocity], ['initial_sdf', 'initial_velocity'], frame=1)
+                self.scene.write_sim_frame([self.liquid.sdf, self.liquid.velocity.staggered], ['initial_sdf', 'initial_velocity_staggered'], frame=1)
 
                 self.new_scene()
                 self.steps = 0
