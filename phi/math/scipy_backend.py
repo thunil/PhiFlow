@@ -201,9 +201,10 @@ class SciPyBackend(Backend):
         return np.expand_dims(a, axis)
 
     def shape(self, tensor):
-        if isinstance(tensor, Number):
-            return ()
-        return tensor.shape
+        return np.shape(tensor)
+
+    def staticshape(self, tensor):
+        return np.shape(tensor)
 
     def to_float(self, x, float64=False):
         return np.array(x).astype(np.float64 if float64 else np.float32)

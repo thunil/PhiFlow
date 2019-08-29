@@ -113,6 +113,9 @@ class Backend:
     def shape(self, tensor):
         raise NotImplementedError()
 
+    def staticshape(self, tensor):
+        raise NotImplementedError()
+
     def to_float(self, x):
         raise NotImplementedError()
 
@@ -292,6 +295,9 @@ class DynamicBackend(Backend):
     def to_float(self, x, float64=False):
         return self.choose_backend(x).to_float(x, float64=float64)
 
+    def staticshape(self, tensor):
+        return self.choose_backend(tensor).staticshape(tensor)
+
     def to_int(self, x, int64=False):
         return self.choose_backend(x).to_int(x, int64=int64)
 
@@ -370,6 +376,7 @@ scatter = backend.scatter
 shape = backend.shape
 sqrt = backend.sqrt
 stack = backend.stack
+staticshape = backend.staticshape
 std = backend.std
 sum = backend.sum
 prod = backend.prod

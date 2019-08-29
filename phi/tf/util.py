@@ -3,6 +3,7 @@ import tensorflow as tf
 from phi.math.nd import *
 from tensorflow.python import pywrap_tensorflow
 from phi.math.initializers import _is_python_shape
+import warnings
 
 
 def _tf_name(attr, basename):
@@ -27,6 +28,7 @@ def placeholder_like(obj, dtype=np.float32, basename=None, particles=False):
         ), _tf_name(attr, basename))
     return struct.map(f, obj, leaf_condition=_is_python_shape, trace=True)
 
+
 def variable(initializer, dtype=np.float32, basename=None, trainable=True):
     def create_variable(shape):
         initial_value = initializer(shape)
@@ -34,6 +36,9 @@ def variable(initializer, dtype=np.float32, basename=None, trainable=True):
         return struct.map(f, initial_value, leaf_condition=_is_python_shape, trace=True)
     return create_variable
 
+
+def isplaceholder(obj):
+    return isinstance(obj, tf.Tensor) and obj.op.type == 'Placeholder'
 
 
 def group_normalization(x, group_count, eps=1e-5):

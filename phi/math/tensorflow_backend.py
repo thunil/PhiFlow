@@ -168,7 +168,7 @@ class TFBackend(Backend):
         rank = tensor_spatial_rank(tensor)
         padding = padding.upper()
         if rank == 1:
-            result = tf.nn.conv1d(tensor, kernel, [1, 1, 1], padding)
+            result = tf.nn.conv1d(tensor, kernel, 1, padding)
         elif rank == 2:
             result = tf.nn.conv2d(tensor, kernel, [1, 1, 1, 1], padding)
         elif rank == 3:
@@ -185,6 +185,9 @@ class TFBackend(Backend):
 
     def to_float(self, x, float64=False):
         return tf.cast(x, tf.float64) if float64 else tf.cast(x, tf.float32)
+
+    def staticshape(self, tensor):
+        return tuple(tensor.shape.as_list())
 
     def to_int(self, x, int64=False):
         return tf.cast(x, tf.int64) if int64 else tf.cast(x, tf.int32)

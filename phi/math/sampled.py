@@ -1,5 +1,7 @@
 from phi import math
 from phi.math.nd import *
+from phi.math.geom import *
+import numpy as np
 
 
 def grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
