@@ -79,6 +79,8 @@ class TFModel(FieldSequenceModel):
         self.set_data(None, None)
         self.base_feed_dict = {}
 
+        self.current_batch = None
+
     def prepare(self):
         scalars = [tf.summary.scalar(self.scalar_names[i], self.scalars[i]) for i in range(len(self.scalars))]
         self.merged_scalars = tf.summary.merge(scalars)
@@ -156,26 +158,30 @@ class TFModel(FieldSequenceModel):
             self.validation_step(create_checkpoint=True)
         return self
 
-    def optimization_step(self, optim_nodes, log_loss=False):
+    def optimization_step(self, optim_nodes, log_loss=True):
         if isinstance(optim_nodes, Iterable):
             optim_nodes = list(optim_nodes)
         else:
             optim_nodes = [optim_nodes]
         batch = next(self._train_iterator) if self._train_iterator is not None else None
+        self.current_batch = batch
         scalar_values = self.session.run(optim_nodes + self.scalars, self._feed_dict(batch, True),
                                          summary_key='train', merged_summary=self.merged_scalars, time=self.steps)[1:]
         if log_loss:
             self.info('Optimization: ' + ', '.join([self.scalar_names[i]+': '+str(scalar_values[i]) for i in range(len(self.scalars))]))
 
-    def validation_step(self, create_checkpoint=False):
+    def validation_step(self, create_checkpoint=False, log_loss=True):
         if self._val_reader is None:
             return
         batch = self._val_reader[0:self.validation_batch_size]
-        self.session.run(self.scalars, self._feed_dict(batch, False),
+        scalar_values = self.session.run(self.scalars, self._feed_dict(batch, False),
                          summary_key='val', merged_summary=self.merged_scalars, time=self.steps)
         if create_checkpoint:
             self.save_model()
         self.info('Validation Done.')
+
+        if log_loss:
+            self.info('Validation: ' + ', '.join([self.scalar_names[i]+': '+str(scalar_values[i]) for i in range(len(self.scalars))]))
 
     def _feed_dict(self, batch, training):
         feed_dict = self.base_feed_dict
@@ -200,7 +206,8 @@ class TFModel(FieldSequenceModel):
         if tasks is None:
             return None
         reader = self.view_reader
-        batch = reader[0:self.validation_batch_size] if reader is not None else None
+        #batch = reader[0:self.validation_batch_size] if reader is not None else None
+        batch = self.current_batch if self.current_batch is not None else reader[0:self.validation_batch_size] if reader is not None else None
         return self.session.run(tasks, self._feed_dict(batch, False))
 
     @property
