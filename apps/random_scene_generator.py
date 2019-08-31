@@ -43,7 +43,7 @@ class RandomLiquid(TFModel):
 
     def __init__(self):
         # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = True
+        self.flip = False
         
         if self.flip:
             TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)
@@ -55,7 +55,7 @@ class RandomLiquid(TFModel):
         self.dt = 0.1
         self.gravity = -4.0
 
-        self.record_steps = 16
+        self.record_steps = 12
 
         self.initial_density = zeros(domain.grid.shape())
         # Initial velocity different for FLIP, so set it separately over there
@@ -118,7 +118,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(2, 40)
+                #self.record_steps = np.random.randint(2, 40)
 
                 self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
             else:
@@ -132,7 +132,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(2, 20)
+                #self.record_steps = np.random.randint(2, 20)
 
                 self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
             else:

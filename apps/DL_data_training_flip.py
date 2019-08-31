@@ -44,14 +44,14 @@ class LiquidNetworkTraining(TFModel):
     def __init__(self):
         TFModel.__init__(self, "Network Training for pre-generated FLIP Liquid simulation data", stride=1, learning_rate=1e-3, validation_batch_size=1)
 
-        self.size = [32, 40]
+        self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
         self.particles_per_cell = 4
         self.dt = 0.1
         self.gravity = -0.0
 
-        self.initial_density = placeholder(domain.grid.shape())
-        self.initial_velocity = placeholder(domain.grid.staggered_shape())
+        self.initial_density = placeholder(np.concatenate(([None], self.size, [1])))
+        self.initial_velocity = StaggeredGrid(placeholder(np.concatenate(([None], self.size+1, [len(self.size)]))))
 
         particle_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
         particle_velocity = grid_to_particles(domain.grid, particle_points, self.initial_velocity, staggered=True)
@@ -61,8 +61,6 @@ class LiquidNetworkTraining(TFModel):
         self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=particle_velocity, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
 
         # Train Neural Network to find forces
-        self.sess = Session(Scene.create('liquid'))
-
         self.target_density = placeholder(domain.grid.shape())
 
         with self.model_scope():
@@ -95,27 +93,6 @@ class LiquidNetworkTraining(TFModel):
             placeholders = (self.initial_density, self.initial_velocity.staggered, self.target_density),
             channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
             )
-
-
-    # def step(self):
-    #     self.base_feed_dict.update({self.state_in.points: self.liquid.points})
-
-    #     # Run optimization step
-    #     self.base_feed_dict.update({
-    #         self.state_in.active_mask: self.liquid.active_mask,self.state_in.velocity: self.liquid.velocity,
-    #         self.target: self.target_data
-    #         })
-
-    #     TFModel.step(self)
-    #     self.current_loss = self.sess.run(self.loss, self.base_feed_dict)
-
-    #     # Use trained forces to do a step when loss is small enough
-    #     if self.current_loss < self.loss_threshold or self.steps > self.step_threshold:
-    #         self.steps = 0
-    #         self.world_steps += 1
-    #         self.liquid.trained_forces = self.sess.run(self.forces)
-    #         world.step(dt=self.dt)
-
 
 
 app = LiquidNetworkTraining().show(production=__name__ != "__main__", framerate=3, display=("Trained Forces", "Target"))
