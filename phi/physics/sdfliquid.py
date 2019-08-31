@@ -83,13 +83,16 @@ class SDFLiquidPhysics(Physics):
 
         return sdf, velocity
 
-    def update_active_mask(self, sdf, inflows, domaincache):
+    def update_active_mask(self, sdf, effects, domaincache):
         # Find the active cells from the Signed Distance Field
         
         dx = 1.0    # In case dx is used later
         ones = math.ones_like(sdf)
         active_mask = math.where(sdf < 0.5*dx, ones, 0.0 * ones)
-        inflow_mask = create_binary_mask(inflow(inflows, domaincache.grid), threshold=0)
+        inflow_grid = math.zeros_like(active_mask)
+        for effect in effects:
+            inflow_grid = effect.apply_grid(inflow_grid, domaincache.grid, staggered=False, dt=dt)
+        inflow_mask = create_binary_mask(inflow_grid)
         # Logical OR between the masks
         active_mask = active_mask + inflow_mask - active_mask * inflow_mask
         # Set the new active mask in domaincache

@@ -44,7 +44,8 @@ class GridLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
         # step
-        inflow_density = dt * inflow(inflows, state.grid)
+        for effect in inflows:
+            inflow_density = effect.apply_grid(inflow_density, state.grid, staggered=False, dt=dt)
         density = state.density + inflow_density
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         active_mask = create_binary_mask(density, threshold=0.5)
@@ -206,13 +207,6 @@ def divergence_free(obj, domaincache, pressure_solver=None, state=None):
         state._last_pressure = pressure
         state._last_pressure_iterations = iter
     return velocity
-
-
-def inflow(inflows, grid):
-    if len(inflows) == 0:
-        return zeros(grid.shape())
-    location = grid.center_points()
-    return add([inflow.geometry.value_at(location) * inflow.rate for inflow in inflows])
 
 
 def stick(velocity, domaincache, dt):

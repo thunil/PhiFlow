@@ -26,7 +26,7 @@ class TFBackend(Backend):
         return len(value.shape)
 
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
-        return tf.cast(tf.range(start, limit, delta, dtype), tensor.dtype)
+        return tf.range(start, limit, delta, dtype)
 
     def tile(self, value, multiples):
         return tf.tile(value, multiples)

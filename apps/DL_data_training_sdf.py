@@ -50,13 +50,11 @@ class LiquidNetworkTraining(TFModel):
         self.dt = 0.1
         self.gravity = -0.0
 
-        #self.initial_density = placeholder(domain.grid.shape())
-        #self.initial_velocity = placeholder(domain.grid.staggered_shape())
-
-        self.initial_density = placeholder(np.concatenate(([None], self.size, [1])))
         self.initial_velocity = StaggeredGrid(placeholder(np.concatenate(([None], self.size+1, [len(self.size)]))))
 
-        self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity)
+        self.liquid = world.SDFLiquid(state_domain=domain, density=0.0, velocity=self.initial_velocity, gravity=self.gravity)
+
+        self.liquid.sdf = placeholder(np.concatenate(([None], self.size, [1])))
 
         # Train Neural Network to find forces
         self.target_sdf = placeholder_like(self.liquid.sdf)
@@ -68,7 +66,7 @@ class LiquidNetworkTraining(TFModel):
         self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
 
         # Two thresholds for the world_step and editable float force_weight
-        self.force_weight = self.editable_float('Force_Weight', 1.0, (1e-5, 1e3))
+        self.force_weight = self.editable_float('Force_Weight', 1e-3, (1e-5, 1e3))
         self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
         self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
@@ -80,17 +78,16 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Trained Forces", self.forces)
         self.add_field("Target", self.target_sdf)
 
-        self.add_field("Initial", self.initial_density)
-        self.add_field("Signed Distance Field", self.liquid.sdf)
+        self.add_field("Initial", self.liquid.sdf)
         self.add_field("Velocity",self.liquid.velocity.staggered)
 
         self.set_data(
             train = Dataset.load('~/phi/model/sdf-datagen', range(10,20)), 
             val = Dataset.load('~/phi/model/sdf-datagen', range(10)), 
-            placeholders = (self.initial_density, self.initial_velocity.staggered, self.target_sdf),
+            placeholders = (self.liquid.sdf, self.initial_velocity.staggered, self.target_sdf),
             channels = ('initial_sdf', 'initial_velocity_staggered', 'target_sdf')
             )
 
 
 
-app = LiquidNetworkTraining().show(production=__name__ != "__main__", framerate=3, display=("Fluid", "Velocity"))
+app = LiquidNetworkTraining().show(production=__name__ != "__main__", framerate=3, display=("Trained Forces", "Velocity"))

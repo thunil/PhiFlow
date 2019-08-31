@@ -44,9 +44,10 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
 
 
 def active_centers(array, particles_per_cell=1):
-    assert array.shape[-1] == 1
     index_array = []
-    for batch in range(array.shape[0]):
+    batch_size = math.staticshape(array)[0] if math.staticshape(array)[0] is not None else 1
+
+    for batch in range(batch_size):
         indices = math.where(array[batch,...,0] > 0)
         indices = math.to_float(indices)
 
@@ -64,10 +65,10 @@ def active_centers(array, particles_per_cell=1):
 
 
 def random_grid_to_coords(array, particles_per_cell=1):
-    assert array.shape[-1] == 1
     index_array = []
+    batch_size = math.staticshape(array)[0] if math.staticshape(array)[0] is not None else 1
     
-    for batch in range(array.shape[0]):
+    for batch in range(batch_size):
         indices = math.where(array[batch,...,0] > 0)
         indices = math.to_float(indices)
 

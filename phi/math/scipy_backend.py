@@ -32,7 +32,7 @@ class SciPyBackend(Backend):
         return len(value.shape)
 
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
-        return np.arange(start, limit, delta, dtype).astype(tensor.dtype)
+        return np.arange(start, limit, delta, dtype)
 
     def tile(self, value, multiples):
         return np.tile(value, multiples)
@@ -213,10 +213,13 @@ class SciPyBackend(Backend):
         return np.array(x).astype(np.int64 if int64 else np.int32)
 
     def gather(self, values, indices):
-        return values[indices]
+        # Reduce rank of input indices, by convention it should be [index] so gather works for Tensorflow
+        index, = indices
+        return values[index]
 
     def gather_nd(self, values, indices):
-        return values[indices]
+        index, = indices
+        return values[index]
 
     def unstack(self, tensor, axis=0):
         if axis < 0:

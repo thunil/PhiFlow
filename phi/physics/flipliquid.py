@@ -62,8 +62,10 @@ class FlipLiquidPhysics(Physics):
         return new_points
 
 
-    def add_inflow(self, state, inflows, dt):
-        inflow_density = dt * inflow(inflows, state.grid)
+    def add_inflow(self, state, effects, dt):
+        inflow_density = math.zeros_like(state.active_mask)
+        for effect in effects:
+            inflow_density = effect.apply_grid(inflow_density, state.grid, staggered=False, dt=dt)
         inflow_points = random_grid_to_coords(inflow_density, state.particles_per_cell)
         points = math.concat([state.points, inflow_points], axis=1)
         velocity = math.concat([state.velocity, 0.0 * (inflow_points)], axis=1)

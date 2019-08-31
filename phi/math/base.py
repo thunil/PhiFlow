@@ -302,10 +302,10 @@ class DynamicBackend(Backend):
         return self.choose_backend(x).to_int(x, int64=int64)
 
     def gather(self, values, indices):
-        return self.choose_backend([values, indices]).gather(values, indices)
+        return self.choose_backend([values]).gather(values, indices)
 
     def gather_nd(self, values, indices):
-        return self.choose_backend([values, indices]).gather_nd(values, indices)
+        return self.choose_backend([values]).gather_nd(values, indices)
 
     def unstack(self, tensor, axis=0):
         return self.choose_backend(tensor).unstack(tensor, axis)
