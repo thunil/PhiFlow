@@ -213,11 +213,10 @@ class SciPyBackend(Backend):
         return np.array(x).astype(np.int64 if int64 else np.int32)
 
     def gather(self, values, indices):
-        # Reduce rank of input indices, by convention it should be [index] so gather works for Tensorflow
-        index, = indices
-        return values[index]
+        return values[indices]
 
     def gather_nd(self, values, indices):
+        # Reduce rank of input indices, by convention it should be [index] so gather works for Tensorflow
         index, = indices
         return values[index]
 

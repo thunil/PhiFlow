@@ -44,9 +44,9 @@ class GridLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
         # step
+        density = state.density
         for effect in inflows:
-            inflow_density = effect.apply_grid(inflow_density, state.grid, staggered=False, dt=dt)
-        density = state.density + inflow_density
+            density = effect.apply_grid(density, state.grid, staggered=False, dt=dt)
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         active_mask = create_binary_mask(density, threshold=0.5)
         domaincache._active = active_mask
