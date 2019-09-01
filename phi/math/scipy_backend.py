@@ -25,6 +25,14 @@ class SciPyBackend(Backend):
                 return False
         return False
 
+
+    def divide_no_nan(self, x, y):
+        # Only for scalars, not arrays yet.
+        if y == 0:
+            return x * 0
+        else:
+            return (x/y)
+
     def random(self, shape):
         return np.random.random(shape).astype('f')
 

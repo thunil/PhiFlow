@@ -226,9 +226,7 @@ Builds a binary tensor with the same shape as field. Wherever field is greater t
     if isinstance(field, StaggeredGrid):
         field = field.staggered
     f_max = math.max(math.abs(field))
-    # Can't use if else statement in TF with boolean tensors that have not been evaluated, but tf.where does work.
-    f_max = math.where(f_max > 0, 1/f_max, 0)
-    scaled_field = math.abs(field) * f_max
+    scaled_field = math.divide_no_nan(math.abs(field), f_max)
     binary_mask = math.ceil(scaled_field - threshold)
 
     return binary_mask

@@ -17,75 +17,71 @@ class LiquidNetworkTesting(TFModel):
         self.dt = 0.1
         self.gravity = -0.0
 
-        self.initial_density = placeholder(np.concatenate(([None], self.size, [1])))
-        self.initial_velocity = StaggeredGrid(placeholder(np.concatenate(([None], self.size+1, [len(self.size)]))))
-
-        particle_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
-        particle_velocity = grid_to_particles(domain.grid, particle_points, self.initial_velocity, staggered=True)
-
-        # Initialization doesn't matter, training data is fed later
-        # Question: Do we want gravity at all.
-        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=particle_velocity, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=0.0, velocity=0.0, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
 
         # Train Neural Network to find forces
         self.target_density = placeholder(domain.grid.shape())
+        self.state_in = placeholder_like(self.liquid.state, particles=True)
 
         with self.model_scope():
-            self.forces = forcenet2d_3x_16(self.initial_density, self.initial_velocity, self.target_density)
-        self.liquid.trained_forces = self.forces
+            self.forces = forcenet2d_3x_16(self.state_in.density_field, self.state_in.velocity_field, self.target_density)
+        self.state_in.trained_forces = self.forces
 
-        self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
+        self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
-        #self.sess = Session(Scene.create('liquid'))
         self.session.initialize_variables()
 
+        # Set the first batch data
         channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
 
-        # Set the first batch data
         self._testing_set = Dataset.load('~/phi/model/flip-datagen', range(20,30))
         self._test_reader = BatchReader(self._testing_set, channels)
         self._test_iterator = self._test_reader.all_batches(batch_size=1, loop=True)
 
-        [self.initial_density_data, self.initial_velocity_staggered_data, self.target_density_data] = next(self._test_iterator)
+        [initial_density_data, initial_velocity_staggered_data, target_density_data] = next(self._test_iterator)
+
+        particle_points = random_grid_to_coords(initial_density_data, self.particles_per_cell)
+        particle_velocity = grid_to_particles(domain.grid, particle_points, StaggeredGrid(initial_velocity_staggered_data), staggered=True)
 
         self.feed = {
-            self.initial_density: self.initial_density_data,
-            self.initial_velocity.staggered: self.initial_velocity_staggered_data, 
-            self.target_density: self.target_density_data
+            self.state_in.points: particle_points,
+            self.state_in.velocity: particle_velocity, 
+            self.target_density: target_density_data
             }
 
 
-        self.add_field("Trained Forces", self.session.run(self.forces, self.feed))
-        self.add_field("Target", self.session.run(self.target_density, self.feed))
+        self.add_field("Trained Forces", self.session.run(self.forces, feed_dict=self.feed))
+        self.add_field("Target", self.session.run(self.target_density, feed_dict=self.feed))
 
-        self.add_field("Fluid", self.session.run(self.liquid.active_mask, self.feed))
-        self.add_field("Density", self.session.run(self.liquid.density_field, self.feed))
+        self.add_field("Fluid", self.session.run(self.state_in.active_mask, feed_dict=self.feed))
+        self.add_field("Density", self.session.run(self.state_in.density_field, feed_dict=self.feed))
         # self.add_field("Points", grid(self.liquid.grid, self.liquid.points, self.liquid.points))
-        # self.add_field("Velocity", self.liquid.velocity_field.staggered)
+        self.add_field("Velocity", self.session.run(self.state_in.velocity_field.staggered, feed_dict=self.feed))
 
 
 
     def step(self):
-        [self.initial_density_data, self.initial_velocity_staggered_data] = self.session.run([self.state_out.density_field, self.state_out.velocity_field.staggered], feed_dict=self.feed)
+        [particle_points, particle_velocity] = self.session.run([self.state_out.points, self.state_out.velocity], feed_dict=self.feed)
 
-        self.feed = {
-            self.initial_density: self.initial_density_data,
-            self.initial_velocity.staggered: self.initial_velocity_staggered_data, 
-            self.target_density: self.target_density_data
-            }
+        self.feed.update({
+            self.state_in.points: particle_points,
+            self.state_in.velocity: particle_velocity
+            })
 
-        self.world_steps += 1
+        #self.world_steps += 1
 
 
     def action_reset(self):
-        # Update data to a new simulation of testing set
-        [self.initial_density_data, self.initial_velocity_staggered_data, self.target_density_data] = next(self._test_iterator)
+        [initial_density_data, initial_velocity_staggered_data, target_density_data] = next(self._test_iterator)
 
-        self.feed = {
-            self.initial_density: self.initial_density_data,
-            self.initial_velocity.staggered: self.initial_velocity_staggered_data, 
-            self.target_density: self.target_density_data
-            }
+        particle_points = random_grid_to_coords(initial_density_data, self.particles_per_cell)
+        particle_velocity = grid_to_particles(domain.grid, particle_points, StaggeredGrid(initial_velocity_staggered_data), staggered=True)
+
+        self.feed.update({
+            self.state_in.points: particle_points,
+            self.state_in.velocity: particle_velocity, 
+            self.target_density: target_density_data
+            })
 
 
 

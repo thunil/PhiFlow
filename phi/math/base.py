@@ -39,6 +39,9 @@ class Backend:
 
     def prod(self, value, axis=None):
         raise NotImplementedError()
+
+    def divide_no_nan(self, x, y):
+        raise NotImplementedError()
     
     def where(self, condition, x=None, y=None):
         raise NotImplementedError()
@@ -216,9 +219,12 @@ class DynamicBackend(Backend):
     def prod(self, value, axis=None):
         return self.choose_backend(value).prod(value, axis)
 
+    def divide_no_nan(self, x, y):
+        return self.choose_backend((x,y)).divide_no_nan(x, y)
+
     def where(self, condition, x=None, y=None):
         # For Tensorflow x,y the condition can be a Numpy array, but not the other way around. If possible, choose backend based on first input, otherwise based on condition.
-        return self.choose_backend((x, condition)).where(condition, x, y)
+        return self.choose_backend((condition, x, y)).where(condition, x, y)
 
     def mean(self, value, axis=None):
         return self.choose_backend(value).mean(value, axis)
@@ -350,6 +356,7 @@ floor = backend.floor
 concat = backend.concat
 conv = backend.conv
 dimrange = backend.dimrange
+divide_no_nan = backend.divide_no_nan
 dot = backend.dot
 exp = backend.exp
 expand_dims = backend.expand_dims

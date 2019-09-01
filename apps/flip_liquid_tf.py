@@ -21,7 +21,7 @@ class ParticleBasedLiquid(TFModel):
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
         session = Session(Scene.create('liquid'))
-        tf_bake_graph(world, session)
+        tf_bake_graph(world, session, particles=True)
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)

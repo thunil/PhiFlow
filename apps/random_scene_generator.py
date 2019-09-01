@@ -43,7 +43,7 @@ class RandomLiquid(TFModel):
 
     def __init__(self):
         # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = False
+        self.flip = True
         
         if self.flip:
             TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)
@@ -63,7 +63,7 @@ class RandomLiquid(TFModel):
 
         number_of_circles = np.random.randint(1, min(self.size)/2)
         centers = np.array([np.random.randint(i, size=number_of_circles) for i in self.size]).reshape([-1, len(self.size)])
-        radii = np.random.uniform(0, min(self.size)/number_of_circles, size=number_of_circles)
+        radii = np.random.uniform(1, min(self.size)/number_of_circles, size=number_of_circles)
         velocities = np.array([np.random.uniform(-min(self.size)/4, min(self.size)/4, size=number_of_circles) for _ in self.size]).reshape([-1, len(self.size)])
 
         self.initial_density = insert_circles(self.initial_density, centers, radii)
@@ -118,7 +118,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                #self.record_steps = np.random.randint(2, 40)
+                self.record_steps = np.random.randint(2, 20)
 
                 self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
             else:
@@ -132,7 +132,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                #self.record_steps = np.random.randint(2, 20)
+                self.record_steps = np.random.randint(2, 20)
 
                 self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
             else:
