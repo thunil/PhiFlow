@@ -43,7 +43,7 @@ class RandomLiquid(TFModel):
 
     def __init__(self):
         # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = True
+        self.flip = False
         
         if self.flip:
             TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)

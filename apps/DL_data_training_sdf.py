@@ -50,9 +50,10 @@ class LiquidNetworkTraining(TFModel):
         self.dt = 0.1
         self.gravity = -0.0
 
+        self.initial_density = tf.zeros(domain.grid.shape())       # Initial density just needs to be a tensor so the simulation can run on tensorflow backend, but the value of initial density doesn't matter, will be overwritten later with sdf.
         self.initial_velocity = StaggeredGrid(placeholder(np.concatenate(([None], self.size+1, [len(self.size)]))))
 
-        self.liquid = world.SDFLiquid(state_domain=domain, density=0.0, velocity=self.initial_velocity, gravity=self.gravity)
+        self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity)
 
         self.liquid.sdf = placeholder(np.concatenate(([None], self.size, [1])))
 

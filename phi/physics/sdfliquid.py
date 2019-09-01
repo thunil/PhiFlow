@@ -91,7 +91,7 @@ class SDFLiquidPhysics(Physics):
         active_mask = math.where(sdf < 0.5*dx, ones, 0.0 * ones)
         inflow_grid = math.zeros_like(active_mask)
         for effect in effects:
-            inflow_grid = effect.apply_grid(inflow_grid, domaincache.grid, staggered=False, dt=dt)
+            inflow_grid = effect.apply_grid(inflow_grid, domaincache.grid, staggered=False, dt=1.0)     # Timestep doesn't matter here
         inflow_mask = create_binary_mask(inflow_grid)
         # Logical OR between the masks
         active_mask = active_mask + inflow_mask - active_mask * inflow_mask
