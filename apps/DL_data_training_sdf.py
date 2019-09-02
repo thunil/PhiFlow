@@ -2,6 +2,7 @@ from __future__ import division
 
 from phi.tf.flow import *
 from phi.math.sampled import *
+from phi.physics.forcenet import *
 
 
 class LiquidNetworkTraining(TFModel):
@@ -10,6 +11,7 @@ class LiquidNetworkTraining(TFModel):
 
         self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
+        # Don't think timestep plays a role during training, but it's still needed for the computation graph.
         self.dt = 0.1
         self.gravity = -0.0
 
@@ -31,8 +33,6 @@ class LiquidNetworkTraining(TFModel):
 
         # Two thresholds for the world_step and editable float force_weight
         self.force_weight = self.editable_float('Force_Weight', 1e-3, (1e-5, 1e3))
-        self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
-        self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
 
 
         self.loss = l2_loss(self.state_out.sdf - self.target_sdf) + self.force_weight * l2_loss(self.forces)
@@ -46,8 +46,8 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Velocity",self.liquid.velocity.staggered)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/sdf-datagen', range(10,20)), 
-            val = Dataset.load('~/phi/model/sdf-datagen', range(10)), 
+            train = Dataset.load('~/phi/model/sdf-datagen', range(450)), 
+            val = Dataset.load('~/phi/model/sdf-datagen', range(450, 500)), 
             placeholders = (self.liquid.sdf, self.initial_velocity.staggered, self.target_sdf),
             channels = ('initial_sdf', 'initial_velocity_staggered', 'target_sdf')
             )

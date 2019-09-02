@@ -12,6 +12,7 @@ class LiquidNetworkTraining(TFModel):
         self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
         self.particles_per_cell = 4
+        # Don't think timestep plays a role during training, but it's still needed for the computation graph.
         self.dt = 0.1
         self.gravity = -0.0
 
@@ -36,9 +37,6 @@ class LiquidNetworkTraining(TFModel):
 
         # Two thresholds for the world_step and editable float force_weight
         self.force_weight = self.editable_float('Force_Weight', 1.0, (1e-5, 1e3))
-        self.loss_threshold = EditableFloat('Loss_Threshold', 1e-1, (1e-5, 10))
-        self.step_threshold = EditableFloat('Step_Threshold', 100, (1, 1e4))
-
 
         self.loss = l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * l2_loss(self.forces)
 

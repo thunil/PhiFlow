@@ -14,7 +14,7 @@ class LiquidNetworkTesting(TFModel):
         self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
         self.particles_per_cell = 4
-        self.dt = 0.1
+        self.dt = 0.01
         self.gravity = -0.0
 
         self.liquid = world.FlipLiquid(state_domain=domain, density=0.0, velocity=0.0, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
@@ -34,7 +34,7 @@ class LiquidNetworkTesting(TFModel):
         # Set the first batch data
         channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
 
-        self._testing_set = Dataset.load('~/phi/model/flip-datagen', range(20,30))
+        self._testing_set = Dataset.load('~/phi/model/flip-datagen', range(1600,1750))
         self._test_reader = BatchReader(self._testing_set, channels)
         self._test_iterator = self._test_reader.all_batches(batch_size=1, loop=True)
 
@@ -52,13 +52,16 @@ class LiquidNetworkTesting(TFModel):
             self.target_density: target_density_data
             }
 
+        self.loss = l2_loss(self.state_in.density_field - self.target_density)
+
         self.add_field("Trained Forces", lambda: self.session.run(self.forces, feed_dict=self.feed))
         self.add_field("Target", lambda: self.session.run(self.target_density, feed_dict=self.feed))
 
         self.add_field("Fluid", lambda: self.session.run(self.state_in.active_mask, feed_dict=self.feed))
-        self.add_field("Density", lambda: self.session.run(self.state_in.density_field, feed_dict=self.feed))
-        self.add_field("Velocity", lambda: self.session.run(self.state_in.velocity_field.staggered, feed_dict=self.feed))
+        #self.add_field("Density", lambda: self.session.run(self.state_in.density_field, feed_dict=self.feed))
 
+        velocity = grid(domain.grid, self.state_in.points, self.state_in.velocity, staggered=True)
+        self.add_field("Velocity", lambda: self.session.run(velocity.staggered, feed_dict=self.feed))
 
 
     def step(self):
@@ -70,7 +73,7 @@ class LiquidNetworkTesting(TFModel):
             self.state_in.velocity: particle_velocity
             })
 
-        #self.world_steps += 1
+        self.current_loss = self.session.run(self.loss, feed_dict=self.feed)
 
 
     def action_reset(self):
