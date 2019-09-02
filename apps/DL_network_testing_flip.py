@@ -43,27 +43,29 @@ class LiquidNetworkTesting(TFModel):
         particle_points = random_grid_to_coords(initial_density_data, self.particles_per_cell)
         particle_velocity = grid_to_particles(domain.grid, particle_points, StaggeredGrid(initial_velocity_staggered_data), staggered=True)
 
+        active_mask = create_binary_mask(initial_density_data, threshold=0)
+
         self.feed = {
+            self.state_in.active_mask: active_mask,
             self.state_in.points: particle_points,
             self.state_in.velocity: particle_velocity, 
             self.target_density: target_density_data
             }
 
+        self.add_field("Trained Forces", lambda: self.session.run(self.forces, feed_dict=self.feed))
+        self.add_field("Target", lambda: self.session.run(self.target_density, feed_dict=self.feed))
 
-        self.add_field("Trained Forces", self.session.run(self.forces, feed_dict=self.feed))
-        self.add_field("Target", self.session.run(self.target_density, feed_dict=self.feed))
-
-        self.add_field("Fluid", self.session.run(self.state_in.active_mask, feed_dict=self.feed))
-        self.add_field("Density", self.session.run(self.state_in.density_field, feed_dict=self.feed))
-        # self.add_field("Points", grid(self.liquid.grid, self.liquid.points, self.liquid.points))
-        self.add_field("Velocity", self.session.run(self.state_in.velocity_field.staggered, feed_dict=self.feed))
+        self.add_field("Fluid", lambda: self.session.run(self.state_in.active_mask, feed_dict=self.feed))
+        self.add_field("Density", lambda: self.session.run(self.state_in.density_field, feed_dict=self.feed))
+        self.add_field("Velocity", lambda: self.session.run(self.state_in.velocity_field.staggered, feed_dict=self.feed))
 
 
 
     def step(self):
-        [particle_points, particle_velocity] = self.session.run([self.state_out.points, self.state_out.velocity], feed_dict=self.feed)
+        [active_mask, particle_points, particle_velocity] = self.session.run([self.state_out.active_mask, self.state_out.points, self.state_out.velocity], feed_dict=self.feed)
 
         self.feed.update({
+            self.state_in.active_mask: active_mask,
             self.state_in.points: particle_points,
             self.state_in.velocity: particle_velocity
             })
@@ -75,9 +77,12 @@ class LiquidNetworkTesting(TFModel):
         [initial_density_data, initial_velocity_staggered_data, target_density_data] = next(self._test_iterator)
 
         particle_points = random_grid_to_coords(initial_density_data, self.particles_per_cell)
-        particle_velocity = grid_to_particles(domain.grid, particle_points, StaggeredGrid(initial_velocity_staggered_data), staggered=True)
+        particle_velocity = grid_to_particles(self.liquid.grid, particle_points, StaggeredGrid(initial_velocity_staggered_data), staggered=True)
+
+        active_mask = create_binary_mask(initial_density_data, threshold=0)
 
         self.feed.update({
+            self.state_in.active_mask: active_mask,
             self.state_in.points: particle_points,
             self.state_in.velocity: particle_velocity, 
             self.target_density: target_density_data

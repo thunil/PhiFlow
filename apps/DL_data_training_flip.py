@@ -53,8 +53,8 @@ class LiquidNetworkTraining(TFModel):
         # self.add_field("Velocity", self.liquid.velocity_field.staggered)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/flip-datagen', range(10,20)), 
-            val = Dataset.load('~/phi/model/flip-datagen', range(10)), 
+            train = Dataset.load('~/phi/model/flip-datagen', range(100,1700)), 
+            val = Dataset.load('~/phi/model/flip-datagen', range(100)), 
             placeholders = (self.initial_density, self.initial_velocity.staggered, self.target_density),
             channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
             )

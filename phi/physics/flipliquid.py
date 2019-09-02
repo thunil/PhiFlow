@@ -42,9 +42,8 @@ class FlipLiquidPhysics(Physics):
 
         # Update new active mask after advection
         active_mask = self.update_active_mask(domaincache, points)
-        # Domaincache seems to be set
         
-        return state.copied_with(points=points, velocity=velocity, age=state.age + dt)
+        return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
 
 
@@ -67,7 +66,6 @@ class FlipLiquidPhysics(Physics):
         inflow_density = math.zeros_like(state.active_mask)
         for effect in effects:
             inflow_density = effect.apply_grid(inflow_density, state.grid, staggered=False, dt=dt)
-
         inflow_points = random_grid_to_coords(inflow_density, state.particles_per_cell)
         points = math.concat([state.points, inflow_points], axis=1)
         velocity = math.concat([state.velocity, 0.0 * (inflow_points)], axis=1)
@@ -126,7 +124,7 @@ FLIPLIQUID = FlipLiquidPhysics()
 
 
 class FlipLiquid(State):
-    __struct__ = State.__struct__.extend(('points', 'velocity', 'trained_forces'),
+    __struct__ = State.__struct__.extend(('points', 'velocity', '_active_mask', 'trained_forces'),
                             ('_domain', '_gravity'))
 
     def __init__(self, state_domain=Open2D,
@@ -189,7 +187,7 @@ class FlipLiquid(State):
 
     @property
     def active_mask(self):
-        return self.domaincache._active
+        return self._active_mask
 
     @property
     def domain(self):
@@ -229,4 +227,3 @@ class FlipLiquid(State):
             return self.copied_with(velocity=self.velocity - other)
         else:
             return self.copied_with(density=self.points - other)
-
