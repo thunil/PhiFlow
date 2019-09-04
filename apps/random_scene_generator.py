@@ -121,7 +121,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(0.1/self.dt, 0.8/self.dt)
+                self.record_steps = np.random.randint(0, 0.8/self.dt)
 
                 self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
             else:
@@ -135,7 +135,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(0.1/self.dt, 0.7/self.dt)
+                self.record_steps = np.random.randint(0, 0.8/self.dt)
 
                 self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
             else:

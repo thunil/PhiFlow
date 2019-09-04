@@ -35,10 +35,15 @@ class LiquidNetworkTraining(TFModel):
 
         self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
 
-        # Two thresholds for the world_step and editable float force_weight
-        self.force_weight = self.editable_float('Force_Weight', 1.0, (1e-5, 1e3))
+        # Do multiple steps so the network learns how the liquid changes shape
+        for _ in range(5):
+            self.state_out = self.liquid.default_physics().step(self.state_out, dt=self.dt)
 
-        self.loss = l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * l2_loss(self.forces)
+        # Two thresholds for the world_step and editable float force_weight
+        self.force_weight = self.editable_float('Force_Weight', 1e-2, (1e-5, 1e3))
+
+        # For larger initial velocities we need a large force to work against it.
+        self.loss = l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
 
         self.add_objective(self.loss, "Unsupervised_Loss")
 
@@ -48,11 +53,11 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Fluid", self.liquid.active_mask)
         self.add_field("Density", self.liquid.density_field)
         # self.add_field("Points", grid(self.liquid.grid, self.liquid.points, self.liquid.points))
-        # self.add_field("Velocity", self.liquid.velocity_field.staggered)
+        self.add_field("Velocity", self.liquid.velocity_field.staggered)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/flip-datagen', range(100,1700)), 
-            val = Dataset.load('~/phi/model/flip-datagen', range(100)), 
+            train = Dataset.load('~/phi/model/flip-datagen', range(1700)), 
+            #val = Dataset.load('~/phi/model/flip-datagen', range(100)), 
             placeholders = (self.initial_density, self.initial_velocity.staggered, self.target_density),
             channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
             )

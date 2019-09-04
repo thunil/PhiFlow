@@ -31,6 +31,10 @@ class LiquidNetworkTraining(TFModel):
 
         self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
 
+        # Do multiple steps so the network learns how the liquid changes shape
+        for _ in range(5):
+            self.state_out = self.liquid.default_physics().step(self.state_out, dt=self.dt)
+
         # Two thresholds for the world_step and editable float force_weight
         self.force_weight = self.editable_float('Force_Weight', 1e-3, (1e-5, 1e3))
 
