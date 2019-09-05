@@ -43,7 +43,7 @@ class RandomLiquid(TFModel):
 
     def __init__(self):
         # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = False
+        self.flip = True
         
         if self.flip:
             TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)
@@ -77,12 +77,10 @@ class RandomLiquid(TFModel):
         if self.flip:
             # FLIP simulation
             self.particles_per_cell = 4
-            self.initial_velocity = np.random.uniform(-min(self.size), min(self.size), size=len(self.size))
             
-            self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
+            self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=0.0, gravity=self.gravity, particles_per_cell=self.particles_per_cell)
 
-            self.state_in = placeholder_like(self.liquid.state, particles=True)
-            self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
+            self.liquid.velocity = grid_to_particles(domain.grid, self.liquid.points, self.initial_velocity, staggered=True)
 
             self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
 
@@ -97,9 +95,6 @@ class RandomLiquid(TFModel):
             self.distance = max(self.size)
 
             self.liquid = world.SDFLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=self.gravity, distance=self.distance)
-
-            self.state_in = placeholder_like(self.liquid.state)
-            self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
             self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
 
@@ -161,8 +156,7 @@ class RandomLiquid(TFModel):
         if self.flip:
             self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
 
-            self.initial_velocity = np.random.uniform(-min(self.size)/4, min(self.size)/4, size=len(self.size))
-            self.liquid.velocity = zeros_like(self.liquid.points) + self.initial_velocity
+            self.liquid.velocity = grid_to_particles(self.liquid.grid, self.liquid.points, self.initial_velocity, staggered=True)
 
         else:
             particle_mask = create_binary_mask(self.initial_density, threshold=0)

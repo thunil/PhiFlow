@@ -36,10 +36,10 @@ class LiquidNetworkTraining(TFModel):
             self.state_out = self.liquid.default_physics().step(self.state_out, dt=self.dt)
 
         # Two thresholds for the world_step and editable float force_weight
-        self.force_weight = self.editable_float('Force_Weight', 1e-3, (1e-5, 1e3))
+        self.force_weight = self.editable_float('Force_Weight', 1e-1, (1e-5, 1e3))
 
 
-        self.loss = l2_loss(self.state_out.sdf - self.target_sdf) + self.force_weight * l2_loss(self.forces)
+        self.loss = l2_loss(self.state_out.sdf - self.target_sdf) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
 
         self.add_objective(self.loss, "Unsupervised_Loss")
 
@@ -50,8 +50,8 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Velocity",self.liquid.velocity.staggered)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/sdf-datagen', range(450)), 
-            val = Dataset.load('~/phi/model/sdf-datagen', range(450, 500)), 
+            train = Dataset.load('~/phi/model/sdf-datagen', range(950)), 
+            #val = Dataset.load('~/phi/model/sdf-datagen', range(450, 500)), 
             placeholders = (self.liquid.sdf, self.initial_velocity.staggered, self.target_sdf),
             channels = ('initial_sdf', 'initial_velocity_staggered', 'target_sdf')
             )

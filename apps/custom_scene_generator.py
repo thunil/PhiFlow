@@ -4,6 +4,11 @@ from phi.tf.flow import *
 from phi.math.sampled import *
 
 
+"""
+This app will generate the necessary initial and target npz files to use for testing a network. Simply adjust the initial density/velocity and target density to the scenario you wish to test, and run the file.
+"""
+
+
 def insert_circles(field, centers, radii, values=None):
     """
 Field should be a density/active mask/velocity field with shape [batch, coordinate_dimensions, components].
@@ -111,12 +116,6 @@ class CustomLiquid(TFModel):
                 'target_density'], 
                 frame=1)
 
-            self.add_field("Fluid", lambda: self.liquid.active_mask)
-            self.add_field("Density", lambda: self.liquid.density_field)
-            self.add_field("Points", lambda: grid(self.liquid.grid, self.liquid.points, self.liquid.points))
-            self.add_field("Velocity", lambda: self.liquid.velocity_field.staggered)
-            self.add_field("Pressure", lambda: self.liquid.pressure)
-
         else:
             # SDF simulation
             self.distance = max(self.size)
@@ -135,14 +134,4 @@ class CustomLiquid(TFModel):
                 'target_sdf'], 
                 frame=1)
 
-            self.add_field("Fluid", lambda: self.liquid.active_mask)
-            self.add_field("Signed Distance Field", lambda: self.liquid.sdf)
-            self.add_field("Velocity", lambda: self.liquid.velocity.staggered)
-            self.add_field("Pressure", lambda: self.liquid.pressure)
-
-
-    def step(self):
-        world.step(dt=self.dt)
-
-
-app = CustomLiquid().show(production=__name__ != "__main__", framerate=3, display=("Initial Density", "Target Density"))
+CustomLiquid()
