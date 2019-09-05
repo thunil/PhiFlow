@@ -6,6 +6,7 @@ class SDFBasedLiquid(FieldSequenceModel):
     def __init__(self):
         FieldSequenceModel.__init__(self, "Signed Distance based Liquid", stride=1)
 
+        self.dt = 0.1
         size = [80,64]
         domain = Domain(size, SLIPPERY)
 
@@ -28,7 +29,7 @@ class SDFBasedLiquid(FieldSequenceModel):
 
 
     def step(self):
-        world.step(dt=0.05)
+        world.step(dt=self.dt)
 
     def action_reset(self):
         particle_mask = create_binary_mask(self.initial_density, threshold=0)

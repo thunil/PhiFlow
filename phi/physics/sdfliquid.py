@@ -33,6 +33,9 @@ class SDFLiquidPhysics(Physics):
         vel_active = self.staggered_active_mask(domaincache._active)
         velocity = velocity * vel_active
         state.mask_after = velocity
+
+        # Rough error correction for disappearing SDF
+        sdf -= (dt) * math.max(math.abs(velocity.staggered)) * 0.01
         
         return state.copied_with(sdf=sdf, velocity=velocity, active_mask=active_mask, age=state.age + dt)
 
