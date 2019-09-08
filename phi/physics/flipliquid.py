@@ -56,9 +56,10 @@ class FlipLiquidPhysics(Physics):
         # Runge Kutta 3rd order advection scheme
         velocity_RK1 = grid_to_particles(domaincache.grid, points, ext_velocity, staggered=True)
         velocity_RK2 = grid_to_particles(domaincache.grid, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
-        velocity_RK3 = grid_to_particles(domaincache.grid, (points + 0.75 * dt * velocity_RK2), ext_velocity, staggered=True)
+        velocity_RK3 = grid_to_particles(domaincache.grid, (points + 0.5 * dt * velocity_RK2), ext_velocity, staggered=True)
+        velocity_RK4 = grid_to_particles(domaincache.grid, (points + 1 * dt * velocity_RK3), ext_velocity, staggered=True)
 
-        new_points = points + 1/9 * dt * (2 * velocity_RK1 + 3 * velocity_RK2 + 4 * velocity_RK3)
+        new_points = points + 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
         return new_points
 
 
