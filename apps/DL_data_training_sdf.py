@@ -12,7 +12,7 @@ class LiquidNetworkTraining(TFModel):
         self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
         # Don't think timestep plays a role during training, but it's still needed for the computation graph.
-        self.dt = 0.1
+        self.dt = 0.01
         self.gravity = -0.0
 
         self.initial_density = tf.zeros(domain.grid.shape())       # Initial density just needs to be a tensor so the simulation can run on tensorflow backend, but the value of initial density doesn't matter, will be overwritten later with sdf.

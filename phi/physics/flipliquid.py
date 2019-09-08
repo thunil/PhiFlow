@@ -21,7 +21,7 @@ class FlipLiquidPhysics(Physics):
         assert len(dependent_states) == 0
         domaincache = domain(state, obstacles)
         
-        # Inflow and forces
+        # Inflow
         points, velocity = self.add_inflow(state, inflows, dt)
 
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
@@ -29,7 +29,7 @@ class FlipLiquidPhysics(Physics):
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
-        velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
+        #velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
 
         velocity_field_with_forces = self.apply_field_forces(state, velocity_field, dt)
         div_free_velocity_field = divergence_free(velocity_field_with_forces, domaincache, self.pressure_solver, state=state)

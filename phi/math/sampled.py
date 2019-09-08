@@ -40,7 +40,7 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
             return StaggeredGrid(math.concat(result, axis=-1))
 
         else:
-            return math.scatter(points, valid_indices, values, griddef.shape(math.shape(values)[-1]), duplicates_handling=duplicate_handling)
+            return math.scatter(points, valid_indices, values, griddef.shape(values.shape[-1]), duplicates_handling=duplicate_handling)
 
 
 def active_centers(array, particles_per_cell=1):

@@ -4,9 +4,10 @@ from phi.math.sampled import *
 class ParticleBasedLiquid(FieldSequenceModel):
 
     def __init__(self):
-        FieldSequenceModel.__init__(self, "Particle-based Liquid", stride=3)
+        FieldSequenceModel.__init__(self, "Particle-based Liquid", stride=10)
 
         size = [64, 80]
+        self.dt = 0.1
         domain = Domain(size, SLIPPERY)
         self.particles_per_cell = 8
 
@@ -17,7 +18,7 @@ class ParticleBasedLiquid(FieldSequenceModel):
         #self.initial_velocity = [1.42, 0]
         self.initial_velocity = 0.0
         
-        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-0.5, particles_per_cell=self.particles_per_cell)
+        self.liquid = world.FlipLiquid(state_domain=domain, density=self.initial_density, velocity=self.initial_velocity, gravity=-9.81, particles_per_cell=self.particles_per_cell)
         #world.Inflow(Sphere((10,32), 5), rate=0.2)
 
         self.add_field("Fluid", lambda: self.liquid.domaincache.active())
@@ -28,7 +29,7 @@ class ParticleBasedLiquid(FieldSequenceModel):
 
 
     def step(self):
-        world.step(dt=0.5)
+        world.step(dt=self.dt)
 
     def action_reset(self):
         self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)

@@ -34,7 +34,7 @@ class LiquidNetworkTesting(TFModel):
         # Set the first batch data
         channels = ('initial_density', 'initial_velocity_staggered', 'target_density')
 
-        self._testing_set = Dataset.load('~/phi/model/flip-datagen', range(1600,1750))
+        self._testing_set = Dataset.load('~/phi/model/flip-datagen', range(1150, 1250))
         self._test_reader = BatchReader(self._testing_set, channels)
         self._test_iterator = self._test_reader.all_batches(batch_size=1, loop=True)
 
