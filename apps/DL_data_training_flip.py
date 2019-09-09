@@ -36,7 +36,7 @@ class LiquidNetworkTraining(TFModel):
         self.state_out = self.liquid.default_physics().step(self.liquid.state, dt=self.dt)
 
         # Do multiple steps so the network learns how the liquid changes shape
-        for _ in range(10):
+        for _ in range(4):
             self.state_out = self.liquid.default_physics().step(self.state_out, dt=self.dt)
 
         # Two thresholds for the world_step and editable float force_weight
@@ -45,20 +45,32 @@ class LiquidNetworkTraining(TFModel):
         # For larger initial velocities we need a large force to work against it.
         #self.loss = l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
 
-        const = max(self.size)
+        self.target_points = active_centers(self.target_density, 1)
+        number_particles = math.shape(self.state_out.points)[1]
+        target_ppc = tf.ceil(math.to_float(number_particles) / math.sum(self.target_density/math.max(self.target_density)))
+
+        self.target_points = tf.tile(self.target_points, [1, target_ppc, 1])
+        self.target_points = tf.slice(self.target_points, (0,0,0), (1, number_particles, 2))
+
+        # Might want to sort both particle lists first, but maybe the order is already sorted by default?
+        self.loss = l2_loss(self.state_out.points - self.target_points) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
+        
+
 
         self.points_out = grid(domain.grid, self.state_out.points, self.state_out.points)
-        #out_sdf, self.points_out = extrapolate(self.points_out, self.state_out.active_mask, distance=min(self.size))
-        self.points_out = self.points_out + const - const*self.state_out.active_mask
+        out_sdf, self.points_out = extrapolate(self.points_out, self.state_out.active_mask, distance=min(self.size))
+        self.points_out_inverse = self.size - self.points_out
 
         # Maybe I don't want to random the target, at centers might be better for the target
         self.points_target = random_grid_to_coords(self.target_density, self.particles_per_cell)
         self.points_target = grid(domain.grid, self.points_target, self.points_target)
-        #target_sdf, self.points_target = extrapolate(self.points_target, self.target_density/self.particles_per_cell, distance=min(self.size))
-        self.points_target = self.points_target + const - const*self.target_density/self.particles_per_cell
+        target_sdf, self.points_target = extrapolate(self.points_target, self.target_density/self.particles_per_cell, distance=min(self.size))
+        self.points_target_inverse = self.size - self.points_target
 
 
-        self.loss = l2_loss(self.points_out - self.points_target) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
+        #self.loss = l2_loss(self.points_out - self.points_target) * l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
+
+        #self.loss = l2_loss(self.points_out - self.points_target) * l2_loss(self.points_out_inverse - self.points_target_inverse) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
 
 
         self.add_objective(self.loss, "Unsupervised_Loss")
@@ -72,6 +84,7 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Velocity", self.liquid.velocity_field.staggered)
 
         self.add_field("Points out", self.points_out)
+        self.add_field("Points out inverse", self.points_out_inverse)
         self.add_field("Points target", self.points_target)
 
         self.set_data(
@@ -82,4 +95,4 @@ class LiquidNetworkTraining(TFModel):
             )
 
 
-app = LiquidNetworkTraining().show(production=__name__ != "__main__", framerate=3, display=("Trained Forces", "Target"))
+app = LiquidNetworkTraining().show(production=__name__ != "__main__", framerate=3, display=("Trained Forces", "Velocity"))
