@@ -45,12 +45,17 @@ class LiquidNetworkTraining(TFModel):
         # For larger initial velocities we need a large force to work against it.
         #self.loss = l2_loss(self.state_out.density_field - self.target_density) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
 
-        self.target_points = active_centers(self.target_density, 1)
-        number_particles = math.shape(self.state_out.points)[1]
-        target_ppc = tf.ceil(math.to_float(number_particles) / math.sum(self.target_density/math.max(self.target_density)))
+        ### USING TILING TO CREATE TARGET POINTS
+        # self.target_points = active_centers(self.target_density, 1)
+        # number_particles = math.shape(self.state_out.points)[1]
+        # target_ppc = tf.ceil(math.to_float(number_particles) / math.sum(self.target_density/math.max(self.target_density)))
 
-        self.target_points = tf.tile(self.target_points, [1, target_ppc, 1])
-        self.target_points = tf.slice(self.target_points, (0,0,0), (1, number_particles, 2))
+        # self.target_points = tf.tile(self.target_points, [1, target_ppc, 1])
+        # self.target_points = tf.slice(self.target_points, (0,0,0), (1, number_particles, 2))
+
+        ### CREATING MORE THAN NECESSARY, THEN SHRINK TO CREATE TARGET POINTS
+        self.target_points = active_centers(self.target_density, self.particles_per_cell+2)
+        self.target_points = tf.slice(self.target_points, (0,0,0), (1, math.shape(self.state_out.points)[1], 2))
 
         # Might want to sort both particle lists first, but maybe the order is already sorted by default?
         self.loss = l2_loss(self.state_out.points - self.target_points) + self.force_weight * math.divide_no_nan(l2_loss(self.forces), math.max(self.initial_velocity.staggered))
@@ -88,7 +93,7 @@ class LiquidNetworkTraining(TFModel):
         self.add_field("Points target", self.points_target)
 
         self.set_data(
-            train = Dataset.load('~/phi/model/flip-datagen', range(1200)), 
+            train = Dataset.load('~/phi/model/flip-datagen', range(12800)), 
             #val = Dataset.load('~/phi/model/flip-datagen', range(100)), 
             placeholders = (self.initial_density, self.initial_velocity.staggered, self.target_density),
             channels = ('initial_density', 'initial_velocity_staggered', 'target_density')

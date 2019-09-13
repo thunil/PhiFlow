@@ -40,7 +40,7 @@ Values should specify the vector that goes into the entry of the corresponding c
 
 class LiquidNetworkTesting(TFModel):
     def __init__(self):
-        TFModel.__init__(self, "Network Testing for pre-generated SDF Liquid simulation data", stride=1, learning_rate=1e-3, validation_batch_size=1)
+        TFModel.__init__(self, "Network Testing for pre-generated FLIP Liquid simulation data", stride=1, learning_rate=1e-3, validation_batch_size=1)
 
         # Load the model data from the training app, so we can test that network on testing simulation data.
 
@@ -74,31 +74,36 @@ class LiquidNetworkTesting(TFModel):
         #-------- INITIAL --------#
 
         ### CIRCLES ###
-        number_of_circles = 1
-        centers = np.array([16, 10])
-        radii = np.array([8])
-        velocities = np.array([0.0, 0.0])
+        # number_of_circles = 1
+        # centers = np.array([16, 10])
+        # radii = np.array([8])
+        # velocities = np.array([0.0, 0.0])
 
-        self.initial_density = insert_circles(self.initial_density, centers, radii)
-        self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
+        # self.initial_density = insert_circles(self.initial_density, centers, radii)
+        # self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
 
         ### OTHER SHAPES ###
-        #self.initial_density[:, self.size[-2] * 2 // 8 : self.size[-2] * 6 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 8 // 8 - 1, :] = 1
+        #self.initial_density[:, self.size[-2] * 2 // 8 : self.size[-2] * 6 // 8, self.size[-1] * 0 // 8 + 1 : self.size[-1] * 3 // 8, :] = 1
         #self.initial_velocity.staggered[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 3 // 8 : size[-1] * 6 // 8 + 1, :] = [-2.0, -0.0]
+
+        self.initial_density[:, self.size[-2] * 3 // 8 : self.size[-2] * 7 // 8, self.size[-1] * 1 // 8 : self.size[-1] * 3 // 8 - 1, :] = 1
+        self.initial_density[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
 
 
         #-------- TARGET --------#
 
         ## CIRCLES ###
-        number_of_circles = 1
-        centers = np.array([16, 30])
-        radii = np.array([8])
-        velocities = np.array([0.0, 0.0])
+        # number_of_circles = 1
+        # centers = np.array([16, 30])
+        # radii = np.array([8])
+        # velocities = np.array([0.0, 0.0])
 
-        self.target_density_data = insert_circles(self.target_density_data, centers, radii)
+        # self.target_density_data = insert_circles(self.target_density_data, centers, radii)
 
         ### OTHER SHAPES ###
         #self.target_density_data[:, self.size[-2] * 6 // 8 : self.size[-2] * 8 // 8 - 1, self.size[-1] * 2 // 8 : self.size[-1] * 6 // 8, :] = 1
+
+        self.target_density_data[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
 
 
         self.particle_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)

@@ -17,7 +17,7 @@ class SDFLiquidPhysics(Physics):
         domaincache = domain(state, obstacles)
 
         #state.mask_before = state.velocity
-        active_mask = self.update_active_mask(state.sdf, inflows, domaincache)
+        active_mask = self.update_active_mask(state.sdf, (), domaincache)
         #domaincache._active = active_mask
 
         velocity = self.apply_forces(state, dt)
@@ -163,7 +163,7 @@ class SDFLiquid(State):
     @property
     def signed_distance(self):
         return self._sdf
-    
+
     @property
     def sdf(self):
         return self._sdf

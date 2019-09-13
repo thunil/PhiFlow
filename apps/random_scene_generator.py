@@ -43,7 +43,7 @@ class RandomLiquid(TFModel):
 
     def __init__(self):
         # Choose whether you want a particle-based FLIP simulation or a grid-based SDF simulation
-        self.flip = False
+        self.flip = True
         
         if self.flip:
             TFModel.__init__(self, "FLIP datagen", stride=1, learning_rate=1e-3)
@@ -67,7 +67,7 @@ class RandomLiquid(TFModel):
 
         radii = np.random.uniform(min(self.size)/(6*np.sqrt(number_of_circles)), min(self.size)/(1.5*np.sqrt(number_of_circles)), size=number_of_circles)
 
-        velocities = np.array([np.random.uniform(-min(self.size), min(self.size), size=number_of_circles) for _ in self.size]).reshape([-1, len(self.size)])
+        velocities = np.array([np.random.uniform(-10.0, 10.0, size=number_of_circles) for _ in self.size]).reshape([-1, len(self.size)])
 
         self.initial_density = insert_circles(self.initial_density, centers, radii)
         self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
@@ -116,7 +116,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(0, 0.8/self.dt)
+                self.record_steps = np.random.randint(0, 0.5/self.dt)
 
                 self.scene.write_sim_frame([self.liquid.density_field], ['target_density'], frame=1)
             else:
@@ -130,7 +130,7 @@ class RandomLiquid(TFModel):
                 self.steps = 0
                 self.action_reset()
                 self.info('Starting data generation in scene %s' % self.scene)
-                self.record_steps = np.random.randint(0, 0.8/self.dt)
+                self.record_steps = np.random.randint(0, 0.5/self.dt)
 
                 self.scene.write_sim_frame([self.liquid.sdf], ['target_sdf'], frame=1)
             else:
@@ -147,7 +147,7 @@ class RandomLiquid(TFModel):
 
         radii = np.random.uniform(min(self.size)/(6*np.sqrt(number_of_circles)), min(self.size)/(1.5*np.sqrt(number_of_circles)), size=number_of_circles)
 
-        velocities = np.array([np.random.uniform(-min(self.size), min(self.size), size=number_of_circles) for _ in self.size]).reshape([-1, len(self.size)])
+        velocities = np.array([np.random.uniform(-10.0, 10.0, size=number_of_circles) for _ in self.size]).reshape([-1, len(self.size)])
 
         self.initial_density = insert_circles(self.initial_density, centers, radii)
         self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
