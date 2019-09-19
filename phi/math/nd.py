@@ -496,7 +496,7 @@ class StaggeredGrid(struct.Struct):
 
 
     def _advect_mac(self, field_mac, dt, interpolation):  # TODO wrong component order
-        # Runge Kutta instead of Backward Euler
+        # Runge Kutta instead of Forward Euler
         idx = indices_tensor(self.staggered)
         advected_component_fields = []
 
@@ -514,7 +514,7 @@ class StaggeredGrid(struct.Struct):
             velocity_RK4 = math.resample(velocity_at_staggered_points, sample_coords, interpolation=interpolation, boundary='REPLICATE')
             
             # Runge Kutta 4th order
-            sample_coords = idx - 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 * 1 * velocity_RK4)
+            sample_coords = idx - 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
 
             advected = math.resample(field_mac.staggered[..., d:d + 1], sample_coords, interpolation=interpolation, boundary='REPLICATE')
             advected_component_fields.append(advected)
