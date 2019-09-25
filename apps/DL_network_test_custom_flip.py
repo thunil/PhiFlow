@@ -44,7 +44,7 @@ class LiquidNetworkTesting(TFModel):
 
         # Load the model data from the training app, so we can test that network on testing simulation data.
 
-        self.size = np.array([32, 40])
+        self.size = np.array([96, 144])
         domain = Domain(self.size, SLIPPERY)
         self.particles_per_cell = 4
         self.dt = 0.01
@@ -62,8 +62,6 @@ class LiquidNetworkTesting(TFModel):
 
         self.state_out = self.liquid.default_physics().step(self.state_in, dt=self.dt)
 
-        self.session.initialize_variables()
-
 
         self.initial_density = zeros(domain.grid.shape())
         # Initial velocity different for FLIP, so set it separately over there
@@ -75,7 +73,7 @@ class LiquidNetworkTesting(TFModel):
 
         ### CIRCLES ###
         # number_of_circles = 1
-        # centers = np.array([16, 10])
+        # centers = np.array([16, 30])
         # radii = np.array([8])
         # velocities = np.array([0.0, 0.0])
 
@@ -83,27 +81,27 @@ class LiquidNetworkTesting(TFModel):
         # self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
 
         ### OTHER SHAPES ###
-        #self.initial_density[:, self.size[-2] * 2 // 8 : self.size[-2] * 6 // 8, self.size[-1] * 0 // 8 + 1 : self.size[-1] * 3 // 8, :] = 1
+        self.initial_density[:, self.size[-2] * 2 // 8 : self.size[-2] * 6 // 8, self.size[-1] * 5 // 8 + 0 : self.size[-1] * 8 // 8 - 1, :] = 1
         #self.initial_velocity.staggered[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 3 // 8 : size[-1] * 6 // 8 + 1, :] = [-2.0, -0.0]
 
-        self.initial_density[:, self.size[-2] * 3 // 8 : self.size[-2] * 7 // 8, self.size[-1] * 1 // 8 : self.size[-1] * 3 // 8 - 1, :] = 1
-        self.initial_density[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
+        # self.initial_density[:, self.size[-2] * 3 // 8 : self.size[-2] * 7 // 8, self.size[-1] * 1 // 8 : self.size[-1] * 3 // 8 - 1, :] = 1
+        # self.initial_density[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
 
 
         #-------- TARGET --------#
 
         ## CIRCLES ###
         # number_of_circles = 1
-        # centers = np.array([16, 30])
+        # centers = np.array([16, 10])
         # radii = np.array([8])
         # velocities = np.array([0.0, 0.0])
 
         # self.target_density_data = insert_circles(self.target_density_data, centers, radii)
 
         ### OTHER SHAPES ###
-        #self.target_density_data[:, self.size[-2] * 6 // 8 : self.size[-2] * 8 // 8 - 1, self.size[-1] * 2 // 8 : self.size[-1] * 6 // 8, :] = 1
+        self.target_density_data[:, self.size[-2] * 6 // 8 : self.size[-2] * 8 // 8 - 1, self.size[-1] * 2 // 8 : self.size[-1] * 6 // 8, :] = 1
 
-        self.target_density_data[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
+        #self.target_density_data[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
 
 
         self.particle_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
@@ -132,6 +130,8 @@ class LiquidNetworkTesting(TFModel):
 
     def step(self):
         [active_mask, particle_points, particle_velocity] = self.session.run([self.state_out.active_mask, self.state_out.points, self.state_out.velocity], feed_dict=self.feed)
+
+        print("Amount of particles:" + str(math.sum(active_mask)))
 
         self.feed.update({
             self.state_in.active_mask: active_mask,

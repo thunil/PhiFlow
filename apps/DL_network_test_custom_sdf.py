@@ -82,6 +82,8 @@ class LiquidNetworkTesting(TFModel):
         # self.initial_velocity = StaggeredGrid(insert_circles(self.initial_velocity.staggered, centers, radii, velocities))
 
         ### OTHER SHAPES ###
+        #self.initial_density[:, self.size[-2] * 2 // 8 : self.size[-2] * 6 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 8 // 8 - 1, :] = 1
+
         self.initial_density[:, self.size[-2] * 3 // 8 : self.size[-2] * 7 // 8, self.size[-1] * 1 // 8 : self.size[-1] * 3 // 8 - 1, :] = 1
         self.initial_density[:, self.size[-2] * 1 // 8 : self.size[-2] * 5 // 8, self.size[-1] * 5 // 8 : self.size[-1] * 7 // 8 - 1, :] = 1
         #self.initial_velocity.staggered[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 3 // 8 : size[-1] * 6 // 8 + 1, :] = [-2.0, -0.0]
@@ -98,6 +100,8 @@ class LiquidNetworkTesting(TFModel):
         # self.target_density = insert_circles(self.target_density, centers, radii)
 
         ### OTHER SHAPES ###
+        #self.target_density[:, self.size[-2] * 6 // 8 : self.size[-2] * 8 // 8 - 1, self.size[-1] * 2 // 8 : self.size[-1] * 6 // 8, :] = 1
+
         self.target_density[:, self.size[-2] * 3 // 8 : self.size[-2] * 5 // 8 - 1, self.size[-1] * 2 // 8 : self.size[-1] * 6 // 8, :] = 1
 
         self.distance = max(self.size)

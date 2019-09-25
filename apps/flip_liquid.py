@@ -25,7 +25,7 @@ class ParticleBasedLiquid(FieldSequenceModel):
         self.add_field("Density", lambda: self.liquid.density_field)
         self.add_field("Points", lambda: grid(self.liquid.grid, self.liquid.points, self.liquid.points))
         self.add_field("Velocity", lambda: self.liquid.velocity_field.staggered)
-        self.add_field("Pressure", lambda: self.liquid.last_pressure)
+        self.add_field("Pressure", lambda: self.liquid.pressure)
 
 
     def step(self):

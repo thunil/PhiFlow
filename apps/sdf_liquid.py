@@ -26,6 +26,8 @@ class SDFBasedLiquid(FieldSequenceModel):
         self.add_field("Signed Distance Field", lambda: self.liquid.sdf)
         self.add_field("Velocity", lambda: self.liquid.velocity.staggered)
         self.add_field("Pressure", lambda: self.liquid.last_pressure)
+        self.add_field("vel ext", lambda: self.liquid.mask_before.staggered)
+        self.add_field("vel after", lambda: self.liquid.mask_after.staggered)
 
 
     def step(self):

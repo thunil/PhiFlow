@@ -48,7 +48,7 @@ class GridLiquidPhysics(Physics):
         for effect in inflows:
             density = effect.apply_grid(density, state.grid, staggered=False, dt=dt)
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        active_mask = create_binary_mask(density, threshold=0.5)
+        active_mask = create_binary_mask(density, threshold=0.1)
         domaincache._active = active_mask
 
         forces = dt * state.gravity

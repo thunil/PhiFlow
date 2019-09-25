@@ -21,7 +21,9 @@ class SDFLiquidPhysics(Physics):
         #domaincache._active = active_mask
 
         velocity = self.apply_forces(state, dt)
+        state.mask_before = velocity
         velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
+        state.mask_after = velocity
 
         sdf, velocity = self.advect(state, velocity, dt)
         active_mask = self.update_active_mask(sdf, inflows, domaincache)
@@ -32,7 +34,7 @@ class SDFLiquidPhysics(Physics):
         # Necessary for obstacle advection (so they don't move using extrapolated velocity in air)
         vel_active = self.staggered_active_mask(domaincache._active)
         velocity = velocity * vel_active
-        state.mask_after = velocity
+        #state.mask_after = velocity
 
         # Rough error correction for disappearing SDF
         sdf -= (dt) * math.max(math.abs(velocity.staggered)) * 0.01
@@ -47,7 +49,7 @@ class SDFLiquidPhysics(Physics):
         _, ext_velocity_free = extrapolate(velocity, state.active_mask, dx=dx, distance=state._distance)
         ext_velocity = state.domaincache.with_hard_boundary_conditions(ext_velocity_free)
 
-        state.mask_after = ext_velocity_free
+        #state.mask_before = ext_velocity
 
 
         # When advecting SDF we don't want to replicate boundary values when the sample coordinates are out of bounds, we want the fluid to move further away from the boundary. We increase the distance when sampling outside of the boundary.
@@ -83,6 +85,8 @@ class SDFLiquidPhysics(Physics):
         #sdf = ext_velocity.advect(state.sdf, dt=dt)
         # Advect the extrapolated velocity that hasn't had BC applied. This will make sure no interpolation occurs with 0 from BC.
         velocity = ext_velocity.advect(ext_velocity_free, dt=dt)
+
+        #state.mask_after = velocity    
 
         return sdf, velocity
 
