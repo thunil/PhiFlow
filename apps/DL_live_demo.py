@@ -5,7 +5,7 @@ from phi.math.sampled import *
 from phi.physics.forcenet import *
 
 # Set the simulation type: either FLIP or SDF
-mode = 'SDF'
+mode = 'FLIP'
 
 def insert_circle(field, center, radius):
     indices = indices_tensor(field).astype(int)
@@ -84,7 +84,7 @@ class LiquidNetworkDemo(TFModel):
             self.loss = l2_loss(self.state_in.density_field - self.target_density)
 
             self.add_field("Trained Forces", lambda: self.session.run(self.forces, feed_dict=self.feed))
-            self.add_field("Target", lambda: self.session.run(self.target_density, feed_dict=self.feed))
+            self.add_field("Target Fluid", lambda: self.session.run(self.target_density, feed_dict=self.feed))
 
             self.add_field("Fluid", lambda: self.session.run(self.state_in.active_mask, feed_dict=self.feed))
             #self.add_field("Density", lambda: self.session.run(self.state_in.density_field, feed_dict=self.feed))
@@ -182,4 +182,4 @@ class LiquidNetworkDemo(TFModel):
 
 
 
-app = LiquidNetworkDemo().show(production=__name__ != "__main__", framerate=3, display=("Trained Forces", "Fluid"))
+app = LiquidNetworkDemo().show(production=__name__ != "__main__", framerate=3, display=("Fluid", "Target Fluid"))

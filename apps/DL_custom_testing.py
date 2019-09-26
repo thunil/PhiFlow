@@ -5,7 +5,7 @@ from phi.math.sampled import *
 from phi.physics.forcenet import *
 
 # Set the simulation type: either FLIP or SDF
-mode = 'FLIP'
+mode = 'SDF'
 
 
 def insert_circles(field, centers, radii, values=None):
@@ -46,7 +46,7 @@ class LiquidNetworkTesting(TFModel):
 
         # Load the model data from the training app, so we can test that network on testing simulation data.
 
-        self.size = np.array([96, 144])
+        self.size = np.array([32, 40])
         domain = Domain(self.size, SLIPPERY)
         
         self.dt = 0.01
