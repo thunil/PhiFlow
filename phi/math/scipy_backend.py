@@ -33,7 +33,7 @@ class SciPyBackend(Backend):
         else:
             return (x/y)
 
-    def random(self, shape):
+    def random_like(self, shape):
         return np.random.random(shape).astype('f')
 
     def rank(self, value):

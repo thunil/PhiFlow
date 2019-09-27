@@ -22,7 +22,7 @@ class TFBackend(Backend):
     def divide_no_nan(self, x, y):
         return tf.div_no_nan(x,y)
 
-    def random(self, shape):
+    def random_like(self, shape):
         return tf.random.uniform(shape)
 
     def rank(self, value):

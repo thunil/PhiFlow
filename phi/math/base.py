@@ -225,7 +225,7 @@ class DynamicBackend(Backend):
         return False
 
     def random_like(self, tensor):
-        return self.choose_backend(tensor).random(shape(tensor))
+        return self.choose_backend(tensor).random_like(shape(tensor))
 
     def stack(self, values, axis=0):
         return self.choose_backend(values).stack(values, axis)
