@@ -17,7 +17,7 @@ class Backend:
         return False
 
     def random_like(self, array):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def stack(self, values, axis=0):
         raise NotImplementedError(self)
@@ -38,13 +38,13 @@ class Backend:
         raise NotImplementedError(self)
 
     def prod(self, value, axis=None):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def divide_no_nan(self, x, y):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
     
     def where(self, condition, x=None, y=None):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def mean(self, value, axis=None):
         raise NotImplementedError(self)
@@ -53,10 +53,10 @@ class Backend:
         raise NotImplementedError(self)
 
     def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
         
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def zeros_like(self, tensor):
         raise NotImplementedError(self)
@@ -78,10 +78,10 @@ class Backend:
         raise NotImplementedError(self)
 
     def sign(self, x):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def round(self, x):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def ceil(self, x):
         raise NotImplementedError(self)
@@ -135,7 +135,7 @@ class Backend:
         raise NotImplementedError(self)
 
     def gather_nd(self, values, indices):
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def flatten(self, x):
         return self.reshape(x, (-1,) )
@@ -163,7 +163,7 @@ All indices must be non-negative and are expected to be within bounds. Otherwise
         :param shape:
         :param duplicates_handling: one of ('undefined', 'add', 'mean', 'any', 'last', 'no duplicates')
         """
-        raise NotImplementedError()
+        raise NotImplementedError(self)
 
     def any(self, boolean_tensor, axis=None, keepdims=False):
         raise NotImplementedError(self)
