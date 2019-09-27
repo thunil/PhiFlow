@@ -51,7 +51,7 @@ class TFBackend(Backend):
     def reshape(self, value, shape):
         return tf.reshape(value, shape)
 
-    def sum(self, value, axis=None):
+    def sum(self, value, axis=None, keepdims=False):
         if axis is not None:
             if not isinstance(axis, int):
                 axis = list(axis)
@@ -180,8 +180,10 @@ class TFBackend(Backend):
             raise ValueError("Tensor must be of rank 1, 2 or 3 but is %d"%rank)
         return result
 
-    def expand_dims(self, a, axis=0):
-        return tf.expand_dims(a, axis)
+    def expand_dims(self, a, axis=0, number=1):
+        for i in range(number):
+            a = tf.expand_dims(a, axis)
+        return a
 
     def shape(self, tensor):
         return tf.shape(tensor)
@@ -194,6 +196,9 @@ class TFBackend(Backend):
 
     def to_int(self, x, int64=False):
         return tf.cast(x, tf.int64) if int64 else tf.cast(x, tf.int32)
+
+    def to_complex(self, x):
+        return tf.to_complex64(x)
 
     def gather(self, values, indices):
         return tf.gather(values, indices)
@@ -253,6 +258,46 @@ class TFBackend(Backend):
             st = tf.SparseTensor(indices, values, shape)
             st = tf.sparse.reorder(st)   # only needed if not ordered
             return tf.sparse.to_dense(st)
+
+    def fft(self, x):
+        rank = len(x.shape) - 2
+        assert rank >= 1
+        if rank == 1:
+            return tf.stack([tf.fft(c) for c in tf.unstack(x, axis=-1)], axis=-1)
+        elif rank == 2:
+            return tf.stack([tf.fft2d(c) for c in tf.unstack(x, axis=-1)], axis=-1)
+        elif rank == 3:
+            return tf.stack([tf.fft3d(c) for c in tf.unstack(x, axis=-1)], axis=-1)
+        else:
+            raise NotImplementedError('n-dimensional FFT not implemented.')
+
+    def ifft(self, k):
+        rank = len(k.shape) - 2
+        assert rank >= 1
+        if rank == 1:
+            return tf.stack([tf.ifft(c) for c in tf.unstack(k, axis=-1)], axis=-1)
+        elif rank == 2:
+            return tf.stack([tf.ifft2d(c) for c in tf.unstack(k, axis=-1)], axis=-1)
+        elif rank == 3:
+            return tf.stack([tf.ifft3d(c) for c in tf.unstack(k, axis=-1)], axis=-1)
+        else:
+            raise NotImplementedError('n-dimensional inverse FFT not implemented.')
+
+    def imag(self, complex):
+        return tf.imag(complex)
+
+    def real(self, complex):
+        return tf.real(complex)
+
+    def cast(self, x, dtype):
+        return tf.cast(x, dtype)
+
+    def sin(self, x):
+        return tf.sin(x)
+
+    def cos(self, x):
+        return tf.cos(x)
+
 
 # from niftynet.layer.resampler.py
 # https://cmiclab.cs.ucl.ac.uk/CMIC/NiftyNet/blob/69c98e5a95cc6788ad9fb8c5e27dc24d1acec634/niftynet/layer/resampler.py
