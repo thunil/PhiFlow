@@ -1,0 +1,4 @@
+model_checkpoint_path: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-sdf-liquid-simulation-data\\sim_000027\\checkpoint_00014113\\model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-sdf-liquid-simulation-data\\sim_000027\\checkpoint_00014111\\model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-sdf-liquid-simulation-data\\sim_000027\\checkpoint_00014112\\model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-sdf-liquid-simulation-data\\sim_000027\\checkpoint_00014113\\model.ckpt"

@@ -1,0 +1,3 @@
+model_checkpoint_path: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-flip-liquid-simulation-data\\sim_000074\\checkpoint_00093866\\model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-flip-liquid-simulation-data\\sim_000074\\checkpoint_00081240\\model.ckpt"
+all_model_checkpoint_paths: "C:\\Users\\mike_/phi/model/network-training-for-pre-generated-flip-liquid-simulation-data\\sim_000074\\checkpoint_00093866\\model.ckpt"
