@@ -25,7 +25,7 @@ def placeholder_like(obj, dtype=np.float32, basename=None, particles=False):
     f = lambda attr: tf.placeholder(dtype, (
             () if isinstance(attr.value, int) 
             else (attr.value.shape[0], None, attr.value.shape[2]) if (particles and len(attr.value.shape) == 3) 
-            else ([None] * len(attr.value.shape)) if particles 
+            #else ([None] * len(attr.value.shape)) if particles 
             else attr.value.shape
         ), _tf_name(attr, basename))
     return struct.map(f, obj, leaf_condition=_is_python_shape, trace=True)

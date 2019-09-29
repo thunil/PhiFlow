@@ -16,6 +16,8 @@ class FieldSequenceModel(nontf.FieldSequenceModel):
         self.editable_placeholders = {}
         self.auto_bake = True
         self.add_trait('tensorflow')
+        
+        self.particles_per_cell = None
 
     def prepare(self):
         if self.prepared:
@@ -24,7 +26,7 @@ class FieldSequenceModel(nontf.FieldSequenceModel):
         self.info('Initializing variables')
         self.session.initialize_variables()
         if self.auto_bake:
-            tf_bake_graph(self.world, self.session)
+            tf_bake_graph(self.world, self.session, self.particles_per_cell is not None)
         return self
 
     def add_scalar(self, name, node):
