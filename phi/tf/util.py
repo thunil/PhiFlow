@@ -13,12 +13,16 @@ def _tf_name(attr, basename):
         return basename + '/' + attr.path('/')
 
 
-def placeholder(shape, dtype=np.float32, basename=None):
-    f = lambda attr: tf.placeholder(dtype, attr.value, _tf_name(attr, basename))
+# For FLIP simulations we want the shape to be dynamic, so we set it to None in that case. 
+def placeholder(shape, dtype=np.float32, basename=None, particles=False):
+    f = lambda attr: tf.placeholder(dtype, 
+        (attr.value[0], None, attr.value[2]) if (particles and len(attr.value) == 3) 
+        else attr.value, 
+        _tf_name(attr, basename))
     return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True)
 
-# int type is not handled by shape, and for the ball_movement demo we require a placeholder for an int, therefore we isolate that case here. (attr.value.shape doesn't return () for int)
-# For FLIP simulations we want the shape to be dynamic, so we set it to None in that case.
+
+
 def placeholder_like(obj, dtype=np.float32, basename=None, particles=False):
     warnings.warn("placeholder_like may not respect the batch dimension. "
                   "For State objects, use placeholder(state.shape) instead.", DeprecationWarning, stacklevel=2)

@@ -393,7 +393,7 @@ class StaggeredGrid(struct.Struct):
         try:
             return 'StaggeredGrid(shape=%s)' % (self.shape,)
         except:
-            return 'StaggeredGrid(%s)' % self.staggered
+            return 'StaggeredGrid(%s)' % (self.staggered,)
 
     def at_centers(self):
         rank = self.spatial_rank

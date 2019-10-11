@@ -3,7 +3,7 @@ from .util import *
 
 
 def tf_bake_graph(world, session, particles=False):
-    state_in = placeholder_like(world.state, particles=particles)
+    state_in = placeholder(world.state.shape, particles=particles)
     dt = tf.placeholder(tf.float32, ())
     state_out = world.physics.step(state_in, dt=dt)
     world.physics = BakedWorldPhysics(world.physics, session, state_in, state_out, dt)
