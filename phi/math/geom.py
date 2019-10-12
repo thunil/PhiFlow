@@ -140,13 +140,6 @@ class Grid(struct.Struct):
         assert isinstance(grid2, Grid), 'Not a grid: %s' % type(grid2)
         return grid1._dimensions == grid2._dimensions and grid1._box == grid2._box
 
-<<<<<<< HEAD
-def tensor_shape(batch_size, dimensions, components):
-    if batch_size is None:
-        batch_size = 1
-    return np.concatenate([[batch_size], dimensions, [components]])
-=======
 
 def tensor_shape(batch_size, resolution, components):
     return np.concatenate([[batch_size], resolution, [components]])
->>>>>>> origin/master
