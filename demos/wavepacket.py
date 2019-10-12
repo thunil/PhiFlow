@@ -5,7 +5,7 @@ from phi.flow import *
 scale = 4
 
 
-class SchroedingerDemo(FieldSequenceModel):
+class WavePacketDemo(FieldSequenceModel):
 
     def __init__(self):
         FieldSequenceModel.__init__(self, u'Schrödinger Demo', stride=10)
@@ -20,14 +20,12 @@ class SchroedingerDemo(FieldSequenceModel):
 
         self.add_field('Real', lambda: np.real(q.amplitude))
         self.add_field('Imag', lambda: np.imag(q.amplitude))
-        self.add_field('Domain', lambda: geometry_mask([glassbar.field.bounds, topbar.geometry], q.grid))
+        self.add_field('Domain', lambda: geometry_mask([glassbar.field.bounds, topbar.geometry], q.domain))
         self.add_field('Zoomed', lambda: np.real(q.amplitude)[:, 0:128, 0:128, :])
-        self.info('Total probability: %f' % sum(abs(self.q.amplitude)**2))
 
     def step(self):
         self.q.mass = self.value_mass
         world.step(dt=self.value_dt)
-        self.info('Total probability: %f' % sum(abs(self.q.amplitude)**2))
 
     def action_reset(self):
         self.steps = 0
@@ -35,4 +33,4 @@ class SchroedingerDemo(FieldSequenceModel):
                                                              [1*self.value_frequency, 0.6*self.value_frequency]))
 
 
-SchroedingerDemo().show(figure_builder=PlotlyFigureBuilder(batches=[0], depths=[0], max_resolution=128))
+WavePacketDemo().show(figure_builder=PlotlyFigureBuilder(batches=[0], depths=[0], max_resolution=128))

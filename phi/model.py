@@ -4,7 +4,7 @@ import logging, os, numbers, six, numpy, threading, inspect, time, sys
 from os.path import isfile
 from phi.data.fluidformat import Scene
 import phi.math.nd
-from phi.math import struct
+from phi import struct
 from phi.viz.plot import PlotlyFigureBuilder
 from phi.physics.world import world
 
@@ -355,7 +355,8 @@ class FieldSequenceModel(object):
         if self.record_data:
             arrays = [self.get_field(field) for field in self.recorded_fields]
             arrays = [a.staggered if isinstance(a, phi.math.nd.StaggeredGrid) else a for a in arrays]
-            files += phi.data.fluidformat.write_sim_frame(self.directory, arrays, self.recorded_fields, self.steps)
+            names = [n.lower() for n in self.recorded_fields]
+            files += phi.data.fluidformat.write_sim_frame(self.directory, arrays, names, self.steps)
 
         if files:
             self.message = 'Frame written to %s' % files

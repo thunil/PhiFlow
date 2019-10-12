@@ -308,6 +308,9 @@ class SciPyBackend(Backend):
     def cos(self, x):
         return np.cos(x)
 
+    def dtype(self, array):
+        return np.dtype(array)
+
 
 
 
