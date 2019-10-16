@@ -1,7 +1,7 @@
 from unittest import TestCase
 from phi.math import *
-from phi.struct import *
 from phi.flow import *
+from phi.struct import *
 
 
 def generate_test_structs():
