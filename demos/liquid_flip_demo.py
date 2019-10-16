@@ -18,7 +18,7 @@ class FlipDemo(FieldSequenceModel):
         domain = Domain(size, SLIPPERY)
         self.particles_per_cell = 8
 
-        self.initial_density = zeros(domain.grid.shape())
+        self.initial_density = zeros(domain.shape())
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
         self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
 

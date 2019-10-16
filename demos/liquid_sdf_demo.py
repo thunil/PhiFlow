@@ -18,8 +18,8 @@ class SDFDemo(FieldSequenceModel):
 
         self.distance = max(size)
 
-        self.initial_density = zeros(domain.grid.shape())
-        self.initial_velocity = zeros(domain.grid.staggered_shape())
+        self.initial_density = zeros(domain.shape())
+        self.initial_velocity = zeros(domain.staggered_shape())
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
         self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
         self.initial_velocity.staggered[:, size[-2] * 3 // 8 : size[-2] * 6 // 8 + 1, size[-1] * 3 // 8 : size[-1] * 6 // 8 + 1, :] = [0, -0.0]

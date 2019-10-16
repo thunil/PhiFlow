@@ -130,7 +130,7 @@ class SDFLiquid(State):
     __struct__ = State.__struct__.extend(('_sdf', '_velocity', '_active_mask', '_pressure', 'mask_before', 'mask_after', 'trained_forces'),
                             ('_domain', '_gravity'))
 
-    def __init__(self, state_domain=Open2D,
+    def __init__(self, state_domain,
                  density=0.0, velocity=zeros, gravity=-9.81, batch_size=None, distance=30):
         State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
         self._domain = state_domain
@@ -214,7 +214,7 @@ class SDFLiquid(State):
 
     @property
     def grid(self):
-        return self.domain.grid
+        return self.domain
 
     @property
     def rank(self):

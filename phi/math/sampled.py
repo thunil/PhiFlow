@@ -6,7 +6,7 @@ import numpy as np
 
 def grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
     valid_indices = math.to_int(math.floor(points))
-    valid_indices = math.minimum(math.maximum(0, valid_indices), griddef.dimensions-1)
+    valid_indices = math.minimum(math.maximum(0, valid_indices), griddef.resolution-1)
     # Correct format for math.scatter
     valid_indices = batch_indices(valid_indices)
 
@@ -18,19 +18,19 @@ def grid(griddef, points, values=None, duplicate_handling='mean', staggered=Fals
         return math.scatter(points, valid_indices, ones, griddef.shape(1), duplicates_handling=duplicate_handling)
     else:
         if staggered:
-            dims = range(len(griddef.dimensions))
+            dims = range(len(griddef.resolution))
             # Staggered grids only for vector fields
             assert values.shape[-1] == len(dims)
             
             result = []
             oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
-            staggered_shape = [i+1 for i in griddef.dimensions]
+            staggered_shape = [i+1 for i in griddef.resolution]
             for d in dims: 
                 staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0.0 * oneD_ones) for i in dims], axis=-1)
 
                 indices = math.to_int(math.floor(points + staggered_offset))
                 
-                valid_indices = math.maximum(0, math.minimum(indices, griddef.dimensions))
+                valid_indices = math.maximum(0, math.minimum(indices, griddef.resolution))
                 valid_indices = batch_indices(valid_indices)
 
                 # No need to manually 'mean', Out of Bounds particles aren't handled here, need to implement that somewhere else.
@@ -88,7 +88,7 @@ def random_grid_to_coords(array, particles_per_cell=1):
 def grid_to_particles(griddef, points, values, staggered=False):
     if staggered:
         values = values.staggered
-        dims = range(len(griddef.dimensions))
+        dims = range(len(griddef.resolution))
         # Staggered grids only for vector fields
         assert values.shape[-1] == len(dims)
 

@@ -28,7 +28,7 @@ class FlipLiquidPhysics(Physics):
         active_mask = self.update_active_mask(domaincache, points)
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
-        velocity_field = grid(domaincache.grid, points, velocity, staggered=True)
+        velocity_field = grid(domaincache.domain, points, velocity, staggered=True)
         #velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
 
         velocity_field_with_forces = self.apply_field_forces(state, velocity_field, dt)
@@ -54,10 +54,10 @@ class FlipLiquidPhysics(Physics):
         ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
 
         # Runge Kutta 3rd order advection scheme
-        velocity_RK1 = grid_to_particles(domaincache.grid, points, ext_velocity, staggered=True)
-        velocity_RK2 = grid_to_particles(domaincache.grid, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
-        velocity_RK3 = grid_to_particles(domaincache.grid, (points + 0.5 * dt * velocity_RK2), ext_velocity, staggered=True)
-        velocity_RK4 = grid_to_particles(domaincache.grid, (points + 1 * dt * velocity_RK3), ext_velocity, staggered=True)
+        velocity_RK1 = grid_to_particles(domaincache.domain, points, ext_velocity, staggered=True)
+        velocity_RK2 = grid_to_particles(domaincache.domain, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
+        velocity_RK3 = grid_to_particles(domaincache.domain, (points + 0.5 * dt * velocity_RK2), ext_velocity, staggered=True)
+        velocity_RK4 = grid_to_particles(domaincache.domain, (points + 1 * dt * velocity_RK3), ext_velocity, staggered=True)
 
         new_points = points + 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
         return new_points
@@ -80,7 +80,7 @@ class FlipLiquidPhysics(Physics):
 
     
     def update_active_mask(self, domaincache, points):
-        density = grid(domaincache.grid, points)
+        density = grid(domaincache.domain, points)
         active_mask = create_binary_mask(density, threshold=0.0)
         domaincache._active = active_mask
 
@@ -99,7 +99,7 @@ class FlipLiquidPhysics(Physics):
         
         # Interpolate the change from the grid and add it to the particle velocity
         _, ext_gradp = extrapolate(velocity_field_change, extrapolate_mask, dx=1.0, distance=2)
-        gradp_particles = grid_to_particles(domaincache.grid, points, ext_gradp, staggered=True)
+        gradp_particles = grid_to_particles(domaincache.domain, points, ext_gradp, staggered=True)
 
         return gradp_particles
 
@@ -109,7 +109,7 @@ class FlipLiquidPhysics(Physics):
         indices = math.to_int(math.floor(points))
         shape = [points.shape[0], -1, points.shape[-1]]
         #shape = [world.batch_size, -1, state.domain.rank]
-        mask = math.prod((indices >= 0) & (indices <= [d-1 for d in state.grid.dimensions]), axis=-1)
+        mask = math.prod((indices >= 0) & (indices <= [d-1 for d in state.grid.resolution]), axis=-1)
 
         # Out of bounds particles will be deleted
         points = math.boolean_mask(points, mask)
@@ -128,7 +128,7 @@ class FlipLiquid(State):
     __struct__ = State.__struct__.extend(('points', 'velocity', '_active_mask', 'trained_forces'),
                             ('_domain', '_gravity'))
 
-    def __init__(self, state_domain=Open2D,
+    def __init__(self, state_domain,
                  density=0.0, velocity=0.0, gravity=-9.81, batch_size=None, particles_per_cell=1):
         State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
         self._domain = state_domain
@@ -196,7 +196,7 @@ class FlipLiquid(State):
 
     @property
     def grid(self):
-        return self.domain.grid
+        return self.domain
 
     @property
     def rank(self):
