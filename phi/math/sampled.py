@@ -44,10 +44,12 @@ def particles_to_grid(griddef, points, values=None, duplicate_handling='mean', s
                 result.append(math.scatter(points, valid_indices, values_d, [indices.shape[0]] + staggered_shape + [1], duplicates_handling='mean'))
 
                 d_slice = tuple([(slice(0, -2) if i == d else slice(1,-1)) for i in dims])
+                u_slice = tuple([(slice(2, None) if i == d else slice(1,-1)) for i in dims])
                 active_mask = math.minimum(mask[(slice(None),) + d_slice + (slice(None),)], active_mask)
+                active_mask = math.minimum(mask[(slice(None),) + u_slice + (slice(None),)], active_mask)
             
             grid_values = StaggeredGrid(math.concat(result, axis=-1))
-            # Fix values at lower boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
+            # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
             _, grid_values = extrapolate(grid_values, active_mask, distance=2)
 
             return grid_values
