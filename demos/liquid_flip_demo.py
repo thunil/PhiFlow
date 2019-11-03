@@ -7,16 +7,17 @@ else:
     mode = 'NumPy'
 
 from phi.math.sampled import *
+from timeit import default_timer as timer
 
 class FlipDemo(FieldSequenceModel):
 
     def __init__(self):
         FieldSequenceModel.__init__(self, 'FLIP simulation', "Fluid Implicit Particle liquid simulation using %s backend." % mode, stride=1)
 
-        size = [64, 80]
+        size = [32, 32]
         self.dt = 0.1
         domain = Domain(size, SLIPPERY)
-        self.particles_per_cell = 8
+        self.particles_per_cell = 4
 
         self.initial_density = zeros(domain.shape())
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
@@ -29,12 +30,18 @@ class FlipDemo(FieldSequenceModel):
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Density", lambda: self.liquid.density_field)
-        self.add_field("Points", lambda: grid(self.liquid.grid, self.liquid.points, self.liquid.points))
+        self.add_field("Points", lambda: particles_to_grid(self.liquid.grid, self.liquid.points, self.liquid.points))
         self.add_field("Velocity", lambda: self.liquid.velocity_field.staggered)
 
 
     def step(self):
+        start = timer()
         world.step(dt=self.dt)
+        end = timer()
+
+        print("Elapsed time:" + str(end-start))
+
+        print("Amount of particles:" + str(math.sum(self.liquid.density_field)))
 
     def action_reset(self):
         self.liquid.points = random_grid_to_coords(self.initial_density, self.particles_per_cell)

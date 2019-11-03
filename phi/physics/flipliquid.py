@@ -28,7 +28,7 @@ class FlipLiquidPhysics(Physics):
         active_mask = self.update_active_mask(domaincache, points)
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
-        velocity_field = grid(domaincache.domain, points, velocity, staggered=True)
+        velocity_field = particles_to_grid(domaincache.domain, points, velocity, staggered=True)
         #velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
 
         velocity_field_with_forces = self.apply_field_forces(state, velocity_field, dt)
@@ -80,7 +80,7 @@ class FlipLiquidPhysics(Physics):
 
     
     def update_active_mask(self, domaincache, points):
-        density = grid(domaincache.domain, points)
+        density = particles_to_grid(domaincache.domain, points)
         active_mask = create_binary_mask(density, threshold=0.0)
         domaincache._active = active_mask
 
@@ -164,7 +164,7 @@ class FlipLiquid(State):
 
     @property
     def density_field(self):
-        return grid(self.grid, self.points, duplicate_handling='add')
+        return particles_to_grid(self.grid, self.points)
 
     @property
     def _density(self):
@@ -176,7 +176,7 @@ class FlipLiquid(State):
 
     @property
     def velocity_field(self):
-        return grid(self.grid, self.points, self.velocity, staggered=True)
+        return particles_to_grid(self.grid, self.points, self.velocity, staggered=True)
 
     @property
     def _velocity(self):

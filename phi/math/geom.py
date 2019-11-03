@@ -112,7 +112,7 @@ class Grid(struct.Struct):
         return math.expand_dims(math.stack(idx_zyx, axis=-1), 0)
 
     def staggered_points(self, dimension):
-        idx_zyx = np.meshgrid(*[np.arange(0.5,dim+1.5,1) if dim != dimension else np.arange(0,dim+1,1) for dim in self._resolution], indexing="ij")
+        idx_zyx = np.meshgrid(*[np.arange(0.5,grid_dim+1.5,1) if dim != dimension else np.arange(0,grid_dim+1,1) for (dim, grid_dim) in zip(range(self.rank), self.resolution)], indexing="ij")
         return math.expand_dims(math.stack(idx_zyx, axis=-1), 0)
 
 
