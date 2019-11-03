@@ -1,83 +1,59 @@
 from phi import math
 from phi.math.nd import *
 from phi.math.geom import *
+from phi.physics.gridliquid import *
 import numpy as np
 
 
-def particles_to_grid(griddef, points, values=None, staggered=False, weight_factor=1.0):
-    """
-Projects particles onto the grid (along with values that the particles carry).
+def particles_to_grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
+    valid_indices = math.to_int(math.floor(points))
+    valid_indices = math.minimum(math.maximum(0, valid_indices), griddef.resolution-1)
+    # Correct format for math.scatter
+    valid_indices = batch_indices(valid_indices)
 
-    :param weight_factor: defines how far values can influence a grid value, i.e. how blurry the grid should look.
-    """
-    def distance(x, y):
-        """
-    Euclidian distance (can be changed) between two tensors without square root to save computation resources.
-    Input shapes to Output shape: (b, m, n, c) and (b, p, c) -> (b, m, n, p, 1)
-        """
-        # Expand dims makes sure that the resulting shape has a last dimension of 1 (scalar field)
-        distance = math.sqrt(math.expand_dims(math.sum((x - y)**2, axis=-1), axis=-1))
-        return distance
+    # Duplicate Handling always add except for active mask, but we can construct that from the density mask.
+    ones = math.expand_dims(math.prod(math.ones_like(points), axis=-1), axis=-1)
 
+    density =  math.scatter(points, valid_indices, ones, griddef.shape(1), duplicates_handling='add')
 
     if values is None:
-        valid_indices = math.to_int(math.floor(points))
-        valid_indices = math.minimum(math.maximum(0, valid_indices), griddef.resolution-1)
-        # Correct format for math.scatter
-        valid_indices = batch_indices(valid_indices)
-        
-        # Duplicate Handling always add except for active mask, but we can construct that from the density mask.
-        ones = math.expand_dims(math.prod(math.ones_like(points), axis=-1), axis=-1)
-
-        return math.scatter(points, valid_indices, ones, griddef.shape(1), duplicates_handling='add')
+        return density
 
     else:
-        # Shape multiplications: (b, m, n, p, 1) * (b, p, c) = (b, m, n, p, c)
-        # We sum up along the "-2" axis (axis with size p) and have a resulting grid (b, m, n, c)
-        # Abbreviations: b=batchsize, [m,n]=2D-grid-dimensions, p=number-of-particles, c=components-of-vector
-
-        # Epsilon to prevent divide by 0 and small values
-        epsilon = 1e-6
-
-        # The following method could be used for density field when weight_factor is chosen small (less extrapolation, most cells too far away and receive value 0).
-
         if staggered:
             dims = range(len(griddef.resolution))
             # Staggered grids only for vector fields
             assert values.shape[-1] == len(dims)
 
+            active_mask = create_binary_mask(density, threshold=0)
+            mask = math.pad(active_mask, [[0, 0]] + [[1, 1]] * spatial_rank(active_mask) + [[0, 0]], "constant")
+            
             result = []
+            oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
+            staggered_shape = [i+1 for i in griddef.resolution]
+
             for d in dims: 
-                cell_staggered = griddef.staggered_points(d)
-                # Correct format for distance calculation
-                cell_staggered = math.expand_dims(cell_staggered, axis=-2)
-                dist = distance(cell_staggered, points)       
+                staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0.0 * oneD_ones) for i in dims], axis=-1)
+
+                indices = math.to_int(math.floor(points + staggered_offset))
                 
-                scaling_dist = math.exp(-dist/weight_factor)
-                normalizing_factor = 1/(math.sum(scaling_dist, axis=-2) + epsilon)
-                staggered_values = math.expand_dims(values[...,d], axis=-1)
-                grid_values = math.sum(scaling_dist * staggered_values, axis=-2) * normalizing_factor
+                valid_indices = math.maximum(0, math.minimum(indices, griddef.resolution))
+                valid_indices = batch_indices(valid_indices)
 
-                grid_values = math.where(math.abs(grid_values) < epsilon, 0.0*grid_values, grid_values)
+                values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
+                result.append(math.scatter(points, valid_indices, values_d, [indices.shape[0]] + staggered_shape + [1], duplicates_handling='mean'))
 
-                result.append(grid_values)
+                d_slice = tuple([(slice(0, -2) if i == d else slice(1,-1)) for i in dims])
+                active_mask = math.minimum(mask[(slice(None),) + d_slice + (slice(None),)], active_mask)
             
-            return StaggeredGrid(math.concat(result, axis=-1))
-
-        else:
-            cell_centers = griddef.center_points()
-            # Correct format for distance calculation
-            cell_centers = math.expand_dims(cell_centers, axis=-2)
-            dist = distance(cell_centers, points)
-            
-            scaling_dist = math.exp(-dist/weight_factor)
-            normalizing_factor = 1/(math.sum(scaling_dist, axis=-2) + epsilon)
-            grid_values = math.sum(scaling_dist * values, axis=-2) * normalizing_factor
-
-            grid_values = math.where(math.abs(grid_values) < epsilon, 0.0*grid_values, grid_values)
+            grid_values = StaggeredGrid(math.concat(result, axis=-1))
+            # Fix values at lower boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
+            _, grid_values = extrapolate(grid_values, active_mask, distance=2)
 
             return grid_values
 
+        else:
+            return math.scatter(points, valid_indices, values, griddef.shape(values.shape[-1]), duplicates_handling=duplicate_handling)
 
 
 def active_centers(array, particles_per_cell=1):
