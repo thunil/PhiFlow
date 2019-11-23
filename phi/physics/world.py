@@ -1,14 +1,9 @@
-from .collective import CollectiveState, CollectivePhysics
-from .smoke import *
-from .burger import *
-from .gridliquid import *
-from .flipliquid import *
-from .sdfliquid import *
-from .heat import *
-from .obstacle import *
-from .effect import *
-from .schroedinger import QuantumWave, StepPotential
+from typing import TypeVar
 import inspect
+
+from .physics import State, Physics, TrajectoryKey
+from .collective import CollectiveState
+from phi.physics.field.effect import Gravity
 
 
 class StateProxy(object):
@@ -61,29 +56,7 @@ class StateProxy(object):
             self.state = self.state.copied_with(**{key:value})
 
 
-def _proxy_wrap(world, constructor):
-    try:
-        const_args = inspect.getargspec(constructor)[0]
-        static = const_args[0] != 'self'
-    except:
-        static = False
-        const_args = ['batch_size']
-    def buildadd(*args, **kwargs):
-        if 'batch_size' not in kwargs and 'batch_size' in const_args:
-            kwargs['batch_size'] = world.batch_size
-        if 'physics' in kwargs:
-            physics = kwargs['physics']
-            assert physics is not None
-            del kwargs['physics']
-        else: physics = None
-        invok = constructor.__func__ if static else constructor
-        state = invok(*args, **kwargs)
-        world.add(state)
-        proxy = StateProxy(world, state.trajectorykey)
-        if physics is not None:
-            proxy.physics = physics
-        return proxy
-    return buildadd
+S = TypeVar('S', bound=State)
 
 
 class World(object):
@@ -95,35 +68,17 @@ class World(object):
     The method world.step() evolves the whole state or optionally a specific state in time.
     """
 
-    def __init__(self, batch_size=None):
+    def __init__(self, batch_size=None, add_default_objects=True):
+        # --- Insert object / create proxy shortcuts ---
+        self.reset(batch_size, add_default_objects)
+
+    def reset(self, batch_size=None, add_default_objects=True):
         self._state = CollectiveState()
         self.physics = self._state.default_physics()
         self.observers = set()
         self.batch_size = batch_size
-        # --- Insert object / create proxy shortcuts ---
-        for proxy in ('Smoke', 'Burger', 'Obstacle', 'Inflow', 'Fan', 'ConstantDensity',
-                      'GridLiquid', 'FlipLiquid', 'SDFLiquid',
-                      'Heat', 'ConstantTemperature', 'HeatSource', 'ColdSource', 'FieldEffect',
-                      'QuantumWave', 'StepPotential'):
-            setattr(self, proxy, _proxy_wrap(self, getattr(self, proxy)))
-
-    Smoke = Smoke
-    Burger = Burger
-    GridLiquid = GridLiquid
-    FlipLiquid = FlipLiquid
-    SDFLiquid = SDFLiquid
-    Obstacle = Obstacle
-    Inflow = Inflow
-    Fan = Fan
-    ConstantDensity = ConstantDensity
-    Heat = Heat
-    ConstantTemperature = ConstantTemperature
-    HeatSource = HeatSource
-    ColdSource = ColdSource
-    FieldEffect = FieldEffect
-    QuantumWave = QuantumWave
-    StepPotential = StepPotential
-
+        if add_default_objects:
+            self.add(Gravity())
 
     @property
     def state(self):
@@ -141,18 +96,18 @@ class World(object):
 
     def step(self, state=None, dt=1.0, physics=None):
         """
-Evolves the current world state by a time increment dt.
-If state is provided, only that state is evolved, leaving the others untouched.
-The optional physics parameter can then be used to override the default physics.
-Otherwise, all states are evolved.
+        Evolves the current world state by a time increment dt.
+        If state is provided, only that state is evolved, leaving the others untouched.
+        The optional physics parameter can then be used to override the default physics.
+        Otherwise, all states are evolved.
 
-Calling World.step resolves all dependencies among simulations and then calls Physics.step on each simulation to evolve the states.
+        Calling World.step resolves all dependencies among simulations and then calls Physics.step on each simulation to evolve the states.
 
-Invoking this method alters the world state. To to_field a copy of the state, use :func:`World.stepped <~world.World.stepped>` instead.
-        :param state: State, StateProxy or None
-        :param dt: time increment, default 1.0
-        :param physics: Physics object for the state or None for default
-        :return: evolved state if a specific state was provided
+        Invoking this method alters the world state. To to_field a copy of the state, use :func:`World.stepped <~world.World.stepped>` instead.
+            :param state: State, StateProxy or None
+            :param dt: time increment, default 1.0
+            :param physics: Physics object for the state or None for default
+            :return: evolved state if a specific state was provided
         """
         if state is None:
             if physics is None: physics = self.physics
@@ -173,30 +128,53 @@ Invoking this method alters the world state. To to_field a copy of the state, us
                 state = state.state
             return self.physics.substep(state, self._state, dt, override_physics=physics)
 
-#     def on_change(self, observer):
-#         """
-# Register an observer that will be called when states are added to the world or removed from the world.
-# The observer must define __call__ and will be given the world as parameter.
-#         :param observer:
-#         """
-#         self.observers.add(observer)
-#
-#     def remove_on_change(self, observer):
-#         self.observers.remove(observer)
-
     def add(self, state, physics=None):
+        # type: (S, Physics) -> S
+        """
+        Adds a State to world.state and creates a StateProxy for that state.
+
+        :param state: State object to add
+        :param physics: Physics to use for stepping or None for state.default_physics()
+        :return: a StateProxy representing the added state. If world.state is updated (e.g. because world.step() was called), the StateProxy will refer to the updated values.
+        """
         self.state += state
+        if state._batch_size is None:
+            state._batch_size = self.batch_size
         if physics is not None:
             self.physics.add(state.trajectorykey, physics)
+        return StateProxy(self, state.trajectorykey)
 
-    def remove(self, state):
-        self.state -= state
-        self.physics.remove(state.trajectorykey)
+    def add_all(self, *states):
+        self.state += states
+
+    def remove(self, obj):
+        if inspect.isclass(obj):
+            states = self.state.all_instances(obj)
+            return self.remove(states)
+        elif isinstance(obj, (tuple,list)):
+            for state in obj:
+                self.remove(state)
+        else:
+            key = obj if isinstance(obj, TrajectoryKey) else obj.trajectorykey
+            self.state = self.state.trajectory_removed(key)
+            self.physics.remove(key)
 
     def clear(self):
         self._state = CollectiveState()
         self.physics = self._state.default_physics()
         self.state = self._state
+
+    def get_physics(self, state):
+        """
+        Looks up the Physics object associated with a given State or StateProxy.
+        If no Physics object was registered manually, the state.default_physics() object is used.
+        
+        :param state: State or StateProxy contained in this world
+        :return: Physics
+        """
+        if isinstance(state, StateProxy):
+            state = state.state
+        return self.physics.for_(state)
 
 
 world = World()

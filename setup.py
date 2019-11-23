@@ -1,13 +1,12 @@
-import setuptools
 import distutils.cmd
 import distutils.log
-from setuptools import setup
-from setuptools.command.install import install
 import subprocess
 import os
+from setuptools import setup
 
 
 class CudaCommand(distutils.cmd.Command):
+
     description = "Compile CUDA sources"
     user_options = [
         ("gcc=", None, "Path to the gcc compiler."),
@@ -15,13 +14,17 @@ class CudaCommand(distutils.cmd.Command):
     ]
 
     def run(self):
-        srcPath = os.path.abspath("./phi/solver/cuda/src")
-        buildPath = os.path.abspath("./phi/solver/cuda/build")
+        srcPath = os.path.abspath("./phi/physics/pressuresolver/cuda/src")
+        buildPath = os.path.abspath("./phi/physics/pressuresolver/cuda/build")
         print("Source Path:\t" + srcPath)
         print("Build Path:\t" + buildPath)
 
         # Get TF Compile/Link Flags and write to env
         import tensorflow as tf
+        if tf.__version__[0] == '2':
+            print('Adjusting for tensorflow 2.0')
+            tf = tf.compat.v1
+            tf.disable_eager_execution()
         TF_CFLAGS = tf.sysconfig.get_compile_flags()
         TF_LFLAGS = tf.sysconfig.get_link_flags()
 
@@ -36,55 +39,72 @@ class CudaCommand(distutils.cmd.Command):
 
         print("Compiling CUDA code...")
         # Build the Laplace Matrix Generation CUDA Kernels
-        subprocess.check_call([self.nvcc,
-                               "-std=c++11",
-                               "-c",
-                               "-o",
-                               os.path.join(buildPath, "laplace_op.cu.o"),
-                               os.path.join(srcPath, "laplace_op.cu.cc"),
-                               "-x",
-                               "cu",
-                               "-Xcompiler",
-                               "-fPIC"]
-                               + TF_CFLAGS)
+        subprocess.check_call(
+            [
+                self.nvcc,
+                "-std=c++11",
+                "-c",
+                "-o",
+                os.path.join(buildPath, "laplace_op.cu.o"),
+                os.path.join(srcPath, "laplace_op.cu.cc"),
+                "-x",
+                "cu",
+                "-Xcompiler",
+                "-fPIC"
+            ]
+            + TF_CFLAGS
+        )
 
         # Build the Laplace Matrix Generation Custom Op
         # This is only needed for the Laplace Matrix Generation Benchmark
-        subprocess.check_call([self.gcc,
-                               "-std=c++11",
-                               "-shared",
-                               "-o",
-                               os.path.join(buildPath, "laplace_op.so"),
-                               os.path.join(srcPath, "laplace_op.cc"),
-                               os.path.join(buildPath, "laplace_op.cu.o"),
-                               "-fPIC"]
-                               + TF_CFLAGS + TF_LFLAGS)
+        subprocess.check_call(
+            [
+                self.gcc,
+                "-std=c++11",
+                "-shared",
+                "-o",
+                os.path.join(buildPath, "laplace_op.so"),
+                os.path.join(srcPath, "laplace_op.cc"),
+                os.path.join(buildPath, "laplace_op.cu.o"),
+                "-fPIC"
+            ]
+            + TF_CFLAGS
+            + TF_LFLAGS
+        )
 
         # Build the Pressure Solver CUDA Kernels
-        subprocess.check_call([self.nvcc,
-                               "-std=c++11",
-                               "-c",
-                               "-lcublas",
-                               "-o",
-                               os.path.join(buildPath, "pressure_solve_op.cu.o"),
-                               os.path.join(srcPath, "pressure_solve_op.cu.cc"),
-                               "-x", "cu",
-                               "-Xcompiler",
-                               "-fPIC"]
-                               + TF_CFLAGS)
+        subprocess.check_call(
+            [
+                self.nvcc,
+                "-std=c++11",
+                "-c",
+                "-lcublas",
+                "-o",
+                os.path.join(buildPath, "pressure_solve_op.cu.o"),
+                os.path.join(srcPath, "pressure_solve_op.cu.cc"),
+                "-x", "cu",
+                "-Xcompiler",
+                "-fPIC"
+            ]
+            + TF_CFLAGS
+        )
 
         # Build the Pressure Solver Custom Op
-        subprocess.check_call([self.gcc,
-                               "-std=c++11",
-                               "-shared",
-                               "-o",
-                               os.path.join(buildPath, "pressure_solve_op.so"),
-                               os.path.join(srcPath, "pressure_solve_op.cc"),
-                               os.path.join(buildPath, "pressure_solve_op.cu.o"),
-                               os.path.join(buildPath, "laplace_op.cu.o"),
-                               "-fPIC"]
-                               + TF_CFLAGS + TF_LFLAGS)
-
+        subprocess.check_call(
+            [
+                self.gcc,
+                "-std=c++11",
+                "-shared",
+                "-o",
+                os.path.join(buildPath, "pressure_solve_op.so"),
+                os.path.join(srcPath, "pressure_solve_op.cc"),
+                os.path.join(buildPath, "pressure_solve_op.cu.o"),
+                os.path.join(buildPath, "laplace_op.cu.o"),
+                "-fPIC"
+            ]
+            + TF_CFLAGS
+            + TF_LFLAGS
+        )
 
     def initialize_options(self):
         self.gcc = "gcc"
@@ -96,13 +116,29 @@ class CudaCommand(distutils.cmd.Command):
 
 
 extras = {
-    'gui': ["dash", "dash-renderer", "dash-html-components", "dash-core-components", "plotly"],
+    'gui': ["dash",
+            "dash-renderer",
+            "dash-html-components",
+            "dash-core-components",
+            "plotly"],
 }
+
 
 setup(
     name='phiflow',
-    version='0.3.4',
-    packages=['phi', 'phi.data', 'phi.local', 'phi.math', 'phi.physics', 'phi.solver', 'phi.tf', 'phi.viz'],
+    version='0.4.3',
+    packages=['phi',
+              'phi.app',
+              'phi.data',
+              'phi.geom',
+              'phi.local',
+              'phi.math',
+              'phi.physics', 
+              'phi.physics.field', 
+              'phi.physics.pressuresolver',
+              'phi.struct',
+              'phi.tf',
+              'phi.viz', 'phi.viz.dash'],
     cmdclass={
         "cuda": CudaCommand,
     },

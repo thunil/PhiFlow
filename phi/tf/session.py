@@ -1,8 +1,9 @@
 import numpy as np
+import contextlib
+
 from phi import struct
 from .profiling import *
 from .util import isplaceholder
-import contextlib
 
 
 class Session(object):
@@ -13,13 +14,17 @@ class Session(object):
         assert self._session.graph == tf.get_default_graph()
         self.graph = tf.get_default_graph()
         self.summary_writers = {}
-        self.summary_directory = os.path.abspath(scene.subpath('summary'))
-        self.profiling_directory = scene.subpath("profile")
+        self.summary_directory = os.path.abspath(scene.subpath('summary')) if scene is not None else None
+        self.profiling_directory = scene.subpath("profile") if scene is not None else None
         self.trace_count = 0
         self.saver = None
 
     def initialize_variables(self):
         import tensorflow as tf
+        if tf.__version__[0] == '2':
+            print('Adjusting for tensorflow 2.0')
+            tf = tf.compat.v1
+            tf.disable_eager_execution()
         self._session.run(tf.global_variables_initializer())
         self.saver = tf.train.Saver(max_to_keep=100, allow_empty=True)
 
@@ -29,15 +34,16 @@ class Session(object):
         if fetches is None:
             return None
 
+        tensor_feed_dict = None
         if feed_dict is not None:
-            new_feed_dict = {}
+            tensor_feed_dict = {}
             for (key, value) in feed_dict.items():
-                key_tensors = struct.flatten(key, include_properties=True)
-                value_tensors = struct.flatten(value, include_properties=True)
-                for key_tensor, value_tensor in zip(key_tensors, value_tensors):
+                pairs = struct.zip([key, value], include_properties=True, zip_parents_if_incompatible=True)
+                def add_to_dict(key_tensor, value_tensor):
                     if isplaceholder(key_tensor):
-                        new_feed_dict[key_tensor] = value_tensor
-            feed_dict = new_feed_dict
+                        tensor_feed_dict[key_tensor] = value_tensor
+                    return None
+                with struct.anytype(): struct.map(add_to_dict, pairs, include_properties=True)
 
         tensor_fetches = struct.flatten(fetches)
 
@@ -54,7 +60,7 @@ class Session(object):
         if summary_key is not None and merged_summary is not None:
             tensor_fetches = [merged_summary] + tensor_fetches
 
-        result_fetches = self._session.run(tensor_fetches, feed_dict, options, run_metadata)
+        result_fetches = self._session.run(tensor_fetches, tensor_feed_dict, options, run_metadata)
         result_dict = {fetch: result for fetch, result in zip(tensor_fetches, result_fetches)}
 
         if summary_key:

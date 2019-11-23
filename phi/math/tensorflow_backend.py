@@ -1,10 +1,15 @@
-import tensorflow as tf
-import numpy as np
-from numpy import ndarray
-import collections
 import uuid
+import numpy as np
+import tensorflow as tf
+
 from phi.math.base import Backend
 from phi.math.nd import *
+
+
+if tf.__version__[0] == '2':
+    print('Adjusting for tensorflow 2.0')
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
 
 
 class TFBackend(Backend):
@@ -20,7 +25,7 @@ class TFBackend(Backend):
         return False
 
     def divide_no_nan(self, x, y):
-        return tf.div_no_nan(x,y)
+        return tf.div_no_nan(x, y)
 
     def random_like(self, shape):
         return tf.random.uniform(shape)
@@ -40,10 +45,24 @@ class TFBackend(Backend):
     def concat(self, values, axis):
         return tf.concat(values, axis)
 
-    def pad(self, value, pad_width, mode="constant", constant_values=0):
+    def pad(self, value, pad_width, mode='constant', constant_values=0):
+        assert mode in ('constant', 'symmetric', 'wrap', 'reflect')
         if np.sum(np.array(pad_width)) == 0:
             return value
-        return tf.pad(value, pad_width, mode, constant_values=constant_values)
+        if mode == 'wrap':
+            dims = range(len(value.shape))
+            for dim in dims:
+                s = value.shape[dim]
+                pad_lower, pad_upper = pad_width[dim]
+                lower_slices = [slice(s-pad_lower, None) if d == dim else slice(None) for d in dims]
+                upper_slices = [slice(None, pad_upper) if d == dim else slice(None) for d in dims]
+                lower = value[lower_slices]
+                upper = value[upper_slices]
+                value = tf.concat([lower, value, upper], axis=dim)
+            return value
+        else:
+            mode = mode.upper()
+            return tf.pad(value, pad_width, mode, constant_values=constant_values)
 
     def add(self, values):
         return tf.add_n(values)
@@ -57,6 +76,17 @@ class TFBackend(Backend):
                 axis = list(axis)
         return tf.reduce_sum(value, axis=axis)
     
+    def prod(self, value, axis=None):
+        if axis is not None:
+            if not isinstance(axis, int):
+                axis = list(axis)
+        if value.dtype == bool:
+            return tf.reduce_all(value, axis=axis)
+        return tf.reduce_prod(value, axis=axis)
+
+    def where(self, condition, x=None, y=None):
+        return tf.where(condition, x, y)
+
     def prod(self, value, axis=None):
         if axis is not None:
             if not isinstance(axis, int):
@@ -136,8 +166,10 @@ class TFBackend(Backend):
     def max(self, x, axis=None):
         return tf.reduce_max(x, axis=axis)
 
+    def min(self, x, axis=None):
+        return tf.reduce_min(x, axis=axis)
+
     def with_custom_gradient(self, function, inputs, gradient, input_index=0, output_index=None, name_base="custom_gradient_func"):
-        import uuid
         # Setup custom gradient
         gradient_name = name_base + "_" + str(uuid.uuid4())
         tf.RegisterGradient(gradient_name)(gradient)
@@ -149,7 +181,8 @@ class TFBackend(Backend):
         outputs = function(*inputs)
         output = outputs if output_index is None else outputs[output_index]
         output_with_gradient = fake_function + tf.stop_gradient(output - fake_function)
-        if output_index is None: return output_with_gradient
+        if output_index is None:
+            return output_with_gradient
         else:
             outputs = list(outputs)
             outputs[output_index] = output_with_gradient
@@ -177,11 +210,11 @@ class TFBackend(Backend):
         elif rank == 3:
             result = tf.nn.conv3d(tensor, kernel, [1, 1, 1, 1, 1], padding)
         else:
-            raise ValueError("Tensor must be of rank 1, 2 or 3 but is %d"%rank)
+            raise ValueError("Tensor must be of rank 1, 2 or 3 but is %d" % rank)
         return result
 
     def expand_dims(self, a, axis=0, number=1):
-        for i in range(number):
+        for _i in range(number):
             a = tf.expand_dims(a, axis)
         return a
 
@@ -210,7 +243,7 @@ class TFBackend(Backend):
         return tf.unstack(tensor, axis=axis)
 
     def std(self, x, axis=None):
-        mean, var = tf.nn.moments(x, axis)
+        _mean, var = tf.nn.moments(x, axis)
         return tf.sqrt(var)
 
     def boolean_mask(self, x, mask):
@@ -259,6 +292,39 @@ class TFBackend(Backend):
             st = tf.sparse.reorder(st)   # only needed if not ordered
             return tf.sparse.to_dense(st)
 
+    def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
+        # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
+        # Input indices only has the 2D coordinates.
+        # EDIT: This formatting should be already done before calling scatter.
+        z = tf.zeros(shape, dtype=values.dtype)
+
+        if duplicates_handling == 'add':
+            # Only for Tensorflow with custom gradient
+            @tf.custom_gradient
+            def scatter_density(points, indices, values):
+                result = tf.tensor_scatter_add(z, indices, values)
+
+                def grad(dr):
+                    return self.resample(gradient(dr, difference='central'), points), None, None
+
+                return result, grad
+
+            return scatter_density(points, indices, values)
+        elif duplicates_handling == 'mean':
+            # Won't entirely work with out of bounds particles (still counted in mean)
+            count = tf.tensor_scatter_add(z, indices, tf.ones_like(values))
+            total = tf.tensor_scatter_add(z, indices, values)
+            return (total / tf.maximum(1.0, count))
+        elif duplicates_handling == 'no duplicates':
+            st = tf.SparseTensor(indices, values, shape)
+            st = tf.sparse.reorder(st)   # only needed if not ordered
+            return tf.sparse.to_dense(st)
+        else:  # last, any, undefined
+            # Same as 'no duplicates'?
+            st = tf.SparseTensor(indices, values, shape)
+            st = tf.sparse.reorder(st)   # only needed if not ordered
+            return tf.sparse.to_dense(st)
+
     def fft(self, x):
         rank = len(x.shape) - 2
         assert rank >= 1
@@ -299,11 +365,12 @@ class TFBackend(Backend):
         return tf.cos(x)
 
     def dtype(self, array):
-        return array.dtype
+        return array.dtype.as_numpy_dtype
 
 
 # from niftynet.layer.resampler.py
 # https://cmiclab.cs.ucl.ac.uk/CMIC/NiftyNet/blob/69c98e5a95cc6788ad9fb8c5e27dc24d1acec634/niftynet/layer/resampler.py
+
 
 COORDINATES_TYPE = tf.int32
 EPS = 1e-6
@@ -313,80 +380,17 @@ def tensor_spatial_rank(tensor):
     return len(tensor.shape) - 2
 
 
-
-# def _resample_linear(inputs, sample_coords, boundary, boundary_func):
-#     # sample coords are ordered like x,y,z
-#     # sample_coords = sample_coords[..., ::-1] # now ordered like z,y,x
-#
-#     in_size = inputs.get_shape().as_list()
-#     in_spatial_size = in_size[1:-1]
-#     in_spatial_rank = tensor_spatial_rank(inputs)
-#     batch_size = tf.shape(inputs)[0]
-#
-#     out_spatial_rank = tensor_spatial_rank(sample_coords)
-#     out_spatial_size = sample_coords.get_shape().as_list()[1:-1]
-#
-#     if in_spatial_rank == 2 and boundary == 'ZERO':
-#         inputs = tf.transpose(inputs, [0, 2, 1, 3])
-#         return tf.contrib.resampler.resampler(inputs, sample_coords)
-#
-#     xy = tf.unstack(sample_coords, axis=-1)
-#     base_coords = [tf.floor(coords) for coords in xy]
-#     floor_coords = [tf.cast(boundary_func(x, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in
-#                     enumerate(base_coords)]
-#     ceil_coords = [tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in
-#                    enumerate(base_coords)]
-#
-#     if boundary == 'ZERO':
-#         floor_weights = [tf.expand_dims(x - tf.cast(i, tf.float32), -1) for (x, i) in zip(xy, floor_coords)]
-#         ceil_weights = [tf.expand_dims(tf.cast(i, tf.float32) - x, -1) for (x, i) in zip(xy, ceil_coords)]
-#     else:
-#         floor_weights = [tf.expand_dims(x - i, -1) for (x, i) in zip(xy, base_coords)]
-#         ceil_weights = [1.0 - w for w in floor_weights]
-#
-#     floor_coords = tf.stack(floor_coords, -1)
-#     ceil_coords = tf.stack(ceil_coords, -1)
-#
-#     batch_ids = tf.reshape(tf.range(batch_size), [batch_size] + [1] * out_spatial_rank)
-#     batch_ids = tf.tile(batch_ids, [1] + out_spatial_size)
-#
-#
-#
-#     int_coords = []
-#     def collect_coordinates(floor_coords, dimensions):
-#         if not dimensions:
-#             int_coords.append(boundary_func(floor_coords, in_spatial_size))
-#         else:
-#             collect_coordinates(floor_coords, dimensions[1:])
-#             collect_coordinates(floor_coords + unit_directions[dimensions[0]], dimensions[1:])
-#     collect_coordinates(floor_coords, range(out_spatial_rank))
-#
-#
-#     def linear_interpolation(dimensions):
-#         if not dimensions:
-#             batch_floor_coords = int_coords.pop(0)
-#             return tf.gather_nd(inputs, batch_floor_coords)
-#         else:
-#             dimension = dimensions[0]
-#             lower = linear_interpolation(dimensions[1:])
-#             upper = linear_interpolation(dimensions[1:])
-#             batch_floor_weights = tf.expand_dims(floor_weights[..., dimension], axis=-1)
-#             batch_ceil_weights = tf.expand_dims(ceil_weights[..., dimension], axis=-1)
-#             return lower * batch_floor_weights + upper * batch_ceil_weights
-#
-#     nlinear = linear_interpolation(range(out_spatial_rank))
-#     return nlinear
-
-
 def unit_direction(dim, spatial_rank):  # ordered like z,y,x
-    direction = [1 if i==dim else 0 for i in range(spatial_rank)]
-    for i in range(spatial_rank):
+    direction = [1 if i == dim else 0 for i in range(spatial_rank)]
+    for _i in range(spatial_rank):
         direction = tf.expand_dims(direction, axis=0)
     return direction
 
 
-
 def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
+    inputs = tf.convert_to_tensor(inputs)
+    sample_coords = tf.convert_to_tensor(sample_coords)
+
     in_spatial_size = [int(d) for d in inputs.shape[1:-1]]
     in_spatial_rank = tensor_spatial_rank(inputs)
     batch_size = tf.shape(inputs)[0]
@@ -394,14 +398,17 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     out_spatial_rank = tensor_spatial_rank(sample_coords)
     out_spatial_size = tf.shape(sample_coords)[1:-1]
 
+    if sample_coords.shape[0] != inputs.shape[0]:
+        sample_coords = tf.tile(sample_coords, [batch_size]+[1]*(len(sample_coords.shape)-1))
+
     if in_spatial_rank == 2 and boundary == 'ZERO':
         inputs = tf.transpose(inputs, [0, 2, 1, 3])
         return tf.contrib.resampler.resampler(inputs, sample_coords)
 
     xy = tf.unstack(sample_coords, axis=-1)
     base_coords = [tf.floor(coords) for coords in xy]
-    floor_coords = [ tf.cast(boundary_func(x, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
-    ceil_coords = [ tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
+    floor_coords = [tf.cast(boundary_func(x, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
+    ceil_coords = [tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
 
     if boundary == 'ZERO':
         weight_0 = [tf.expand_dims(x - tf.cast(i, tf.float32), -1) for (x, i) in zip(xy, floor_coords)]
@@ -428,13 +435,10 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
         weight_0 = [tf.expand_dims(x - i, -1) for (x, i) in zip(xy, base_coords)]
         weight_1 = [1.0 - w for w in weight_0]
 
-    # TODO: apply sigmoid on the weights, so we are closer to cubic interpolation than linear without the extra datapoints
-
     batch_ids = tf.reshape(tf.range(batch_size), [batch_size] + [1] * out_spatial_rank)
-    tile_shape = tf.pad(out_spatial_size, [[1,0]], constant_values=1)
-    batch_ids = tf.tile(batch_ids, tile_shape)
+    batch_ids = tf.tile(batch_ids, [1] + out_spatial_size)
     sc = (floor_coords, ceil_coords)
-    binary_neighbour_ids = [ [int(c) for c in format(i, '0%ib' % in_spatial_rank)] for i in range(2 ** in_spatial_rank)]
+    binary_neighbour_ids = [[int(c) for c in format(i, '0%ib' % in_spatial_rank)] for i in range(2 ** in_spatial_rank)]
 
     def get_knot(bc):
         coord = [sc[c][i] for i, c in enumerate(bc)]
@@ -442,7 +446,6 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
         return tf.gather_nd(inputs, coord)
 
     samples = [get_knot(bc) for bc in binary_neighbour_ids]
-
 
     def _pyramid_combination(samples, w_0, w_1):
         if len(w_0) == 1:
@@ -463,22 +466,15 @@ Resamples an N-dimensional tensor at the locations provided by sample_coords
     :param boundary: ZERO, REPLICATE, CIRCULAR, SYMMETRIC (default is ZERO)
     :return:
     """
-    # for dim in inputs.shape:
-    #     if dim.value is None:
-    #         raise ValueError("Shape of input must be known, got {}".format(inputs.shape))
-
     boundary_func = SUPPORTED_BOUNDARY[boundary]
     assert interpolation.upper() == "LINEAR"
-    # return _resample_linear(inputs, sample_coords, boundary, boundary_func)
     return _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func)
-
 
 
 def _boundary_snap(sample_coords, spatial_shape):
     max_indices = [l-1 for l in spatial_shape]
-    for i in range(len(spatial_shape)):
+    for _i in range(len(spatial_shape)):
         max_indices = tf.expand_dims(max_indices, 0)
-
     sample_coords = tf.minimum(sample_coords, max_indices)
     sample_coords = tf.maximum(sample_coords, 0)
     return sample_coords
@@ -498,7 +494,6 @@ def _boundary_symmetric(sample_coords, input_size):
         (input_size - 1) - _boundary_circular(sample_coords, circular_size))
 
 
-
 SUPPORTED_BOUNDARY = {
     'ZERO': _boundary_replicate,
     'REPLICATE': _boundary_replicate,
@@ -506,59 +501,3 @@ SUPPORTED_BOUNDARY = {
     'CIRCULAR': _boundary_circular,
     'SYMMETRIC': _boundary_symmetric
 }
-
-
-
-
-
-# def _resample_linear(inputs, sample_coords, boundary, boundary_func):
-#     # sample coords are ordered like x,y,z
-#     # sample_coords = sample_coords[..., ::-1] # now ordered like z,y,x
-#
-#     in_size = inputs.get_shape().as_list()
-#     in_spatial_size = in_size[1:-1]
-#     in_spatial_rank = tensor_spatial_rank(inputs)
-#     batch_size = tf.shape(inputs)[0]
-#
-#     out_spatial_rank = tensor_spatial_rank(sample_coords)
-#     out_spatial_size = sample_coords.get_shape().as_list()[1:-1]
-#
-#     if in_spatial_rank == 2 and boundary == 'ZERO':
-#         inputs = tf.transpose(inputs, [0, 2, 1, 3])
-#         return tf.contrib.resampler.resampler(inputs, sample_coords)
-#
-#     floor_coords = tf.cast(tf.floor(sample_coords), COORDINATES_TYPE)
-#     ceil_weights = sample_coords - tf.floor(sample_coords)
-#     floor_weights = 1 - ceil_weights
-#
-#     unit_directions = [unit_direction(i, out_spatial_rank) for i in range(out_spatial_rank)]
-#
-#     int_coords = []
-#     def collect_coordinates(floor_coords, dimensions):
-#         if not dimensions:
-#             int_coords.append(boundary_func(floor_coords, in_spatial_size))
-#         else:
-#             collect_coordinates(floor_coords, dimensions[1:])
-#             collect_coordinates(floor_coords + unit_directions[dimensions[0]], dimensions[1:])
-#     collect_coordinates(floor_coords, range(out_spatial_rank))
-#
-#
-#     def one_batch(batch_index):
-#
-#         def linear_interpolation(dimensions):
-#             if not dimensions:
-#                 batch_floor_coords = int_coords.pop(0)[batch_index,...]
-#                 return tf.gather_nd(inputs[batch_index,...], batch_floor_coords)
-#             else:
-#                 dimension = dimensions[0]
-#                 lower = linear_interpolation(dimensions[1:])
-#                 upper = linear_interpolation(dimensions[1:])
-#                 batch_floor_weights = tf.expand_dims(floor_weights[batch_index, ..., dimension], axis=-1)
-#                 batch_ceil_weights = tf.expand_dims(ceil_weights[batch_index, ..., dimension], axis=-1)
-#                 return lower * batch_floor_weights + upper * batch_ceil_weights
-#
-#         nlinear = linear_interpolation(range(out_spatial_rank))
-#         return nlinear
-#
-#     result = tf.map_fn(one_batch, tf.range(0, batch_size), dtype=tf.float32)
-#     return result

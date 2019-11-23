@@ -1,12 +1,14 @@
 # coding=utf-8
-from phi.data.fluidformat import *
-from phi.model import FieldSequenceModel
 import sys
 
+from phi.flow import *
+from phi.model import App
 
-class Viewer(FieldSequenceModel):
+
+class Viewer(App):
+
     def __init__(self, simpath):
-        FieldSequenceModel.__init__(self, name=u'*Φ-Flow* Viewer', subtitle='Play a recorded simulation')
+        App.__init__(self, name=u'*Φ-Flow* Viewer', subtitle='Play a recorded simulation')
         self.value_directory = simpath
         self.action_rewind()
 
@@ -42,10 +44,9 @@ class Viewer(FieldSequenceModel):
         self.update()
 
 
-scene_path = sys.argv[1] if len(sys.argv) >= 2 else '~/phi/data/simpleplume/sim_000000'
+scene_path = sys.argv[1] if len(sys.argv) >= 2 else '~/phi/data/smokedatagen/sim_000000'
 scene_path = os.path.expanduser(scene_path)
 if os.path.isdir(scene_path):
-    app = Viewer(scene_path).show(framerate=3, production=__name__!='__main__')
+    show(Viewer(scene_path), framerate=3)
 else:
-    import logging
-    logging.fatal('Scene path %s does not exist.' % scene_path)
+    print('Scene path %s does not exist.' % scene_path)

@@ -1,10 +1,12 @@
-from phi.physics.world import *
-from .util import *
+from phi.physics.world import World
+from phi.physics import Physics
+from phi.physics.collective import CollectivePhysics
+from .util import placeholder
 
 
 def tf_bake_graph(world, session, particles=False):
     state_in = placeholder(world.state.shape, particles=particles)
-    dt = tf.placeholder(tf.float32, ())
+    dt = placeholder(())
     state_out = world.physics.step(state_in, dt=dt)
     world.physics = BakedWorldPhysics(world.physics, session, state_in, state_out, dt)
     for sysstate in world.state.states:
@@ -17,8 +19,8 @@ def tf_bake_graph(world, session, particles=False):
 def tf_bake_subgraph(tracker, session):
     tfworld = World()
     tfworld.add(tracker.state)
-    state_in = placeholder_like(tracker.state)
-    dt = tf.placeholder(tf.float32, ())
+    state_in = placeholder(tracker.state.shape)
+    dt = placeholder(())
     state_out = tracker.world.physics.substep(state_in, tracker.world.state, dt)
     tracker.physics = BakedPhysics(session, state_in, state_out, dt)
     return tfworld
@@ -43,7 +45,7 @@ class BakedWorldPhysics(CollectivePhysics):
 
     def __init__(self, physics, session, state_in, state_out, dt):
         CollectivePhysics.__init__(self)
-        self._physics = physics._physics
+        self._physics = physics.physics
         self.state_in = state_in
         self.state_out = state_out
         self.session = session

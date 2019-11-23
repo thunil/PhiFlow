@@ -1,9 +1,11 @@
-from phi.math.base import Backend
-import numpy as np
-import numbers
 import collections
-import scipy.sparse, scipy.signal
-from numbers import Number
+import numbers
+import numpy as np
+import scipy.sparse
+import scipy.signal
+
+from phi.math.base import Backend
+
 
 class SciPyBackend(Backend):
 
@@ -69,6 +71,8 @@ class SciPyBackend(Backend):
         return np.sum(value, axis=axis, keepdims=keepdims)
 
     def prod(self, value, axis=None):
+        if not isinstance(value, np.ndarray):
+            value = np.array(value)
         if value.dtype == bool:
             return np.all(value, axis=axis)
         return np.prod(value, axis=axis)
@@ -81,8 +85,7 @@ class SciPyBackend(Backend):
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         result = func(*inputs)
         assert result.dtype == Tout, "returned value has wrong type: {}, expected {}".format(result.dtype, Tout)
-        assert result.shape == shape_out, "returned value has wrong shape: {}, expected {}".format(result.shape,
-                                                                                                   shape_out)
+        assert result.shape == shape_out, "returned value has wrong shape: {}, expected {}".format(result.shape, shape_out)
         return result
 
     def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
@@ -174,6 +177,9 @@ class SciPyBackend(Backend):
     def max(self, x, axis=None):
         return np.max(x, axis)
 
+    def min(self, x, axis=None):
+        return np.min(x, axis)
+
     def with_custom_gradient(self, function, inputs, gradient, input_index=0, output_index=None, name_base="custom_gradient_func"):
         return function(*inputs)
 
@@ -193,10 +199,10 @@ class SciPyBackend(Backend):
         assert tensor.shape[-1] == kernel.shape[-2]
         # kernel = kernel[[slice(None)] + [slice(None, None, -1)] + [slice(None)]*(len(kernel.shape)-3) + [slice(None)]]
         if padding.lower() == "same":
-            result = np.zeros(tensor.shape[:-1]+(kernel.shape[-1],), np.float32)
+            result = np.zeros(tensor.shape[:-1] + (kernel.shape[-1],), np.float32)
         elif padding.lower() == "valid":
-            valid = [tensor.shape[i+1]-(kernel.shape[i]+1)//2 for i in range(tensor_spatial_rank(tensor))]
-            result = np.zeros([tensor.shape[0]]+valid+[kernel.shape[-1]], np.float32)
+            valid = [tensor.shape[i + 1] - (kernel.shape[i] + 1) // 2 for i in range(tensor_spatial_rank(tensor))]
+            result = np.zeros([tensor.shape[0]] + valid + [kernel.shape[-1]], np.float32)
         else:
             raise ValueError("Illegal padding: %s"%padding)
         for batch in range(tensor.shape[0]):
@@ -206,7 +212,7 @@ class SciPyBackend(Backend):
         return result
 
     def expand_dims(self, a, axis=0, number=1):
-        for i in range(number):
+        for _i in range(number):
             a = np.expand_dims(a, axis)
         return a
 
@@ -272,10 +278,10 @@ class SciPyBackend(Backend):
             np.add.at(count, tuple(indices), 1)
             count = np.maximum(1, count)
             return array / count
-        else: # last, any, undefined
+        else:  # last, any, undefined
             array[indices] = values
         return array
-        
+
     def fft(self, x):
         rank = len(x.shape) - 2
         assert rank >= 1
@@ -309,9 +315,9 @@ class SciPyBackend(Backend):
         return np.cos(x)
 
     def dtype(self, array):
-        return np.dtype(array)
-
-
+        if not isinstance(array, np.ndarray):
+            array = np.array(array)
+        return array.dtype
 
 
 def clamp(coordinates, shape):

@@ -1,44 +1,24 @@
-from .domain import *
-from .smoke import initialize_field
+import numpy as np
+from .domain import DomainState
+from .field.effect import effect_applied, FieldEffect, ADD
+from .field import Field, union_mask, GeometryMask
+from . import StateDependency, Physics
+from phi import math, struct
 
 
+class QuantumWave(DomainState):
 
-class QuantumWave(State):
+    def __init__(self, domain, amplitude=1, mass=0.1, tags=('qwave',), **kwargs):
+        DomainState.__init__(**struct.kwargs(locals()))
 
-    __struct__ = State.__struct__.extend(['_amplitude'], ['_domain', '_is_normalized', '_mass'])
+    @struct.attr(default=1)
+    def amplitude(self, amplitude):
+        return self.centered_grid('amplitude', amplitude, dtype=np.complex64)
 
-    def __init__(self, domain, amplitude=1, is_normalized=False, mass=0.1, batch_size=None):
-        State.__init__(self, tags=('qwave',), batch_size=batch_size)
-        self._domain = domain
-        self._amplitude = initialize_field(amplitude, self.domain.shape(1, self._batch_size), dtype=np.complex64)
-        self._is_normalized = is_normalized
-        self._mass = mass
+    @struct.prop(default=0.1)
+    def mass(self, mass): return mass
 
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def amplitude(self):
-        return self._amplitude
-
-    @property
-    def mass(self):
-        return self._mass
-
-    @property
-    def is_normalized(self):
-        return self._is_normalized
-
-    def copied_with(self, **kwargs):
-        if ('amplitude' in kwargs) and 'is_normalized' not in kwargs:
-            kwargs['is_normalized'] = False
-        if 'amplitude' in kwargs:
-            kwargs['amplitude'] = initialize_field(kwargs['amplitude'], self.domain.shape(1, self._batch_size), dtype=np.complex64)
-        return State.copied_with(self, **kwargs)
-
-    def default_physics(self):
-        return SCHROEDINGER
+    def default_physics(self): return SCHROEDINGER
 
 
 def normalize_probability(probability_amplitude):
@@ -54,8 +34,8 @@ def psquare(complex):
 class Schroedinger(Physics):
 
     def __init__(self, margin=1):
-        Physics.__init__(self, dependencies={'obstacles': 'obstacle'},
-                         blocking_dependencies={'potentials': 'potential_effect'})
+        Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),
+                                StateDependency('potentials', 'potential_effect', blocking=True)])
         self.margin = margin
 
     def step(self, state, dt=1.0, potentials=(), obstacles=()):
@@ -64,27 +44,28 @@ class Schroedinger(Physics):
         else:
             potential = math.zeros_like(math.real(state.amplitude))  # for the moment, allow only real potentials
             for pot in potentials:
-                potential = pot.apply_grid(potential, state.domain, False, dt)
+                potential = effect_applied(pot, potential, dt)
+            potential = potential.data
 
-        amplitude = state.amplitude
+        amplitude = state.amplitude.data
 
         # Rotate by potential
         rotation = math.exp(1j * math.to_complex(potential * dt))
-        amplitude *= rotation
+        amplitude = amplitude * rotation
 
         # Move by rotating in Fourier space
         amplitude_fft = math.fft(amplitude)
-        laplace = math.sum(math.fftfreq(staticshape(amplitude)[1:-1]) ** 2, axis=-1, keepdims=True)
-        amplitude_fft *= math.exp(-1j * np.pi * math.to_complex(dt) * laplace / state.mass)  # TODO should be 2 pi^2
+        laplace = math.fftfreq(state.resolution, mode='square')
+        amplitude_fft *= math.exp(-1j * (2 * np.pi)**2 * math.to_complex(dt) * laplace / (2*state.mass))
         amplitude = math.ifft(amplitude_fft)
 
-        for obstacle in obstacles:
-            amplitude *= 1 - obstacle.geometry.at(state.domain)
+        obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles]).at(state.amplitude).data
+        amplitude *= 1 - obstacle_mask
 
         normalized = False
         symmetric = False
         if not symmetric:
-            boundary_mask = np.zeros(state.domain.shape(1, batch_size=1))
+            boundary_mask = math.zeros(state.domain.centered_shape(1, batch_size=1)).data
             boundary_mask[[slice(None)] + [slice(self.margin,-self.margin) for i in math.spatial_dimensions(boundary_mask)] + [slice(None)]] = 1
             amplitude *= boundary_mask
 
@@ -92,44 +73,127 @@ class Schroedinger(Physics):
             amplitude = normalize_probability(amplitude)
             normalized = True
 
-        return state.copied_with(amplitude=amplitude, is_normalized=normalized or state.is_normalized)
+        return state.copied_with(amplitude=amplitude)
 
 
 SCHROEDINGER = Schroedinger()
 
 
-StepPotential = lambda geometry, height: FieldEffect(ComplexConstantField(geometry, height), ['potential'], mode=ADD)
+StepPotential = lambda geometry, height: FieldEffect(GeometryMask('potential', [geometry], height), ['potential'], mode=ADD)
 
 
-def wave_packet(grid, center, size, wave_vector, normalized=True, dtype=np.complex64):
-    if len(np.shape(wave_vector)) == 0:
-        wave_vector = math.expand_dims(wave_vector, 0)
-    x = grid.center_points()
-    envelope = math.exp(-0.5 * math.sum((x - center)**2, axis=-1, keepdims=True) / size**2)
-    wave = math.exp(1j * math.expand_dims(np.dot(x, wave_vector), -1)) * envelope
-    wave = math.cast(wave, dtype)
-    if normalized: wave = normalize_probability(wave)
-    return wave
+class AnalyticSingleComponentField(Field):
+
+    def __init__(self, **kwargs):
+        data = None
+        Field.__init__(**struct.kwargs(locals()))
+
+    def sample_at(self, points, collapse_dimensions=True):
+        raise NotImplementedError()
+
+    @property
+    def rank(self):
+        raise NotImplementedError()
+
+    @property
+    def component_count(self):
+        return 1
+
+    def unstack(self):
+        return [self]
+
+    @property
+    def points(self):
+        return None
+
+    def compatible(self, other_field):
+        return True
+
+    def __repr__(self):
+        return self.__class__.__name__
 
 
-def wave_packet_gen(center, size, wave_vector, normalized=True):
-    def init(shape, dtype=np.complex64):
-        grid = Grid(shape[1:-1])
-        return wave_packet(grid, center, size, wave_vector, normalized, dtype=dtype)
-    return init
+class WavePacket(AnalyticSingleComponentField):
+
+    def __init__(self, center, size, wave_vector, name='wave_packet', **kwargs):
+        AnalyticSingleComponentField.__init__(**struct.kwargs(locals()))
+
+    @struct.prop()
+    def center(self, center): return center
+
+    @struct.prop()
+    def size(self, size): return size
+
+    @struct.attr()
+    def data(self, data):
+        assert data is None
+        return None
+
+    @struct.prop()
+    def wave_vector(self, wave_vector):
+        if len(math.shape(wave_vector)) == 0:
+            wave_vector = math.expand_dims(wave_vector, 0)
+        return wave_vector
+
+    def sample_at(self, points, collapse_dimensions=True):
+        envelope = math.exp(-0.5 * math.sum((points - self.center) ** 2, axis=-1, keepdims=True) / self.size ** 2)
+        wave = math.exp(1j * math.expand_dims(np.dot(points, self.wave_vector), -1)) * envelope
+        return wave
+
+    @property
+    def rank(self):
+        return len(self.center)
+
+    def __repr__(self):
+        return 'WavePacket(%s)' % self.center
 
 
-def harmonic_potential(grid, center, unit_distance, maximum_value=1.0, dtype=np.float32):
-    x = (grid.center_points() - center) / unit_distance
-    pot = math.sum(x ** 2, -1, keepdims=True)
-    if maximum_value is not None:
-        pot = math.minimum(pot, maximum_value)
-    return math.cast(pot, dtype)
+class HarmonicPotential(AnalyticSingleComponentField):
+
+    def __init__(self, center, unit_distance, maximum_value=1.0, data=1, name='harmonic', **kwargs):
+        AnalyticSingleComponentField.__init__(**struct.kwargs(locals()))
+
+    @struct.prop()
+    def center(self, center): return center
+
+    @struct.prop()
+    def unit_distance(self, distance): return distance
+
+    @struct.prop()
+    def maximum_value(self, maximum_value): return maximum_value
+
+    def sample_at(self, points, collapse_dimensions=True):
+        x = (points - self.center) / self.unit_distance
+        pot = math.sum(x ** 2, -1, keepdims=True) * self.data
+        if self.maximum_value is not None:
+            pot = math.minimum(pot, self.maximum_value)
+        return math.cast(pot, np.float32)
+
+    @property
+    def rank(self):
+        return len(self.center)
 
 
-def sin_potential(grid, k, phase_offset=0, dtype=np.float32):
-    x = grid.center_points()
-    phase_offset = math.expand_dims(phase_offset, -1, grid.rank+1)
-    x_k = math.expand_dims(np.dot(x, k), -1)
-    wave = math.sin(x_k + phase_offset)
-    return math.cast(wave, dtype)
+class SinPotential(AnalyticSingleComponentField):
+
+    def __init__(self, k, phase_offset=0, data=1, name='harmonic', **kwargs):
+        AnalyticSingleComponentField.__init__(**struct.kwargs(locals()))
+
+    @struct.prop()
+    def k(self, k): return k
+
+    @struct.prop()
+    def phase_offset(self, phase_offset): return phase_offset
+
+    def sample_at(self, x, collapse_dimensions=True):
+        phase_offset = math.expand_dims(self.phase_offset, -1, self.rank + 1)
+        x_k = math.expand_dims(np.dot(x, self.k), -1)
+        wave = math.sin(x_k + phase_offset)
+        return math.cast(wave, np.float32)
+
+    @property
+    def rank(self):
+        return len(self.k)
+
+    def __repr__(self):
+        return 'Sin(x*%s)' % self.k

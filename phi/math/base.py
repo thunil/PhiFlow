@@ -1,4 +1,3 @@
-
 class Backend:
 
     def __init__(self, name):
@@ -27,11 +26,12 @@ class Backend:
 
     def pad(self, value, pad_width, mode='constant', constant_values=0):
         """
-Pad a tensor.
+        Pad a tensor.
+
         :param value:
         :param pad_width: 2D tensor specifying the number of values padded to the edges of each axis in the form [[before axis 0, after axis 0], ...].
-        :param mode: 'constant', 'symmetric', 'reflect'
-        :param constant_values:
+        :param mode: 'constant', 'symmetric', 'reflect', 'wrap'
+        :param constant_values: used for out-of-bounds points if mode='constant'
         """
         raise NotImplementedError(self)
 
@@ -99,6 +99,9 @@ Pad a tensor.
     def max(self, x, axis=None):
         raise NotImplementedError(self)
 
+    def min(self, x, axis=None):
+        raise NotImplementedError(self)
+
     def maximum(self, a, b):
         raise NotImplementedError(self)
 
@@ -136,7 +139,7 @@ Pad a tensor.
         raise NotImplementedError(self)
 
     def dimrange(self, tensor):
-        return range(1, len(tensor.shape)-1)
+        return range(1, len(tensor.shape) - 1)
 
     def gather(self, values, indices):
         raise NotImplementedError(self)
@@ -161,10 +164,11 @@ Pad a tensor.
 
     def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         """
-This method expects the first dimension of indices and values to be the batch dimension.
-The batch dimension need not be specified in the indices array.
+        This method expects the first dimension of indices and values to be the batch dimension.
+        The batch dimension need not be specified in the indices array.
 
-All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.
+        All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.
+
         :param indices:
         :param values:
         :param shape:
@@ -180,14 +184,16 @@ All indices must be non-negative and are expected to be within bounds. Otherwise
 
     def fft(self, x):
         """
-Computes the n-dimensional FFT along all but the first and last dimensions.
+        Computes the n-dimensional FFT along all but the first and last dimensions.
+
         :param x: tensor of dimension 3 or higher
         """
         raise NotImplementedError(self)
 
     def ifft(self, k):
         """
-Computes the n-dimensional inverse FFT along all but the first and last dimensions.
+        Computes the n-dimensional inverse FFT along all but the first and last dimensions.
+        
         :param k: tensor of dimension 3 or higher
         """
         raise NotImplementedError(self)
@@ -210,6 +216,8 @@ Computes the n-dimensional inverse FFT along all but the first and last dimensio
     def dtype(self, array):
         raise NotImplementedError(self)
 
+    def tile(self, value, multiples):
+        raise NotImplementedError(self)
 
 
 class DynamicBackend(Backend):
@@ -246,7 +254,7 @@ class DynamicBackend(Backend):
     def tile(self, value, multiples):
         return self.choose_backend(value).tile(value, multiples)
 
-    def pad(self, value, pad_width, mode="constant", constant_values=0):
+    def pad(self, value, pad_width, mode='constant', constant_values=0):
         return self.choose_backend(value).pad(value, pad_width, mode, constant_values)
 
     def add(self, values):
@@ -315,6 +323,9 @@ class DynamicBackend(Backend):
 
     def max(self, x, axis=None):
         return self.choose_backend(x).max(x, axis)
+
+    def min(self, x, axis=None):
+        return self.choose_backend(x).min(x, axis)
 
     def maximum(self, a, b):
         return self.choose_backend([a,b]).maximum(a, b)
@@ -405,71 +416,6 @@ class DynamicBackend(Backend):
 
 
 class NoBackendFound(Exception):
+
     def __init__(self, msg):
         Exception.__init__(self, msg)
-
-
-
-backend = DynamicBackend()
-
-from phi.math.scipy_backend import SciPyBackend, as_tensor
-backend.backends.append(SciPyBackend())
-
-abs = backend.abs
-add = backend.add
-all = backend.all
-any = backend.any
-boolean_mask = backend.boolean_mask
-cast = backend.cast
-ceil = backend.ceil
-cos = backend.cos
-dtype = backend.dtype
-floor = backend.floor
-concat = backend.concat
-conv = backend.conv
-dimrange = backend.dimrange
-divide_no_nan = backend.divide_no_nan
-dot = backend.dot
-exp = backend.exp
-expand_dims = backend.expand_dims
-fft = backend.fft
-flatten = backend.flatten
-gather = backend.gather
-gather_nd = backend.gather_nd
-ifft = backend.ifft
-imag = backend.imag
-isfinite = backend.isfinite
-matmul = backend.matmul
-max = backend.max
-maximum = backend.maximum
-mean = backend.mean
-minimum = backend.minimum
-name = backend.name
-ones_like = backend.ones_like
-pad = backend.pad
-py_func = backend.py_func
-random_like = backend.random_like
-range_like = backend.range_like
-real = backend.real
-resample = backend.resample
-reshape = backend.reshape
-round = backend.round
-sign = backend.sign
-scatter = backend.scatter
-shape = backend.shape
-sin = backend.sin
-sqrt = backend.sqrt
-stack = backend.stack
-staticshape = backend.staticshape
-std = backend.std
-sum = backend.sum
-prod = backend.prod
-tile = backend.tile
-to_complex = backend.to_complex
-to_float = backend.to_float
-to_int = backend.to_int
-unstack = backend.unstack
-where = backend.where
-while_loop = backend.while_loop
-with_custom_gradient = backend.with_custom_gradient
-zeros_like = backend.zeros_like

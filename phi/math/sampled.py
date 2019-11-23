@@ -4,6 +4,8 @@ from phi.math.geom import *
 from phi.physics.gridliquid import *
 import numpy as np
 
+from phi.geom import *
+
 
 def particles_to_grid(griddef, points, values=None, duplicate_handling='mean', staggered=False):
     valid_indices = math.to_int(math.floor(points))

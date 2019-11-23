@@ -1,233 +1,144 @@
 # Because division is different in Python 2 and 3
-#from __future__ import division
+from __future__ import division
 
 from .domain import *
-from phi.solver.base import *
+from .physics import *
+from .field import *
+from .fluid import *
 from phi.math.initializers import _is_python_shape
-#from operator import itemgetter
 import itertools
 
 
-def initialize_field(value, shape):
-    if isinstance(value, (int, float)):
-        return math.zeros(shape) + value
-    elif callable(value):
-        return value(shape)
-    if isinstance(shape, struct.Struct):
-        if type(shape) == type(value):
-            zipped = struct.zip([value, shape], leaf_condition=_is_python_shape)
-            return struct.map(lambda val, sh: initialize_field(val, sh), zipped)
+
+def get_domain(liquid, obstacles):
+    if liquid.domaincache is None or not liquid.domaincache.is_valid(obstacles):
+        if obstacles is not None:
+            obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
+            obstacle_grid = obstacle_mask.at(liquid.velocity.center_points, collapse_dimensions=False).data
+            mask = 1 - obstacle_grid
         else:
-            return type(shape)(value)
-    else:
-        return value
+            mask = math.ones(liquid.domain.centered_shape(name='active')).data
 
-
-def domain(state, obstacles):
-    if state.domaincache is None or not state.domaincache.is_valid(obstacles):
-        mask = 1 - geometry_mask([o.geometry for o in obstacles], state.grid)
-        if state.domaincache is None:
+        if liquid.domaincache is None:
             active_mask = mask
         else:
-            active_mask = mask * state.domaincache.active()
-        state.domaincache = FluidDomain(state.domain, obstacles, active=active_mask, accessible=mask)
-    return state.domaincache
+            active_mask = mask * liquid.domaincache.active()
+        return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
+    else:
+        return liquid.domaincache
 
 
 class GridLiquidPhysics(Physics):
 
     def __init__(self, pressure_solver=None):
-        Physics.__init__(self, {'obstacles': ['obstacle'], 'inflows': 'inflow'})
+        Physics.__init__(self)
         self.pressure_solver = pressure_solver
 
-    def step(self, state, dt=1.0, obstacles=(), inflows=(), **dependent_states):
-        assert len(dependent_states) == 0
-        domaincache = domain(state, obstacles)
+    def step(self, liquid, dt=1.0, obstacles=(), effects=()):
+        fluiddomain = get_domain(liquid, obstacles)
         # step
-        density = state.density
-        for effect in inflows:
-            density = effect.apply_grid(density, state.grid, staggered=False, dt=dt)
+        density = liquid.density
+        for effect in effects:
+            density = effect_applied(effect, density, dt=dt)
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        active_mask = create_binary_mask(density, threshold=0.1)
-        domaincache._active = active_mask
+        fluiddomain._active = create_binary_mask(density.data, threshold=0.1)
 
-        forces = dt * state.gravity
-        velocity = state.velocity + forces
+        forces = liquid.gravity_field(dt=dt)
+        velocity = liquid.velocity + forces
 
-        velocity = divergence_free(velocity, domaincache, self.pressure_solver, state=state)
+        velocity = divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
-        #max_vel = math.max(math.abs(velocity.staggered))
-        #distance = int(5 * abs(state.gravity[-2]) * dt + 1)
         distance = 30
-        state.signed_distance, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=distance)
-        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
+        s_distance, ext_velocity = extrapolate(liquid, velocity, fluiddomain.active(), dx=1.0, distance=distance)
+        ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
-        density = ext_velocity.advect(density, dt=dt)
-        velocity = ext_velocity.advect(ext_velocity, dt=dt)
+        density = advect.semi_lagrangian(density, ext_velocity, dt=dt)
+        velocity = advect.semi_lagrangian(ext_velocity, ext_velocity, dt=dt)
         
-        return state.copied_with(density=density, velocity=velocity, age=state.age + dt)
+        return liquid.copied_with(density=density, velocity=velocity, signed_distance=s_distance, domaincache=fluiddomain, age=liquid.age + dt)
 
 
-GRIDLIQUID = GridLiquidPhysics()
+class GridLiquid(DomainState):
 
-
-class GridLiquid(State):
-    __struct__ = State.__struct__.extend(('_density', '_velocity'),
-                            ('_domain', '_gravity'))
-
-    def __init__(self, state_domain,
-                 density=0.0, velocity=math.zeros, gravity=-9.81, batch_size=None):
-        State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
-        self._domain = state_domain
-        self._density = density
-        self._velocity = velocity
-        self.domaincache = None
-        self._last_pressure = None
-        self._last_pressure_iterations = None
-        self.signed_distance = None
+    def __init__(self, domain, density=0.0, velocity=0.0, gravity=-9.81, tags=('gridliquid', 'velocityfield'), **kwargs):
+        DomainState.__init__(**struct.kwargs(locals()))
 
         if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == state_domain.rank
+            assert len(gravity) == domain.rank
             self._gravity = np.array(gravity)
         else:
-            assert state_domain.rank >= 1
-            gravity = [gravity] + ([0] * (state_domain.rank - 1))
+            assert domain.rank >= 1
+            gravity = [gravity] + ([0] * (domain.rank - 1))
             self._gravity = np.array(gravity)
 
+        
     def default_physics(self):
-        return GRIDLIQUID
+        return GridLiquidPhysics()
 
-    @property
-    def density(self):
-        return self._density
+    @struct.attr(default=0.0)
+    def density(self, d):
+        return self.centered_grid('density', d)
 
-    @property
-    def _density(self):
-        return self._density_field
+    @struct.attr(default=0.0)
+    def velocity(self, v):
+        return self.staggered_grid('velocity', v)
 
-    @_density.setter
-    def _density(self, value):
-        self._density_field = initialize_field(value, self.grid.shape())
+    @struct.attr(default=0.0)
+    def signed_distance(self, s):
+        return self.centered_grid('SDF', s)
 
-    @property
-    def velocity(self):
-        return self._velocity
+    @struct.attr(default=None)
+    def domaincache(self, d):
+        return d
 
-    @property
-    def _velocity(self):
-        return self._velocity_field
+    @struct.prop(default=-9.81)
+    def gravity(self, g):
+        return g
 
-    @_velocity.setter
-    def _velocity(self, value):
-        self._velocity_field = initialize_field(value, self.grid.staggered_shape())
 
-    @property
-    def domain(self):
-        return self._domain
+    def gravity_field(self, dt=1.0, centered=False):
+        if centered:
+            zeros = self.domain.centered_grid(0).data
+        else:
+            zeros = self.domain.staggered_grid(0).staggered_tensor()
 
-    @property
-    def grid(self):
-        return self.domain
+        gravity = dt * (zeros + self._gravity)
 
-    @property
-    def rank(self):
-        return self.grid.rank
+        if centered:
+            return self.domain.centered_grid(gravity)
+        else:
+            return self.domain.staggered_grid(gravity)
 
-    @property
-    def gravity(self):
-        return self._gravity
-
-    @property
-    def last_pressure(self):
-        return self._last_pressure
-
-    @property
-    def last_pressure_iterations(self):
-        return self._last_pressure_iterations
 
     def __repr__(self):
         return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)
 
-    def __add__(self, other):
-        if isinstance(other, math.StaggeredGrid):
-            return self.copied_with(velocity=self.velocity + other)
-        else:
-            return self.copied_with(density=self.density + other)
 
-    def __sub__(self, other):
-        if isinstance(other, math.StaggeredGrid):
-            return self.copied_with(velocity=self.velocity - other)
-        else:
-            return self.copied_with(density=self.density - other)
+def divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
+    assert isinstance(velocity, StaggeredGrid)
 
+    _, ext_velocity = extrapolate(liquid, velocity, fluiddomain.active(), dx=1.0, distance=2)
 
+    ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
+    divergence_field = ext_velocity.divergence(physical_units=False)
 
-def solve_pressure(input_field, domaincache, pressure_solver=None):
-    """
-Calculates the pressure from the given velocity or velocity divergence using the specified solver.
-    :param obj: tensor containing the centered velocity divergence values or velocity as StaggeredGrid
-    :param solver: PressureSolver to use, options DEFAULT, SCIPY or MANTA
-    :return: scalar pressure channel as tensor
-    """
-    if isinstance(input_field, State):
-        div = input_field.velocity.divergence()
-    elif isinstance(input_field, math.StaggeredGrid):
-        div = input_field.divergence()
-    elif input_field.shape[-1] == domaincache.rank:
-        div = math.divergence(input_field, difference='central')
-    else:
-        raise ValueError("Cannot solve pressure for %s" % input_field)
+    pressure, iteration = solve_pressure(divergence_field, fluiddomain, pressure_solver=pressure_solver)
+    gradp = StaggeredGrid.gradient(pressure)
+    velocity -= fluiddomain.with_hard_boundary_conditions(gradp)
 
-    if pressure_solver is None:
-        from phi.solver.sparse import SparseCG
-        pressure_solver = SparseCG()
-
-    div = div * domaincache.active()
-
-    pressure, iter = pressure_solver.solve(div, domaincache, pressure_guess=None)
-    return pressure, iter
-
-
-def divergence_free(obj, domaincache, pressure_solver=None, state=None):
-    if isinstance(obj, State):
-        # of course only works if the State has a velocity component
-        return obj.copied_with(velocity=divergence_free(obj.velocity, domaincache))
-    assert isinstance(obj, math.StaggeredGrid)
-    velocity = obj
-
-    _, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=2)
-    ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
-    
-    pressure, iter = solve_pressure(ext_velocity, domaincache, pressure_solver)
-    gradp = math.StaggeredGrid.gradient(pressure)
-    # No need to multiply with dt here because we didn't divide divergence by dt in pressure solve.
-    velocity = domaincache.with_hard_boundary_conditions(velocity - gradp)
-    if state is not None:
-        state.mask_before = gradp
-        state._last_pressure = pressure
-        state._last_pressure_iterations = iter
     return velocity
 
 
-def stick(velocity, domaincache, dt):
-    velocity = domaincache.with_hard_boundary_conditions(velocity)
-    # TODO wall friction
-    # self.world.geom
-    # friction = material.friction_multiplier(dt)
-    return velocity
 
-
-def create_binary_mask(field, threshold=1e-5):
+def create_binary_mask(tensor, threshold=1e-5):
     """
-Builds a binary tensor with the same shape as field. Wherever field is greater than threshold, the binary mask will contain a '1', else the entry will be '0'.
-    :param threshold: Optional scalar value. Threshold relative to the maximal value in the field, must be between 0 and 1. Default is 1e-5.
-    :return: The binary mask according to the given input field.
+    Builds a binary tensor with the same shape as the input tensor. Wherever tensor is greater than threshold, the binary mask will contain a '1', else the entry will be '0'.
+        :param threshold: Optional scalar value. Threshold relative to the maximal value in the tensor, must be between 0 and 1. Default is 1e-5.
+        :return: A tensor which is a binary mask of the given input tensor.
     """
-    if isinstance(field, math.StaggeredGrid):
-        field = field.staggered
-    f_max = math.max(math.abs(field))
-    scaled_field = math.divide_no_nan(math.abs(field), f_max)
-    binary_mask = math.ceil(scaled_field - threshold)
+    f_max = math.max(math.abs(tensor))
+    scaled_tensor = math.divide_no_nan(math.abs(tensor), f_max)
+    binary_mask = math.ceil(scaled_tensor - threshold)
 
     return binary_mask
 
@@ -255,20 +166,23 @@ def create_surface_mask(particle_mask):
     return bcs
 
 
-def extrapolate(input_field, particle_mask, distance=10, dx=1.0):
+def extrapolate(state, input_field, particle_mask, distance=10, dx=1.0):
     """
-Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
-    :param input_field: Field to be extrapolated
-    :param particle_mask: One dimensional binary mask indicating where fluid is present
-    :param dx: Optional grid cells width
-    :param distance: Optional maximal distance (in number of grid cells) where signed distance should still be calculated / how far should be extrapolated.
+    Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
+        :param state: DomainState that can create new Fields
+        :param input_field: Field to be extrapolated
+        :param particle_mask: One dimensional binary mask indicating where fluid is present
+        :param dx: Optional grid cells width
+        :param distance: Optional maximal distance (in number of grid cells) where signed distance should still be calculated / how far should be extrapolated.
+        :return s_distance: tensor containing signed distance field
+        :return ext_field: a new Field with extrapolated values
     """
-    ext_field = 1. * input_field    # Copy the original field, so we don't edit it.
-    if isinstance(input_field, math.StaggeredGrid):
-        ext_field = input_field.staggered
-        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * math.spatial_rank(ext_field) + [[0,0]], "constant")
+    ext_data = input_field.data
+    if isinstance(input_field, StaggeredGrid):
+        ext_data = input_field.staggered_tensor()
+        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * input_field.rank + [[0,0]], "constant")
 
-    dims = range(math.spatial_rank(ext_field))
+    dims = range(input_field.rank)
     # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
     signs = -1 * (2*particle_mask - 1)
     s_distance = 2.0 * (distance+1) * signs
@@ -285,7 +199,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
         )))
 
     # First make a move in every positive direction (StaggeredGrid velocities there are correct, we want to extrapolate these)
-    if isinstance(input_field, math.StaggeredGrid):
+    if isinstance(input_field, StaggeredGrid):
         for d in directions:
             if (d <= 0).all():
                 continue
@@ -293,7 +207,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             # Shift the field in direction d, compare new distances to old ones.
             d_slice = tuple([(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims])
 
-            d_field = math.pad(ext_field, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
+            d_field = math.pad(ext_data, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
             d_field = d_field[(slice(None),) + d_slice + (slice(None),)]
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
@@ -305,7 +219,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
                 # Pure axis direction (1,0,0), (0,1,0), (0,0,1)
                 updates = (math.abs(d_dist) < math.abs(s_distance)) & (surface_mask <= 0)
                 updates_velocity = updates & (signs > 0)
-                ext_field = math.where(math.concat([(math.zeros_like(updates_velocity) if d[i] == 1 else updates_velocity) for i in dims], axis=-1), d_field, ext_field)
+                ext_data = math.where(math.concat([(math.zeros_like(updates_velocity) if d[i] == 1 else updates_velocity) for i in dims], axis=-1), d_field, ext_data)
                 s_distance = math.where(updates, d_dist, s_distance)
             else:
                 # Mixed axis direction (1,1,0), (1,1,-1), etc.
@@ -313,7 +227,6 @@ Create a signed distance field for the grid, where negative signs are fluid cell
 
 
     for _ in range(distance):
-        # TODO Is buffer really necessary? I'm doubting my decision again...
         # Create a copy of current distance
         buffered_distance = 1.0 * s_distance
         for d in directions:
@@ -323,7 +236,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             # Shift the field in direction d, compare new distances to old ones.
             d_slice = tuple([(slice(1, None) if d[i] == -1 else slice(0,-1) if d[i] == 1 else slice(None)) for i in dims])
 
-            d_field = math.pad(ext_field, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
+            d_field = math.pad(ext_data, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
             d_field = d_field[(slice(None),) + d_slice + (slice(None),)]
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
@@ -333,7 +246,7 @@ Create a signed distance field for the grid, where negative signs are fluid cell
             # We only want to update velocity that is outside of fluid
             updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (surface_mask <= 0)
             updates_velocity = updates & (signs > 0)
-            ext_field = math.where(math.concat([updates_velocity] * math.spatial_rank(ext_field), axis=-1), d_field, ext_field)
+            ext_data = math.where(math.concat([updates_velocity] * math.spatial_rank(ext_data), axis=-1), d_field, ext_data)
             buffered_distance = math.where(updates, d_dist, buffered_distance)
             
         s_distance = buffered_distance
@@ -342,9 +255,12 @@ Create a signed distance field for the grid, where negative signs are fluid cell
     distance_limit = -distance * (2*particle_mask - 1)
     s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
 
-    if isinstance(input_field, math.StaggeredGrid):
-        ext_field = math.StaggeredGrid(ext_field)
+
+    if isinstance(input_field, StaggeredGrid):
+        ext_field = state.staggered_grid('extrapolated_velocity', ext_data)
         stagger_slice = tuple([slice(0,-1) for i in dims])
         s_distance = s_distance[(slice(None),) + stagger_slice + (slice(None),)]
+    else:
+        ext_field = input_field.copied_with(data=ext_data)
 
     return s_distance, ext_field
