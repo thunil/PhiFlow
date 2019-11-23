@@ -166,12 +166,12 @@ def create_surface_mask(particle_mask):
     return bcs
 
 
-def extrapolate(state, input_field, particle_mask, distance=10, dx=1.0):
+def extrapolate(state, input_field, active_mask, distance=10, dx=1.0):
     """
     Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
         :param state: DomainState that can create new Fields
         :param input_field: Field to be extrapolated
-        :param particle_mask: One dimensional binary mask indicating where fluid is present
+        :param active_mask: One dimensional binary mask indicating where fluid is present
         :param dx: Optional grid cells width
         :param distance: Optional maximal distance (in number of grid cells) where signed distance should still be calculated / how far should be extrapolated.
         :return s_distance: tensor containing signed distance field
@@ -180,13 +180,13 @@ def extrapolate(state, input_field, particle_mask, distance=10, dx=1.0):
     ext_data = input_field.data
     if isinstance(input_field, StaggeredGrid):
         ext_data = input_field.staggered_tensor()
-        particle_mask = math.pad(particle_mask, [[0,0]] + [[0,1]] * input_field.rank + [[0,0]], "constant")
+        active_mask = math.pad(active_mask, [[0,0]] + [[0,1]] * input_field.rank + [[0,0]], "constant")
 
     dims = range(input_field.rank)
     # Larger than distance to be safe. It could start extrapolating velocities from outside distance into the field.
-    signs = -1 * (2*particle_mask - 1)
+    signs = -1 * (2*active_mask - 1)
     s_distance = 2.0 * (distance+1) * signs
-    surface_mask = create_surface_mask(particle_mask)
+    surface_mask = create_surface_mask(active_mask)
 
     # surface_mask == 1 doesn't output a tensor, just a scalar, but >= works.
     # Initialize the distance with 0 at the surface
@@ -252,7 +252,7 @@ def extrapolate(state, input_field, particle_mask, distance=10, dx=1.0):
         s_distance = buffered_distance
     
     # Cut off unaccurate values
-    distance_limit = -distance * (2*particle_mask - 1)
+    distance_limit = -distance * (2*active_mask - 1)
     s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
 
 

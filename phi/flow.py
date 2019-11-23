@@ -7,7 +7,7 @@ from .physics.smoke import *
 from .physics.burgers import *
 from .physics.heat import *
 from .physics.gridliquid import *
-#from .physics.sdfliquid import *
+from .physics.sdfliquid import *
 #from .physics.flipliquid import *
 
 from .physics.worldutil import *
