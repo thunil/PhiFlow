@@ -7,3 +7,4 @@ from .mask import *
 from . import advect
 from . import manta
 from .util import *
+from .sampled import SampledField

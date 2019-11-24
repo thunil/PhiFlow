@@ -49,7 +49,7 @@ class GridLiquidPhysics(Physics):
         velocity = divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
         distance = 30
-        s_distance, ext_velocity = extrapolate(liquid, velocity, fluiddomain.active(), dx=1.0, distance=distance)
+        s_distance, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         density = advect.semi_lagrangian(density, ext_velocity, dt=dt)
@@ -117,7 +117,7 @@ class GridLiquid(DomainState):
 def divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
     assert isinstance(velocity, StaggeredGrid)
 
-    _, ext_velocity = extrapolate(liquid, velocity, fluiddomain.active(), dx=1.0, distance=2)
+    _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=2)
 
     ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
     divergence_field = ext_velocity.divergence(physical_units=False)
@@ -166,10 +166,10 @@ def create_surface_mask(particle_mask):
     return bcs
 
 
-def extrapolate(state, input_field, active_mask, distance=10, dx=1.0):
+def extrapolate(domain, input_field, active_mask, distance=10, dx=1.0):
     """
     Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
-        :param state: DomainState that can create new Fields
+        :param domain: Domain that can create new Fields
         :param input_field: Field to be extrapolated
         :param active_mask: One dimensional binary mask indicating where fluid is present
         :param dx: Optional grid cells width
@@ -257,7 +257,7 @@ def extrapolate(state, input_field, active_mask, distance=10, dx=1.0):
 
 
     if isinstance(input_field, StaggeredGrid):
-        ext_field = state.staggered_grid('extrapolated_velocity', ext_data)
+        ext_field = domain.staggered_grid(ext_data, extrapolation=domain.boundaries.extrapolation_mode)
         stagger_slice = tuple([slice(0,-1) for i in dims])
         s_distance = s_distance[(slice(None),) + stagger_slice + (slice(None),)]
     else:

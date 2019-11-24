@@ -27,7 +27,7 @@ class SDFLiquidPhysics(Physics):
     def advect(self, liquid, velocity, fluiddomain, dt):
         dx = 1.0
 
-        _, ext_velocity_free = extrapolate(liquid, velocity, fluiddomain.active(), dx=dx, distance=liquid.distance)
+        _, ext_velocity_free = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=dx, distance=liquid.distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity_free)
 
         # When advecting SDF we don't want to replicate boundary values when the sample coordinates are out of bounds, we want the fluid to move further away from the boundary. We increase the distance when sampling outside of the boundary.
@@ -86,7 +86,7 @@ class SDFLiquidPhysics(Physics):
 
 
     def apply_forces(self, liquid, dt=1.0):
-        forces = dt * (liquid._gravity + liquid.trained_forces.staggered_tensor())
+        forces = dt * (liquid.gravity + liquid.trained_forces.staggered_tensor())
         forces = liquid.domain.staggered_grid(forces)
         
         return liquid.velocity + forces
@@ -100,7 +100,7 @@ class SDFLiquid(DomainState):
         self._domaincache = get_domain(self, ())
         self._active_mask = create_binary_mask(self.density.data, threshold=0)
         self._domaincache._active = self._active_mask
-        self._sdf_data, _ = extrapolate(self, self.velocity, self._active_mask, distance=distance)
+        self._sdf_data, _ = extrapolate(self.domain, self.velocity, self._active_mask, distance=distance)
         self._sdf = self.centered_grid('sdf', self._sdf_data)
 
         if isinstance(gravity, (tuple, list)):

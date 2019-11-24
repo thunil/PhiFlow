@@ -260,8 +260,6 @@ class TFBackend(Backend):
     
     def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
-        # Input indices only has the 2D coordinates.
-        # EDIT: This formatting should be already done before calling scatter.
         z = tf.zeros(shape, dtype=values.dtype)
         
         if duplicates_handling == 'add':
@@ -282,48 +280,11 @@ class TFBackend(Backend):
             total = tf.tensor_scatter_add(z, indices, values)
 
             return (total / tf.maximum(1.0, count))
-        elif duplicates_handling == 'no duplicates':
-            st = tf.SparseTensor(indices, values, shape)
-            st = tf.sparse.reorder(st)   # only needed if not ordered
-            return tf.sparse.to_dense(st)
         else: # last, any, undefined
-            # Same as 'no duplicates'?
             st = tf.SparseTensor(indices, values, shape)
             st = tf.sparse.reorder(st)   # only needed if not ordered
             return tf.sparse.to_dense(st)
 
-    def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
-        # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
-        # Input indices only has the 2D coordinates.
-        # EDIT: This formatting should be already done before calling scatter.
-        z = tf.zeros(shape, dtype=values.dtype)
-
-        if duplicates_handling == 'add':
-            # Only for Tensorflow with custom gradient
-            @tf.custom_gradient
-            def scatter_density(points, indices, values):
-                result = tf.tensor_scatter_add(z, indices, values)
-
-                def grad(dr):
-                    return self.resample(gradient(dr, difference='central'), points), None, None
-
-                return result, grad
-
-            return scatter_density(points, indices, values)
-        elif duplicates_handling == 'mean':
-            # Won't entirely work with out of bounds particles (still counted in mean)
-            count = tf.tensor_scatter_add(z, indices, tf.ones_like(values))
-            total = tf.tensor_scatter_add(z, indices, values)
-            return (total / tf.maximum(1.0, count))
-        elif duplicates_handling == 'no duplicates':
-            st = tf.SparseTensor(indices, values, shape)
-            st = tf.sparse.reorder(st)   # only needed if not ordered
-            return tf.sparse.to_dense(st)
-        else:  # last, any, undefined
-            # Same as 'no duplicates'?
-            st = tf.SparseTensor(indices, values, shape)
-            st = tf.sparse.reorder(st)   # only needed if not ordered
-            return tf.sparse.to_dense(st)
 
     def fft(self, x):
         rank = len(x.shape) - 2

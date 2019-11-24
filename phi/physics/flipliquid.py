@@ -1,96 +1,73 @@
-from __future__ import division
-
-from .domain import *
-from phi.math import *
-from operator import itemgetter
-import itertools
-import tensorflow as tf
-from phi.math.sampled import *
 # Many functions used from gridliquid
 from .gridliquid import *
+from phi.physics.field.sampled import *
+
+
+
+def get_domain(liquid, obstacles):
+    if liquid.domaincache is None or not liquid.domaincache.is_valid(obstacles):
+        if obstacles is not None:
+            obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
+            # Difference with grid-based liquid simulations
+            obstacle_grid = obstacle_mask.at(liquid.velocity.stagger_sample().center_points, collapse_dimensions=False).data
+            mask = 1 - obstacle_grid
+        else:
+            mask = math.ones(liquid.domain.centered_shape(name='active')).data
+
+        if liquid.domaincache is None:
+            active_mask = mask
+        else:
+            active_mask = mask * liquid.domaincache.active()
+        return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
+    else:
+        return liquid.domaincache
 
 
 class FlipLiquidPhysics(Physics):
 
     def __init__(self, pressure_solver=None):
-        Physics.__init__(self, {'obstacles': ['obstacle'], 'inflows': 'inflow'})
+        Physics.__init__(self)
         self.pressure_solver = pressure_solver
 
-    def step(self, state, dt=1.0, obstacles=(), inflows=(), **dependent_states):
-        # Not really needed, but here just to be sure
-        assert len(dependent_states) == 0
-        domaincache = domain(state, obstacles)
-        
-        # Inflow
-        points, velocity = self.add_inflow(state, inflows, dt)
-
-        # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        active_mask = self.update_active_mask(domaincache, points)
+    def step(self, liquid, dt=1.0, obstacles=(), effects=()):
+        fluiddomain = get_domain(liquid, obstacles)
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
-        velocity_field = particles_to_grid(domaincache.domain, points, velocity, staggered=True)
-        #velocity_field = domaincache.with_hard_boundary_conditions(velocity_field)
+        velocity_field = liquid.velocity.stagger_sample()
 
-        velocity_field_with_forces = self.apply_field_forces(state, velocity_field, dt)
-        div_free_velocity_field = divergence_free(velocity_field_with_forces, domaincache, self.pressure_solver, state=state)
+        velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, dt)
+        div_free_velocity_field = divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
         
-        velocity += self.particle_velocity_change(domaincache, points, (div_free_velocity_field - velocity_field))
+        velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points, (div_free_velocity_field - velocity_field))
 
-        # Advect the points and remove the particles that went out of the simulation boundaries.
-        points = self.advect_points(domaincache, points, div_free_velocity_field, dt)
-        points, velocity = self.remove_out_of_bounds(state, points, velocity)
+        # Advect the points
+        points = self.advect_points(fluiddomain, liquid.points, div_free_velocity_field, dt)
 
-        # Update new active mask after advection
-        active_mask = self.update_active_mask(domaincache, points)
-        
-        return state.copied_with(points=points, velocity=velocity, active_mask=active_mask, age=state.age + dt)
-
-
-
-    def advect_points(self, domaincache, points, velocity, dt):
-        # For now the distance is fixed, we could make it dependent on velocity later on.
-        #max_vel = math.max(math.abs(velocity.staggered))
-        _, ext_velocity = extrapolate(velocity, domaincache.active(), dx=1.0, distance=30)
-        ext_velocity = domaincache.with_hard_boundary_conditions(ext_velocity)
-
-        # Runge Kutta 3rd order advection scheme
-        velocity_RK1 = grid_to_particles(domaincache.domain, points, ext_velocity, staggered=True)
-        velocity_RK2 = grid_to_particles(domaincache.domain, (points + 0.5 * dt * velocity_RK1), ext_velocity, staggered=True)
-        velocity_RK3 = grid_to_particles(domaincache.domain, (points + 0.5 * dt * velocity_RK2), ext_velocity, staggered=True)
-        velocity_RK4 = grid_to_particles(domaincache.domain, (points + 1 * dt * velocity_RK3), ext_velocity, staggered=True)
-
-        new_points = points + 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
-        return new_points
-
-
-    def add_inflow(self, state, effects, dt):
-        inflow_density = math.zeros_like(state.active_mask)
+        # Inflow    
+        inflow_density = liquid.domain.centered_grid(0)
         for effect in effects:
-            inflow_density = effect.apply_grid(inflow_density, state.grid, staggered=False, dt=dt)
-        inflow_points = random_grid_to_coords(inflow_density, state.particles_per_cell)
-        points = math.concat([state.points, inflow_points], axis=1)
-        velocity = math.concat([state.velocity, 0.0 * (inflow_points)], axis=1)
+            inflow_density = effect_applied(inflow_density, effect, dt=dt)
+        inflow_points = random_grid_to_coords(inflow_density.data, liquid.particles_per_cell)
+        points = math.concat([points, inflow_points], axis=1)
+        velocity = math.concat([velocity, 0.0 * (inflow_points)], axis=1)
 
-        return points, velocity
+        # Remove the particles that went out of the simulation boundaries
+        points, velocity = self.remove_out_of_bounds(liquid, points, velocity)
 
-
-    def apply_field_forces(self, state, velocity, dt):
-        forces = dt * (state.gravity + state.trained_forces.staggered)
-        return velocity + forces
-
-    
-    def update_active_mask(self, domaincache, points):
-        density = particles_to_grid(domaincache.domain, points)
-        active_mask = create_binary_mask(density, threshold=0.0)
-        domaincache._active = active_mask
-
-        return active_mask
+        return liquid.copied_with(points=points, velocity=velocity, domaincache=fluiddomain, age=liquid.age + dt)
 
 
-    def particle_velocity_change(self, domaincache, points, velocity_field_change):
-        solid_paddings, open_paddings = domaincache.domain._get_paddings(lambda material: material.solid)
-        active_mask = domaincache._active
-        mask = active_mask[(slice(None),) + tuple([slice(1,-1)] * domaincache.rank) + (slice(None),)]
+    def apply_field_forces(self, liquid, velocity_field, dt):
+        forces = dt * (liquid.gravity + liquid.trained_forces.staggered_tensor())
+        forces = liquid.domain.staggered_grid(forces)
+
+        return velocity_field + forces
+
+
+    def particle_velocity_change(self, fluiddomain, points, velocity_field_change):
+        solid_paddings, open_paddings = fluiddomain.domain._get_paddings(lambda material: material.solid)
+        active_mask = fluiddomain._active
+        mask = active_mask[(slice(None),) + tuple([slice(1,-1)] * fluiddomain.rank) + (slice(None),)]
         mask = math.pad(mask, solid_paddings, "constant", 0)
         mask = math.pad(mask, open_paddings, "constant", 1)
 
@@ -98,18 +75,31 @@ class FlipLiquidPhysics(Physics):
         extrapolate_mask = mask * active_mask
         
         # Interpolate the change from the grid and add it to the particle velocity
-        _, ext_gradp = extrapolate(velocity_field_change, extrapolate_mask, dx=1.0, distance=2)
-        gradp_particles = grid_to_particles(domaincache.domain, points, ext_gradp, staggered=True)
+        _, ext_gradp = extrapolate(fluiddomain.domain, velocity_field_change, extrapolate_mask, distance=2)
+        gradp_particles = grid_to_particles(points, ext_gradp)
 
         return gradp_particles
 
+
+    def advect_points(self, fluiddomain, points, velocity_field, dt):
+        _, ext_velocity = extrapolate(fluiddomain.domain, velocity_field, fluiddomain.active(), distance=30)
+        ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
+
+        # Runge Kutta 3rd order advection scheme
+        velocity_RK1 = grid_to_particles(points, ext_velocity)
+        velocity_RK2 = grid_to_particles(points + 0.5 * dt * velocity_RK1, ext_velocity)
+        velocity_RK3 = grid_to_particles(points + 0.5 * dt * velocity_RK2, ext_velocity)
+        velocity_RK4 = grid_to_particles(points + 1 * dt * velocity_RK3, ext_velocity)
+
+        new_points = points + 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
+        return new_points
+
     
-    def remove_out_of_bounds(self, state, points, velocity):
+    def remove_out_of_bounds(self, liquid, points, velocity):
         # Remove out of bounds
         indices = math.to_int(math.floor(points))
         shape = [points.shape[0], -1, points.shape[-1]]
-        #shape = [world.batch_size, -1, state.domain.rank]
-        mask = math.prod((indices >= 0) & (indices <= [d-1 for d in state.grid.resolution]), axis=-1)
+        mask = math.prod((indices >= 0) & (indices <= [d-1 for d in liquid.domain.resolution]), axis=-1)
 
         # Out of bounds particles will be deleted
         points = math.boolean_mask(points, mask)
@@ -121,110 +111,60 @@ class FlipLiquidPhysics(Physics):
         return points, velocity
 
 
-FLIPLIQUID = FlipLiquidPhysics()
 
+class FlipLiquid(DomainState):
 
-class FlipLiquid(State):
-    __struct__ = State.__struct__.extend(('points', 'velocity', '_active_mask', 'trained_forces'),
-                            ('_domain', '_gravity'))
+    def __init__(self, domain, points=0.0, velocity=0.0, gravity=-9.81, particles_per_cell=1, tags=('flipliquid'), **kwargs):
 
-    def __init__(self, state_domain,
-                 density=0.0, velocity=0.0, gravity=-9.81, batch_size=None, particles_per_cell=1):
-        State.__init__(self, tags=('liquid', 'velocityfield'), batch_size=batch_size)
-        self._domain = state_domain
-        self._density = density
-        self.particles_per_cell = particles_per_cell
-        self.batch_size = batch_size
-        self._active_mask = create_binary_mask(self._density, threshold=0)
-        self.domaincache = None
-        self.domaincache = domain(self, ())
-        self.domaincache._active = self._active_mask
+        DomainState.__init__(**struct.kwargs(locals()))
 
-        self._last_pressure = None
-        self._last_pressure_iterations = None
-
-        # Density only used to initialize the particle array, afterwards density is never used for calculations again.
-        # points has dimensions (batch, particle_number, spatial_rank), when we concatenate we always add to the "particle_number" dimension.
-        self.points = random_grid_to_coords(self._density, particles_per_cell)
-        self.velocity = zeros_like(self.points) + velocity
+        self._domaincache = get_domain(self, ())
+        self._domaincache._active = self.active_mask.center_sample().data
 
         if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == state_domain.rank
+            assert len(gravity) == domain.rank
             self._gravity = np.array(gravity)
         else:
-            assert state_domain.rank >= 1
-            gravity = [gravity] + ([0] * (state_domain.rank - 1))
+            assert domain.rank >= 1
+            gravity = [gravity] + ([0] * (domain.rank - 1))
             self._gravity = np.array(gravity)
 
-        # When you want to train a force, you need to overwrite this value with a tf.Variable that is trainable. This initialization is only a dummy value.
-        self.trained_forces = zeros(self.grid.staggered_shape())
 
     def default_physics(self):
-        return FLIPLIQUID
+        return FlipLiquidPhysics()
+
+    @struct.attr()
+    def points(self, p):
+        return p
+
+    @struct.attr(default=0.0)
+    def velocity(self, v):
+        return SampledField('velocity', self.domain, self.points, data=v, mode='mean')
 
     @property
-    def density_field(self):
-        return particles_to_grid(self.grid, self.points)
-
-    @property
-    def _density(self):
-        return self._density_field
-
-    @_density.setter
-    def _density(self, value):
-        self._density_field = initialize_field(value, self.grid.shape())
-
-    @property
-    def velocity_field(self):
-        return particles_to_grid(self.grid, self.points, self.velocity, staggered=True)
-
-    @property
-    def _velocity(self):
-        return self.velocity_field
-    
-    @_velocity.setter
-    def _velocity(self, value):
-        self.velocity = zeros_like(self.points) + value
+    def density(self):
+        return SampledField('density', self.domain, self.points, data=1.0, mode='add')
 
     @property
     def active_mask(self):
-        return self._active_mask
+        return SampledField('active_mask', self.domain, self.points, data=1.0, mode='any')
 
-    @property
-    def domain(self):
-        return self._domain
+    # Domaincache sort of redundant, can be merged with active_mask
+    @struct.attr(default=None)
+    def domaincache(self, d):
+        return d
 
-    @property
-    def grid(self):
-        return self.domain
+    @struct.attr(default=0.0)
+    def trained_forces(self, f):
+        return self.staggered_grid('trained_forces', f)
 
-    @property
-    def rank(self):
-        return self.grid.rank
+    @struct.prop(default=1)
+    def particles_per_cell(self, p):
+        return p
 
-    @property
-    def gravity(self):
-        return self._gravity
-
-    @property
-    def pressure(self):
-        return self._last_pressure
-
-    @property
-    def last_pressure_iterations(self):
-        return self._last_pressure_iterations
+    @struct.prop(default=-9.81)
+    def gravity(self, g):
+        return g
 
     def __repr__(self):
-        return "Liquid[points: %s, velocity: %s]" % (self.points, self.velocity)
-
-    def __add__(self, other):
-        if isinstance(other, StaggeredGrid):
-            return self.copied_with(velocity=self.velocity + other)
-        else:
-            return self.copied_with(density=self.points + other)
-
-    def __sub__(self, other):
-        if isinstance(other, StaggeredGrid):
-            return self.copied_with(velocity=self.velocity - other)
-        else:
-            return self.copied_with(density=self.points - other)
+        return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)

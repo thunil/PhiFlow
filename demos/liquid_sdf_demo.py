@@ -28,7 +28,7 @@ class SDFDemo(App):
 
     def action_reset(self):
         active_mask = create_binary_mask(self.initial_density, threshold=0)
-        self.liquid._sdf, _ = extrapolate(self.liquid, 0.0, active_mask, distance=self.distance)
+        self.liquid.sdf, _ = extrapolate(self.liquid.domain, self.liquid.staggered_grid('velocity', 0.0), active_mask, distance=self.distance)
         self.liquid.domaincache._active = active_mask
         self.liquid.velocity = 0.0
         self.time = 0

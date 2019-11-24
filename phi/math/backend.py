@@ -44,6 +44,7 @@ ones_like = backend.ones_like
 pad = backend.pad
 py_func = backend.py_func
 random_like = backend.random_like
+range_like = backend.range_like
 real = backend.real
 resample = backend.resample
 reshape = backend.reshape

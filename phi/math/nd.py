@@ -16,6 +16,13 @@ def batch_gather(struct, batches):
     if isinstance(batches, int):
         batches = [batches]
     return struct.map(lambda tensor: tensor[batches, ...], struct)
+    
+
+def ndims(obj):
+    if struct.isstruct(obj):
+        with struct.anytype():
+            return struct.map(lambda o: spatial_rank(o), obj, recursive=False)  # TODO this should be done by the Struct backend
+    return len(math.staticshape(obj))
 
 
 def spatial_rank(obj):
