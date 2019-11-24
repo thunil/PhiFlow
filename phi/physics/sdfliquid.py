@@ -92,6 +92,9 @@ class SDFLiquidPhysics(Physics):
         return liquid.velocity + forces
 
 
+SDFLIQUID = SDFLiquidPhysics()
+
+
 class SDFLiquid(DomainState):
 
     def __init__(self, domain, density=0.0, velocity=0.0, gravity=-9.81, distance=30, tags=('sdfliquid', 'velocityfield'), **kwargs):
@@ -113,8 +116,8 @@ class SDFLiquid(DomainState):
 
 
     def default_physics(self):
-        return SDFLiquidPhysics()
-
+        return SDFLIQUID
+        
     @struct.attr(default=0.0)
     def density(self, d):
         return self.centered_grid('density', d)

@@ -4,7 +4,7 @@ from __future__ import division
 from .domain import *
 from .physics import *
 from .field import *
-from .fluid import *
+from .fluid import solve_pressure, FluidDomain
 from phi.math.initializers import _is_python_shape
 import itertools
 
@@ -58,6 +58,9 @@ class GridLiquidPhysics(Physics):
         return liquid.copied_with(density=density, velocity=velocity, signed_distance=s_distance, domaincache=fluiddomain, age=liquid.age + dt)
 
 
+GRIDLIQUID = GridLiquidPhysics()
+
+
 class GridLiquid(DomainState):
 
     def __init__(self, domain, density=0.0, velocity=0.0, gravity=-9.81, tags=('gridliquid', 'velocityfield'), **kwargs):
@@ -73,7 +76,7 @@ class GridLiquid(DomainState):
 
         
     def default_physics(self):
-        return GridLiquidPhysics()
+        return GRIDLIQUID
 
     @struct.attr(default=0.0)
     def density(self, d):

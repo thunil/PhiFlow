@@ -59,7 +59,7 @@ class Backend:
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         raise NotImplementedError(self)
 
-    def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='ZERO'):
+    def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='zero'):
         raise NotImplementedError(self)
         
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
@@ -282,7 +282,7 @@ class DynamicBackend(Backend):
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         return self.choose_backend(inputs).py_func(func, inputs, Tout, shape_out, stateful, name, grad)
 
-    def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='ZERO'):
+    def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='zero'):
         return self.choose_backend((inputs, sample_coords)).resample(inputs, sample_coords, interpolation, boundary)
 
     def range_like(self, tensor, limit, start=0, delta=1, dtype=None):

@@ -119,7 +119,7 @@ class TFBackend(Backend):
             result.set_shape(shape_out)
         return result
 
-    def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
+    def resample(self, inputs, sample_coords, interpolation="LINEAR", boundary="zero"):
         return resample_tf(inputs, sample_coords, interpolation, boundary)
 
     def zeros_like(self, tensor):
@@ -362,7 +362,7 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     if sample_coords.shape[0] != inputs.shape[0]:
         sample_coords = tf.tile(sample_coords, [batch_size]+[1]*(len(sample_coords.shape)-1))
 
-    if in_spatial_rank == 2 and boundary == 'ZERO':
+    if in_spatial_rank == 2 and boundary == 'zero':
         inputs = tf.transpose(inputs, [0, 2, 1, 3])
         return tf.contrib.resampler.resampler(inputs, sample_coords)
 
@@ -371,10 +371,10 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     floor_coords = [tf.cast(boundary_func(x, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
     ceil_coords = [tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
 
-    if boundary == 'ZERO':
+    if boundary == 'zero':
         weight_0 = [tf.expand_dims(x - tf.cast(i, tf.float32), -1) for (x, i) in zip(xy, floor_coords)]
         weight_1 = [tf.expand_dims(tf.cast(i, tf.float32) - x, -1) for (x, i) in zip(xy, ceil_coords)]
-    elif boundary == 'UPDIM':
+    elif boundary == 'updim':
         if in_spatial_rank == 1:
             updim = 0
         else:
@@ -418,7 +418,7 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     return _pyramid_combination(samples, weight_0, weight_1)
 
 
-def resample_tf(inputs, sample_coords, interpolation="LINEAR", boundary="ZERO"):
+def resample_tf(inputs, sample_coords, interpolation="LINEAR", boundary="zero"):
     """
 Resamples an N-dimensional tensor at the locations provided by sample_coords
     :param inputs: grid with dimensions (batch_size, spatial dimensions..., element_size)
@@ -456,9 +456,9 @@ def _boundary_symmetric(sample_coords, input_size):
 
 
 SUPPORTED_BOUNDARY = {
-    'ZERO': _boundary_replicate,
-    'REPLICATE': _boundary_replicate,
-    'UPDIM': _boundary_replicate,
-    'CIRCULAR': _boundary_circular,
-    'SYMMETRIC': _boundary_symmetric
+    'zero': _boundary_replicate,
+    'replicate': _boundary_replicate,
+    'updim': _boundary_replicate,
+    'circular': _boundary_circular,
+    'symmetric': _boundary_symmetric
 }

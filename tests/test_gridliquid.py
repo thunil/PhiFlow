@@ -14,8 +14,8 @@ class TestGridLiquid(TestCase):
     def test_gridliquid(self):
         world = World()
         world.batch_size = 2
-        liquid = world.GridLiquid(Domain([16, 16]))
-        inflow = world.Inflow(Sphere((8, 8), radius=4))
+        liquid = world.add(GridLiquid(Domain([16, 16])))
+        inflow = world.add(Inflow(Sphere((8, 8), radius=4)))
         world.step()
         world.step(liquid)
         self.assertAlmostEqual(world.state.age, 2.0)
@@ -27,12 +27,11 @@ class TestGridLiquid(TestCase):
         def typetest(liquid):
             self.assertIsInstance(liquid, GridLiquid)
             self.assertIsInstance(liquid.velocity, StaggeredGrid)
-            np.testing.assert_equal(liquid.density.shape, [1,4,4,1])
-            np.testing.assert_equal(liquid.velocity.shape, [1,5,5,2])
+            np.testing.assert_equal(liquid.density.data.shape, [1,4,4,1])
+            np.testing.assert_equal(liquid.velocity.staggered_tensor().shape, [1,5,5,2])
         typetest(GridLiquid(Domain([4, 4]), density=0.0, velocity=0.0))
         typetest(GridLiquid(Domain([4, 4]), density=1.0, velocity=1.0))
-        typetest(GridLiquid(Domain([4, 4]), density=zeros, velocity=zeros))
-        typetest(GridLiquid(Domain([4, 4]), density=randn(), velocity=randn()))
-        typetest(GridLiquid(Domain([4, 4]), density=np.zeros([1, 4, 4, 1]), velocity=StaggeredGrid(np.zeros([1, 5, 5, 2]))))
+        typetest(GridLiquid(Domain([4, 4]), density=math.zeros, velocity=math.zeros))
+        typetest(GridLiquid(Domain([4, 4]), density=lambda s: math.randn(s), velocity=lambda s: math.randn(s)))
         typetest(GridLiquid(Domain([4, 4]), density=np.zeros([1, 4, 4, 1]), velocity=np.zeros([1, 5, 5, 2])))
         typetest(GridLiquid(Domain([4, 4])))

@@ -112,10 +112,12 @@ class FlipLiquidPhysics(Physics):
         return points, velocity
 
 
+FLIPLIQUID = FlipLiquidPhysics()
+
 
 class FlipLiquid(DomainState):
 
-    def __init__(self, domain, points=0.0, velocity=0.0, gravity=-9.81, particles_per_cell=1, tags=('flipliquid'), **kwargs):
+    def __init__(self, domain, points, velocity=0.0, gravity=-9.81, particles_per_cell=1, tags=('flipliquid'), **kwargs):
 
         DomainState.__init__(**struct.kwargs(locals()))
 
@@ -132,7 +134,7 @@ class FlipLiquid(DomainState):
 
 
     def default_physics(self):
-        return FlipLiquidPhysics()
+        return FLIPLIQUID
 
     @struct.attr()
     def points(self, p):
