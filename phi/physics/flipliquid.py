@@ -31,6 +31,7 @@ class FlipLiquidPhysics(Physics):
 
     def step(self, liquid, dt=1.0, obstacles=(), effects=()):
         fluiddomain = get_domain(liquid, obstacles)
+        fluiddomain._active = liquid.active_mask.center_sample().data
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = liquid.velocity.stagger_sample()

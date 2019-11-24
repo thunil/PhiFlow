@@ -1,11 +1,10 @@
 from phi.flow import * 
-#from phi.math.sampled import *
 
 
 class FlipDemo(App):
 
     def __init__(self):
-        App.__init__(self, 'FLIP simulation', "Fluid Implicit Particle liquid simulation.", stride=1)
+        App.__init__(self, 'FLIP simulation', "Fluid Implicit Particle liquid simulation.", stride=3)
 
         self.dt = 0.3
         size = [64, 64]
@@ -13,25 +12,15 @@ class FlipDemo(App):
         self.particles_per_cell = 8
 
         self.initial_density = domain.centered_grid(0.0).data
-        # self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
-        # self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
+        self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
+        self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
 
-        # ----------
-        ### Blob moving at constant speed to check if the implementation is correct
-        self.initial_density[:, size[-2] * 3 // 8 : size[-2] * 6 // 8, size[-1] * 0 // 8 + 1 : size[-1] * 3 // 8, :] = 1
 
-        # self.initial_density[:, size[-2] * 3 // 8 : size[-2] * 6 // 8, size[-1] * 5 // 8 : size[-1] * 8 // 8 - 1, :] = 1
-
-        # self.initial_density[:, size[-2] * 0 // 8 + 1 : size[-2] * 3 // 8, size[-1] * 3 // 8: size[-1] * 6 // 8, :] = 1
-
-        # self.initial_density[:, size[-2] * 5 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 3 // 8: size[-1] * 6 // 8, :] = 1
-
-        self.initial_velocity = [0.0,5.0]
-        # ----------
+        self.initial_velocity = [0.0,0.0]
 
         self.initial_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
         
-        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, gravity=-0.0, particles_per_cell=self.particles_per_cell))
+        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, gravity=-4.0, particles_per_cell=self.particles_per_cell))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask.center_sample())
         self.add_field("Density", lambda: self.liquid.density.center_sample())
