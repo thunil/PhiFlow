@@ -37,7 +37,7 @@ class FlipLiquidPhysics(Physics):
         velocity_field = liquid.velocity.stagger_sample()
 
         velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, dt)
-        div_free_velocity_field = divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
+        div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
         
         velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points, (div_free_velocity_field - velocity_field))
 

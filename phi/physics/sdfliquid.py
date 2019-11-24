@@ -14,7 +14,7 @@ class SDFLiquidPhysics(Physics):
         fluiddomain._active = self.update_active_mask(liquid.sdf.data, (), dt)
 
         velocity = self.apply_forces(liquid, dt)
-        velocity = divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
+        velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
         sdf, velocity = self.advect(liquid, velocity, fluiddomain, dt)
         fluiddomain._active = self.update_active_mask(sdf.data, effects, dt)
@@ -117,7 +117,7 @@ class SDFLiquid(DomainState):
 
     def default_physics(self):
         return SDFLIQUID
-        
+
     @struct.attr(default=0.0)
     def density(self, d):
         return self.centered_grid('density', d)

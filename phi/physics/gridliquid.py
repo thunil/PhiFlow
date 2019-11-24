@@ -4,7 +4,7 @@ from __future__ import division
 from .domain import *
 from .physics import *
 from .field import *
-from .fluid import solve_pressure, FluidDomain
+from .fluid import *
 from phi.math.initializers import _is_python_shape
 import itertools
 
@@ -46,7 +46,7 @@ class GridLiquidPhysics(Physics):
         forces = liquid.gravity_field(dt=dt)
         velocity = liquid.velocity + forces
 
-        velocity = divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
+        velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
         distance = 30
         s_distance, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=distance)
@@ -117,7 +117,7 @@ class GridLiquid(DomainState):
         return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)
 
 
-def divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
+def liquid_divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
     assert isinstance(velocity, StaggeredGrid)
 
     _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=2)
