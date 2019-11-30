@@ -1,6 +1,13 @@
-# Many functions used from gridliquid
-from .gridliquid import *
-from phi.physics.field.sampled import *
+from __future__ import division
+
+from phi import math, struct
+from .gridliquid import extrapolate, liquid_divergence_free
+from .field.mask import union_mask
+from .field.effect import Gravity, gravity_tensor, effect_applied
+from .pressuresolver.base import FluidDomain
+from .physics import Physics, StateDependency
+from .domain import DomainState
+from .field.sampled import SampledField, random_grid_to_coords
 
 
 
@@ -24,6 +31,10 @@ def get_particle_domain(liquid, obstacles):
 
 
 class FlipLiquidPhysics(Physics):
+    """
+Physics for Fluid Implicit Particles simulation for liquids.
+Supports obstacles, density effects and global gravity.
+    """
 
     def __init__(self, pressure_solver=None):
         Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),

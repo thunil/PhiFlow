@@ -1,17 +1,16 @@
 # Because division is different in Python 2 and 3
 from __future__ import division
 
+import itertools
 import numpy as np
 
 from phi import math, struct
 from .physics import StateDependency, Physics
 from .pressuresolver.base import FluidDomain
-from .field import advect, StaggeredGrid, CenteredGrid, union_mask
+from .field import advect, StaggeredGrid, union_mask
 from .field.effect import Gravity, gravity_tensor, effect_applied
 from .domain import DomainState
 from .fluid import solve_pressure
-from phi.math.initializers import _is_python_shape
-import itertools
 
 
 
@@ -34,7 +33,10 @@ def get_domain(liquid, obstacles):
 
 
 class GridLiquidPhysics(Physics):
-
+    """
+Physics for Grid-based liquid simulation directly advecting the density.
+Supports obstacles, density effects and global gravity.
+    """
     def __init__(self, pressure_solver=None):
         Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),
                                 StateDependency('gravity', 'gravity', single_state=True),

@@ -1,12 +1,12 @@
-from .flag import SAMPLE_POINTS
+from phi.physics.gridliquid import extrapolate
+from phi.physics.domain import Domain
+from phi.physics.material import SLIPPERY
+from phi import struct, math
+import numpy as np
 from .field import Field
 from .grid import CenteredGrid
 from .staggered_grid import StaggeredGrid, unstack_staggered_tensor
-from phi.physics.gridliquid import extrapolate
-from phi.physics.domain import Domain
-from phi.physics.material import *
-from phi import struct, math
-import numpy as np
+from .flag import SAMPLE_POINTS
 
 
 @struct.definition()
