@@ -9,7 +9,7 @@ class TestFlipLiquid(TestCase):
         liquid2 = FLIPLIQUID.step(liquid)
         assert(liquid2.age == 1.0)
         assert(liquid.age == 0.0)
-        assert(liquid2.trajectorykey == liquid.trajectorykey)
+        assert(liquid2.name == liquid.name)
 
     def test_flipliquid(self):
         world = World()

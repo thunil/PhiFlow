@@ -9,7 +9,7 @@ class TestGridLiquid(TestCase):
         liquid2 = GRIDLIQUID.step(liquid)
         assert(liquid2.age == 1.0)
         assert(liquid.age == 0.0)
-        assert(liquid2.trajectorykey == liquid.trajectorykey)
+        assert(liquid2.name == liquid.name)
 
     def test_gridliquid(self):
         world = World()
@@ -18,7 +18,6 @@ class TestGridLiquid(TestCase):
         inflow = world.add(Inflow(Sphere((8, 8), radius=4)))
         world.step()
         world.step(liquid)
-        self.assertAlmostEqual(world.state.age, 2.0)
         self.assertAlmostEqual(liquid.age, 2.0)
         self.assertAlmostEqual(inflow.age, 1.0)
         self.assertEqual(liquid._batch_size, 2)

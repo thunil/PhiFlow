@@ -51,7 +51,7 @@ class FlipLiquidPhysics(Physics):
         # Inflow    
         inflow_density = liquid.domain.centered_grid(0)
         for effect in density_effects:
-            inflow_density = effect_applied(inflow_density, effect, dt=dt)
+            inflow_density = effect_applied(effect, inflow_density, dt=dt)
         inflow_points = random_grid_to_coords(inflow_density.data, liquid.particles_per_cell)
         points = math.concat([points, inflow_points], axis=1)
         velocity = math.concat([velocity, 0.0 * (inflow_points)], axis=1)
