@@ -15,20 +15,21 @@ if tf.__version__[0] == '2':
     tf = tf.compat.v1
     tf.disable_eager_execution()
 
-def _tf_name(attr, basename):
+def _tf_name(trace, basename):
     if basename is None:
-        return attr.path('/')
+        return trace.path('/')
     else:
-        return basename + '/' + attr.path('/')
+        return basename + '/' + trace.path('/')
 
 
-# For FLIP simulations we want the shape to be dynamic, so we set it to None in that case. 
-def placeholder(shape, dtype=np.float32, basename=None, particles=False):
-    f = lambda attr: tf.placeholder(dtype, 
-        (attr.value[0], None, attr.value[2]) if (particles and len(attr.value) == 3) 
-        else attr.value, 
-        _tf_name(attr, basename))
-    return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True)
+def placeholder(shape, dtype=np.float32, basename=None, include_properties=False):
+    if struct.isstruct(dtype):
+        f = lambda trace: tf.placeholder(trace.value[1], trace.value[0], _tf_name(trace, basename))
+        zipped = struct.zip([shape, dtype], leaf_condition=_is_python_shape, include_properties=include_properties)
+        return struct.map(f, zipped, leaf_condition=_is_python_shape, trace=True, include_properties=include_properties)
+    else:
+        f = lambda trace: tf.placeholder(dtype, trace.value, _tf_name(trace, basename))
+        return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True, include_properties=include_properties)
 
 
 

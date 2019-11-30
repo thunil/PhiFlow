@@ -145,7 +145,6 @@ class SampledField(Field):
         return '%s[%sx(%d), %dD]' % (self.__class__.__name__, self._point_count if self._point_count is not None else '?', self.component_count, self.rank)
 
 
-
 def batch_indices(indices):
     """
 Reshapes the indices, such that aside from indices they also contain batch number. For example the entry (32, 40) as coordinates of batch 2 will become (2, 32, 40).
