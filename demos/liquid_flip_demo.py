@@ -20,7 +20,7 @@ class FlipDemo(App):
 
         self.initial_points = random_grid_to_coords(self.initial_density, self.particles_per_cell)
         
-        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, gravity=-4.0, particles_per_cell=self.particles_per_cell))
+        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, particles_per_cell=self.particles_per_cell))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask.center_sample())
         self.add_field("Density", lambda: self.liquid.density.center_sample())

@@ -162,32 +162,6 @@ Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of partic
     return math.concat((batch_ids, indices), axis=-1)
 
 
-def grid_to_particles(points, values):
-    if isinstance(values, StaggeredGrid):
-        dims = range(values.rank)
-        values = values.staggered_tensor()
-
-        result = []
-        oneD_ones = math.unstack(math.ones_like(points), axis=-1)[0]
-        for d in dims:
-            staggered_offset = math.stack([(0.0 * oneD_ones if i == d else -0.5 * oneD_ones) for i in dims], axis=-1)
-
-            indices = (points + staggered_offset)
-            values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
-
-            result.append(math.resample(values_d, indices, boundary="REPLICATE"))
-
-        return math.concat(result, axis=-1)
-
-    elif isinstance(values, CenteredGrid):
-        values = values.data
-        return math.resample(values, points-0.5, boundary="REPLICATE")
-
-    else:
-        # Failed
-        return points
-
-
 def active_centers(array, particles_per_cell=1):
     index_array = []
     batch_size = math.staticshape(array)[0] if math.staticshape(array)[0] is not None else 1

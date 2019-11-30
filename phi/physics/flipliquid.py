@@ -26,17 +26,21 @@ def get_domain(liquid, obstacles):
 class FlipLiquidPhysics(Physics):
 
     def __init__(self, pressure_solver=None):
-        Physics.__init__(self)
+        Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),
+                                StateDependency('gravity', 'gravity', single_state=True),
+                                StateDependency('density_effects', 'density_effect', blocking=True)])
         self.pressure_solver = pressure_solver
 
-    def step(self, liquid, dt=1.0, obstacles=(), effects=()):
+    def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
+        # We advect as the last part of the step, because we must make sure we have divergence free velocity fields. We cannot advect first assuming the input is divergence free because it never will be due to the velocities being stored on the particles.
+
         fluiddomain = get_domain(liquid, obstacles)
         fluiddomain._active = liquid.active_mask.center_sample().data
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = liquid.velocity.stagger_sample()
 
-        velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, dt)
+        velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, gravity, dt)
         div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
         
         velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points, (div_free_velocity_field - velocity_field))
@@ -46,7 +50,7 @@ class FlipLiquidPhysics(Physics):
 
         # Inflow    
         inflow_density = liquid.domain.centered_grid(0)
-        for effect in effects:
+        for effect in density_effects:
             inflow_density = effect_applied(inflow_density, effect, dt=dt)
         inflow_points = random_grid_to_coords(inflow_density.data, liquid.particles_per_cell)
         points = math.concat([points, inflow_points], axis=1)
@@ -58,8 +62,8 @@ class FlipLiquidPhysics(Physics):
         return liquid.copied_with(points=points, velocity=velocity, domaincache=fluiddomain, age=liquid.age + dt)
 
 
-    def apply_field_forces(self, liquid, velocity_field, dt):
-        forces = dt * (liquid.gravity + liquid.trained_forces.staggered_tensor())
+    def apply_field_forces(self, liquid, velocity_field, gravity, dt):
+        forces = dt * (gravity_tensor(gravity, liquid.rank) + liquid.trained_forces.staggered_tensor())
         forces = liquid.domain.staggered_grid(forces)
 
         return velocity_field + forces
@@ -77,7 +81,7 @@ class FlipLiquidPhysics(Physics):
         
         # Interpolate the change from the grid and add it to the particle velocity
         _, ext_gradp = extrapolate(fluiddomain.domain, velocity_field_change, extrapolate_mask, distance=2)
-        gradp_particles = grid_to_particles(points, ext_gradp)
+        gradp_particles = ext_gradp.sample_at(points)
 
         return gradp_particles
 
@@ -87,10 +91,10 @@ class FlipLiquidPhysics(Physics):
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         # Runge Kutta 3rd order advection scheme
-        velocity_RK1 = ext_velocity.at(points)
-        velocity_RK2 = grid_to_particles(points + 0.5 * dt * velocity_RK1, ext_velocity)
-        velocity_RK3 = grid_to_particles(points + 0.5 * dt * velocity_RK2, ext_velocity)
-        velocity_RK4 = grid_to_particles(points + 1 * dt * velocity_RK3, ext_velocity)
+        velocity_RK1 = ext_velocity.sample_at(points)
+        velocity_RK2 = ext_velocity.sample_at(points + 0.5 * dt * velocity_RK1)
+        velocity_RK3 = ext_velocity.sample_at(points + 0.5 * dt * velocity_RK2)
+        velocity_RK4 = ext_velocity.sample_at(points + 1 * dt * velocity_RK3)
 
         new_points = points + 1/6 * dt * (1 * velocity_RK1 + 2 * velocity_RK2 + 2 * velocity_RK3 + 1 * velocity_RK4)
         return new_points
@@ -117,20 +121,12 @@ FLIPLIQUID = FlipLiquidPhysics()
 
 class FlipLiquid(DomainState):
 
-    def __init__(self, domain, points, velocity=0.0, gravity=-9.81, particles_per_cell=1, tags=('flipliquid'), **kwargs):
+    def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid'), **kwargs):
 
         DomainState.__init__(**struct.kwargs(locals()))
 
         self._domaincache = get_domain(self, ())
         self._domaincache._active = self.active_mask.center_sample().data
-
-        if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == domain.rank
-            self._gravity = np.array(gravity)
-        else:
-            assert domain.rank >= 1
-            gravity = [gravity] + ([0] * (domain.rank - 1))
-            self._gravity = np.array(gravity)
 
 
     def default_physics(self):
@@ -164,10 +160,6 @@ class FlipLiquid(DomainState):
     @struct.prop(default=1)
     def particles_per_cell(self, p):
         return p
-
-    @struct.prop(default=-9.81)
-    def gravity(self, g):
-        return g
 
     def __repr__(self):
         return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)
