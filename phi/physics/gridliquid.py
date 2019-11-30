@@ -1,10 +1,15 @@
 # Because division is different in Python 2 and 3
 from __future__ import division
 
-from .domain import *
-from .physics import *
-from .field import *
-from .fluid import *
+import numpy as np
+
+from phi import math, struct
+from .physics import StateDependency, Physics
+from .pressuresolver.base import FluidDomain
+from .field import advect, StaggeredGrid, CenteredGrid, union_mask
+from .field.effect import Gravity, gravity_tensor, effect_applied
+from .domain import DomainState
+from .fluid import solve_pressure
 from phi.math.initializers import _is_python_shape
 import itertools
 
@@ -62,11 +67,11 @@ class GridLiquidPhysics(Physics):
 
 GRIDLIQUID = GridLiquidPhysics()
 
-
+@struct.definition()
 class GridLiquid(DomainState):
 
     def __init__(self, domain, density=0.0, velocity=0.0, tags=('gridliquid', 'velocityfield'), **kwargs):
-        DomainState.__init__(**struct.kwargs(locals()))
+        DomainState.__init__(self, **struct.kwargs(locals()))
 
         
     def default_physics(self):

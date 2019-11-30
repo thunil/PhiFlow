@@ -100,11 +100,11 @@ class SDFLiquidPhysics(Physics):
 
 SDFLIQUID = SDFLiquidPhysics()
 
-
+@struct.definition()
 class SDFLiquid(DomainState):
 
     def __init__(self, domain, density=0.0, velocity=0.0, distance=30, tags=('sdfliquid', 'velocityfield'), **kwargs):
-        DomainState.__init__(**struct.kwargs(locals()))
+        DomainState.__init__(self,**struct.kwargs(locals()))
 
         self._domaincache = get_domain(self, ())
         self._active_mask = create_binary_mask(self.density.data, threshold=0)
