@@ -16,7 +16,7 @@ class SDFDemo(App):
         self.initial_density[:, size[-2] * 6 // 8 : size[-2] * 8 // 8 - 1, size[-1] * 2 // 8 : size[-1] * 6 // 8, :] = 1
         self.initial_density[:, size[-2] * 0 // 8 : size[-2] * 2 // 8, size[-1] * 0 // 8 : size[-1] * 8 // 8, :] = 1
 
-        self.liquid = world.add(SDFLiquid(domain, density=self.initial_density, gravity=-9.81, distance=self.distance))
+        self.liquid = world.add(SDFLiquid(domain, density=self.initial_density, distance=self.distance))
 
         self.add_field("Fluid", lambda: self.liquid.active_mask)
         self.add_field("Signed Distance Field", lambda: self.liquid.sdf)

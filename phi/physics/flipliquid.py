@@ -87,7 +87,7 @@ class FlipLiquidPhysics(Physics):
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         # Runge Kutta 3rd order advection scheme
-        velocity_RK1 = grid_to_particles(points, ext_velocity)
+        velocity_RK1 = ext_velocity.at(points)
         velocity_RK2 = grid_to_particles(points + 0.5 * dt * velocity_RK1, ext_velocity)
         velocity_RK3 = grid_to_particles(points + 0.5 * dt * velocity_RK2, ext_velocity)
         velocity_RK4 = grid_to_particles(points + 1 * dt * velocity_RK3, ext_velocity)

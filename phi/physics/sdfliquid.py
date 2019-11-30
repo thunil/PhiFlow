@@ -5,29 +5,34 @@ from .gridliquid import *
 class SDFLiquidPhysics(Physics):
 
     def __init__(self, pressure_solver=None):
-        Physics.__init__(self)
+        Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),
+                                StateDependency('gravity', 'gravity', single_state=True),
+                                StateDependency('density_effects', 'density_effect', blocking=True)])
         self.pressure_solver = pressure_solver
 
-    def step(self, liquid, dt=1.0, obstacles=(), effects=()):
+    def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         fluiddomain = get_domain(liquid, obstacles)
+        # Need correct active mask for advection
+        fluiddomain._active = liquid.active_mask
 
-        fluiddomain._active = self.update_active_mask(liquid.sdf.data, (), dt)
-
-        velocity = self.apply_forces(liquid, dt)
-        velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
-
-        sdf, velocity = self.advect(liquid, velocity, fluiddomain, dt)
-        fluiddomain._active = self.update_active_mask(sdf.data, effects, dt)
+        # Assume input has a divergence free velocity
+        sdf, velocity = self.advect(liquid, fluiddomain, dt)
+        # Update active mask after advection
+        fluiddomain._active = self.update_active_mask(sdf.data, density_effects, dt)
 
         sdf = recompute_sdf(sdf, fluiddomain.active(), velocity, distance=liquid.distance, dt=dt)
+
+        velocity = self.apply_forces(liquid, velocity, gravity, dt)
+        velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
         return liquid.copied_with(sdf=sdf, velocity=velocity, domaincache=fluiddomain, active_mask=fluiddomain.active(), age=liquid.age + dt)
 
 
-    def advect(self, liquid, velocity, fluiddomain, dt):
+    def advect(self, liquid, fluiddomain, dt):
+        # Advect liquid SDF and velocity using extrapolated velocity
         dx = 1.0
 
-        _, ext_velocity_free = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=dx, distance=liquid.distance)
+        _, ext_velocity_free = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), dx=dx, distance=liquid.distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity_free)
 
         # When advecting SDF we don't want to replicate boundary values when the sample coordinates are out of bounds, we want the fluid to move further away from the boundary. We increase the distance when sampling outside of the boundary.
@@ -43,6 +48,7 @@ class SDFLiquidPhysics(Physics):
             padded = math.pad(zero, [[0,0]] + [([1,0] if i == (rank-2) else [1,1]) for i in range(rank)] + [[0,0]], "constant", constant_values=0)
             padded_cells = math.pad(padded, [[0,0]] + [([0,1] if i == (rank-2) else [0,0]) for i in range(rank)] + [[0,0]], "constant", constant_values=dx)
         else:
+            # Creating a mask for padding in all directions (in case we don't want the special case for upper dimension)
             for d in range(rank):
                 padded = math.pad(zero, [[0,0]] + [([0,0] if d == i else [1,1]) for i in range(rank)] + [[0,0]], "constant", constant_values=0)
                 padded = math.pad(padded, [[0,0]] + [([1,1] if d == i else [0,0]) for i in range(rank)] + [[0,0]], "constant", constant_values=1)
@@ -85,11 +91,11 @@ class SDFLiquidPhysics(Physics):
         return active_mask
 
 
-    def apply_forces(self, liquid, dt=1.0):
-        forces = dt * (liquid.gravity + liquid.trained_forces.staggered_tensor())
+    def apply_forces(self, liquid, velocity, gravity, dt=1.0):
+        forces = dt * (gravity_tensor(gravity, liquid.rank) + liquid.trained_forces.staggered_tensor())
         forces = liquid.domain.staggered_grid(forces)
         
-        return liquid.velocity + forces
+        return velocity + forces
 
 
 SDFLIQUID = SDFLiquidPhysics()
@@ -97,7 +103,7 @@ SDFLIQUID = SDFLiquidPhysics()
 
 class SDFLiquid(DomainState):
 
-    def __init__(self, domain, density=0.0, velocity=0.0, gravity=-9.81, distance=30, tags=('sdfliquid', 'velocityfield'), **kwargs):
+    def __init__(self, domain, density=0.0, velocity=0.0, distance=30, tags=('sdfliquid', 'velocityfield'), **kwargs):
         DomainState.__init__(**struct.kwargs(locals()))
 
         self._domaincache = get_domain(self, ())
@@ -105,14 +111,6 @@ class SDFLiquid(DomainState):
         self._domaincache._active = self._active_mask
         self._sdf_data, _ = extrapolate(self.domain, self.velocity, self._active_mask, distance=distance)
         self._sdf = self.centered_grid('sdf', self._sdf_data)
-
-        if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == domain.rank
-            self._gravity = np.array(gravity)
-        else:
-            assert domain.rank >= 1
-            gravity = [gravity] + ([0] * (domain.rank - 1))
-            self._gravity = np.array(gravity)
 
 
     def default_physics(self):
@@ -141,10 +139,6 @@ class SDFLiquid(DomainState):
     @struct.attr(default=0.0)
     def trained_forces(self, f):
         return self.staggered_grid('trained_forces', f)
-
-    @struct.prop(default=-9.81)
-    def gravity(self, g):
-        return g
 
     @struct.prop(default=10)
     def distance(self, d):
@@ -190,7 +184,7 @@ def recompute_sdf(sdf, active_mask, velocity, distance=10, dt=1.0, dx=1.0):
             d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
             d_dist += dx * np.sqrt(d.dot(d)) * signs
 
-            # Prevent updating the distance at the surface
+            # Update smaller distances and prevent updating the distance at the surface
             updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (surface_mask <= 0)
             buffered_distance = math.where(updates, d_dist, buffered_distance)
 

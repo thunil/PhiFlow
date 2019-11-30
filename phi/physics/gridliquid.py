@@ -31,29 +31,31 @@ def get_domain(liquid, obstacles):
 class GridLiquidPhysics(Physics):
 
     def __init__(self, pressure_solver=None):
-        Physics.__init__(self)
+        Physics.__init__(self, [StateDependency('obstacles', 'obstacle'),
+                                StateDependency('gravity', 'gravity', single_state=True),
+                                StateDependency('density_effects', 'density_effect', blocking=True)])
         self.pressure_solver = pressure_solver
 
-    def step(self, liquid, dt=1.0, obstacles=(), effects=()):
+    def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         fluiddomain = get_domain(liquid, obstacles)
-        # step
-        density = liquid.density
-        for effect in effects:
+        fluiddomain._active = create_binary_mask(liquid.density.data, threshold=0.1)
+        
+        distance = 30
+        s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), dx=1.0, distance=distance)
+        ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
+
+        density = advect.semi_lagrangian(liquid.density, ext_velocity, dt=dt)
+        velocity = advect.semi_lagrangian(ext_velocity, ext_velocity, dt=dt)
+
+        for effect in density_effects:
             density = effect_applied(effect, density, dt=dt)
+
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
         fluiddomain._active = create_binary_mask(density.data, threshold=0.1)
 
-        forces = liquid.gravity_field(dt=dt)
-        velocity = liquid.velocity + forces
-
+        forces = liquid.staggered_grid('forces', 0).staggered_tensor() + dt * gravity_tensor(gravity, liquid.rank)
+        velocity = velocity + liquid.domain.staggered_grid(forces)
         velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
-
-        distance = 30
-        s_distance, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=distance)
-        ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
-
-        density = advect.semi_lagrangian(density, ext_velocity, dt=dt)
-        velocity = advect.semi_lagrangian(ext_velocity, ext_velocity, dt=dt)
         
         return liquid.copied_with(density=density, velocity=velocity, signed_distance=s_distance, domaincache=fluiddomain, age=liquid.age + dt)
 
@@ -63,16 +65,8 @@ GRIDLIQUID = GridLiquidPhysics()
 
 class GridLiquid(DomainState):
 
-    def __init__(self, domain, density=0.0, velocity=0.0, gravity=-9.81, tags=('gridliquid', 'velocityfield'), **kwargs):
+    def __init__(self, domain, density=0.0, velocity=0.0, tags=('gridliquid', 'velocityfield'), **kwargs):
         DomainState.__init__(**struct.kwargs(locals()))
-
-        if isinstance(gravity, (tuple, list)):
-            assert len(gravity) == domain.rank
-            self._gravity = np.array(gravity)
-        else:
-            assert domain.rank >= 1
-            gravity = [gravity] + ([0] * (domain.rank - 1))
-            self._gravity = np.array(gravity)
 
         
     def default_physics(self):
@@ -93,25 +87,6 @@ class GridLiquid(DomainState):
     @struct.attr(default=None)
     def domaincache(self, d):
         return d
-
-    @struct.prop(default=-9.81)
-    def gravity(self, g):
-        return g
-
-
-    def gravity_field(self, dt=1.0, centered=False):
-        if centered:
-            zeros = self.domain.centered_grid(0).data
-        else:
-            zeros = self.domain.staggered_grid(0).staggered_tensor()
-
-        gravity = dt * (zeros + self._gravity)
-
-        if centered:
-            return self.domain.centered_grid(gravity)
-        else:
-            return self.domain.staggered_grid(gravity)
-
 
     def __repr__(self):
         return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)
