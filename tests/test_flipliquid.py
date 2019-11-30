@@ -25,8 +25,8 @@ class TestFlipLiquid(TestCase):
     def test_flipliquid_initializers(self):
         def typetest(liquid):
             self.assertIsInstance(liquid, FlipLiquid)
-            self.assertIsInstance(liquid.velocity.stagger_sample(), StaggeredGrid)
-            np.testing.assert_equal(liquid.density.center_sample().data.shape, [1,4,4,1])
-            np.testing.assert_equal(liquid.velocity.stagger_sample().staggered_tensor().shape, [1,5,5,2])
+            self.assertIsInstance(liquid.velocity.stagger_sample(liquid.staggered_grid('test', 0)), StaggeredGrid)
+            np.testing.assert_equal(liquid.density.center_sample(liquid.centered_grid('test', 0)).data.shape, [1,4,4,1])
+            np.testing.assert_equal(liquid.velocity.stagger_sample(liquid.staggered_grid('test', 0)).staggered_tensor().shape, [1,5,5,2])
         typetest(FlipLiquid(Domain([4, 4]), points=np.zeros([1,0,2]), velocity=0.0))
         typetest(FlipLiquid(Domain([4, 4]), points=np.zeros([1,0,2])))
