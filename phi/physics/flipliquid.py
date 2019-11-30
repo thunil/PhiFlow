@@ -118,12 +118,11 @@ class FlipLiquidPhysics(Physics):
 
 FLIPLIQUID = FlipLiquidPhysics()
 
-
+@struct.definition()
 class FlipLiquid(DomainState):
 
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid'), **kwargs):
-
-        DomainState.__init__(**struct.kwargs(locals()))
+        DomainState.__init__(self, **struct.kwargs(locals()))
 
         self._domaincache = get_domain(self, ())
         self._domaincache._active = self.active_mask.center_sample().data

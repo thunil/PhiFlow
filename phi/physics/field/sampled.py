@@ -7,11 +7,11 @@ from phi.physics.gridliquid import extrapolate
 import numpy as np
 
 
-#@struct.definition()
+@struct.definition()
 class SampledField(Field):
 
     def __init__(self, name, domain, sample_points, data=1, mode='add', point_count=None, **kwargs):
-        Field.__init__(**struct.kwargs(locals(), ignore=['point_count']))
+        Field.__init__(self, **struct.kwargs(locals(), ignore=['point_count']))
         self._point_count = point_count
 
     def sample_at(self, points, collapse_dimensions=True):
