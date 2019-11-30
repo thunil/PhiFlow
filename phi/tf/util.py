@@ -32,19 +32,6 @@ def placeholder(shape, dtype=np.float32, basename=None, include_properties=False
         return struct.map(f, shape, leaf_condition=_is_python_shape, trace=True, include_properties=include_properties)
 
 
-
-def placeholder_like(obj, dtype=np.float32, basename=None, particles=False):
-    warnings.warn("placeholder_like may not respect the batch dimension. "
-                  "For State objects, use placeholder(state.shape) instead.", DeprecationWarning, stacklevel=2)
-    f = lambda attr: tf.placeholder(dtype, (
-            () if isinstance(attr.value, int) 
-            else (attr.value.shape[0], None, attr.value.shape[2]) if (particles and len(attr.value.shape) == 3) 
-            #else ([None] * len(attr.value.shape)) if particles 
-            else attr.value.shape
-        ), _tf_name(attr, basename))
-    return struct.map(f, obj, leaf_condition=_is_python_shape, trace=True)
-
-
 def variable(initial_value, dtype=np.float32, basename=None, trainable=True):
     f = lambda attr: tf.Variable(attr.value, name=_tf_name(attr, basename), dtype=dtype, trainable=trainable)
     return struct.map(f, initial_value, leaf_condition=_is_python_shape, trace=True)
