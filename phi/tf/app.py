@@ -23,8 +23,6 @@ class App(nontf.App):
         self.editable_placeholders = {}
         self.auto_bake = True
         self.add_trait('tensorflow')
-        
-        self.particles_per_cell = None
 
     def prepare(self):
         if self.prepared:
@@ -33,7 +31,7 @@ class App(nontf.App):
         self.info('Initializing variables')
         self.session.initialize_variables()
         if self.auto_bake:
-            tf_bake_graph(self.world, self.session, self.particles_per_cell is not None)
+            tf_bake_graph(self.world, self.session)
         return self
 
     def add_scalar(self, name, node):
@@ -89,9 +87,6 @@ class TFApp(App):
         self.auto_bake = False
         self.scalar_values = {}
         self.set_data(None, None)
-        self.base_feed_dict = {}
-
-        self.current_batch = None
         self.custom_stride = stride
         self.force_custom_stride = force_custom_stride
 
@@ -184,14 +179,13 @@ class TFApp(App):
         except:
             optim_nodes = [optim_nodes]
         batch = next(self._train_iterator) if self._train_iterator is not None else None
-        self.current_batch = batch
         feed_dict = self._feed_dict(batch, True)
         scalar_values = self.session.run(optim_nodes + self.scalars, feed_dict, summary_key='train', merged_summary=self.merged_scalars, time=self.steps)[len(optim_nodes):]
         self.scalar_values = {name: value for name, value in zip(self.scalar_names, scalar_values) }
         if log_loss:
             self.info('Optimization: ' + ', '.join([self.scalar_names[i]+': '+str(scalar_values[i]) for i in range(len(self.scalars))]))
 
-    def validation_step(self, create_checkpoint=False, log_loss=True):
+    def validation_step(self, create_checkpoint=False):
         if self._val_reader is None:
             return
         batch = self._val_reader[0:self.validation_batch_size]
@@ -201,11 +195,11 @@ class TFApp(App):
             self.save_model()
         self.info('Parameters: %d. Validation Done (%d).' % (self.custom_properties()['parameter_count'], self.steps) )
 
-        if log_loss:
-            self.info('Validation: ' + ', '.join([self.scalar_names[i]+': '+str(scalar_values[i]) for i in range(len(self.scalars))]))
+    def base_feed_dict(self):
+        return {}
 
     def _feed_dict(self, batch, training):
-        feed_dict = self.base_feed_dict
+        feed_dict = self.base_feed_dict()
         feed_dict.update(self.editable_values_dict())
         feed_dict[self.training] = training
         if batch is not None:
@@ -227,8 +221,7 @@ class TFApp(App):
         if tasks is None:
             return None
         reader = self.view_reader
-        #batch = reader[0:self.validation_batch_size] if reader is not None else None
-        batch = self.current_batch if self.current_batch is not None else reader[0:self.validation_batch_size] if reader is not None else None
+        batch = reader[0:self.validation_batch_size] if reader is not None else None
         return self.session.run(tasks, self._feed_dict(batch, False))
 
     @property
