@@ -61,8 +61,8 @@ class Backend:
 
     def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='zero'):
         raise NotImplementedError(self)
-        
-    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
+
+    def range(self, start, limit=None, delta=1, dtype=None):
         raise NotImplementedError(self)
 
     def zeros_like(self, tensor):
@@ -298,9 +298,8 @@ class DynamicBackend(Backend):
     def resample(self, inputs, sample_coords, interpolation='LINEAR', boundary='zero'):
         return self.choose_backend((inputs, sample_coords)).resample(inputs, sample_coords, interpolation, boundary)
 
-    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
-        # Careful with argument ordering, limit before start in range_like because default arguments must be after non-default.
-        return self.choose_backend(tensor).range_like(tensor, limit, start=0, delta=1, dtype=None)
+    def range(self, start, limit=None, delta=1, dtype=None):
+        return self.choose_backend((start, limit, delta)).range(start, limit, delta, dtype)
         
     def zeros_like(self, tensor):
         return self.choose_backend(tensor).zeros_like(tensor)

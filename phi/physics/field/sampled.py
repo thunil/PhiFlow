@@ -154,7 +154,8 @@ Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of partic
     out_spatial_rank = len(indices.shape) - 2
     out_spatial_size = math.shape(indices)[1:-1]
 
-    batch_ids = math.reshape(math.range_like(indices, batch_size), [batch_size] + [1] * out_spatial_rank)
+    batch_range = math.backend.choose_backend(indices).range(batch_size)
+    batch_ids = math.reshape(batch_range, [batch_size] + [1] * out_spatial_rank)
     tile_shape = math.pad(out_spatial_size, [[1,0]], constant_values=1)
     batch_ids = math.expand_dims(math.tile(batch_ids, tile_shape), axis=-1)
 

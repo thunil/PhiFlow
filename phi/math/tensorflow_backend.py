@@ -33,7 +33,7 @@ class TFBackend(Backend):
     def rank(self, value):
         return len(value.shape)
 
-    def range_like(self, tensor, limit, start=0, delta=1, dtype=None):
+    def range(self, start, limit=None, delta=1, dtype=None):
         return tf.range(start, limit, delta, dtype)
 
     def tile(self, value, multiples):
