@@ -18,7 +18,6 @@ class TestFlipLiquid(TestCase):
         inflow = world.add(Inflow(Sphere((8, 8), radius=4)))
         world.step()
         world.step(liquid)
-        self.assertAlmostEqual(world.state.age, 2.0)
         self.assertAlmostEqual(liquid.age, 2.0)
         self.assertAlmostEqual(inflow.age, 1.0)
         self.assertEqual(liquid._batch_size, 2)

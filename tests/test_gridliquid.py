@@ -20,7 +20,7 @@ class TestGridLiquid(TestCase):
         world.step(liquid)
         self.assertAlmostEqual(liquid.age, 2.0)
         self.assertAlmostEqual(inflow.age, 1.0)
-        self.assertEqual(liquid._batch_size, 2)
+        #self.assertEqual(liquid._batch_size, 2)
 
     def test_gridliquid_initializers(self):
         def typetest(liquid):
