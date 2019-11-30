@@ -9,7 +9,7 @@ def get_domain(liquid, obstacles):
         if obstacles is not None:
             obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
             # Difference with grid-based liquid simulations
-            obstacle_grid = obstacle_mask.at(liquid.velocity.stagger_sample().center_points, collapse_dimensions=False).data
+            obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False).data
             mask = 1 - obstacle_grid
         else:
             mask = math.ones(liquid.domain.centered_shape(name='active')).data

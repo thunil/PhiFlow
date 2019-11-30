@@ -46,7 +46,7 @@ class GridLiquidPhysics(Physics):
         fluiddomain._active = create_binary_mask(liquid.density.data, threshold=0.1)
         
         distance = 30
-        s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), dx=1.0, distance=distance)
+        s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), distance=distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         density = advect.semi_lagrangian(liquid.density, ext_velocity, dt=dt)
@@ -100,7 +100,7 @@ class GridLiquid(DomainState):
 def liquid_divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
     assert isinstance(velocity, StaggeredGrid)
 
-    _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), dx=1.0, distance=2)
+    _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), distance=2)
 
     ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
     divergence_field = ext_velocity.divergence(physical_units=False)
@@ -149,18 +149,18 @@ def create_surface_mask(particle_mask):
     return bcs
 
 
-def extrapolate(domain, input_field, active_mask, distance=10, dx=1.0):
+def extrapolate(domain, input_field, active_mask, distance=10):
     """
     Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.
         :param domain: Domain that can create new Fields
         :param input_field: Field to be extrapolated
         :param active_mask: One dimensional binary mask indicating where fluid is present
-        :param dx: Optional grid cells width
-        :param distance: Optional maximal distance (in number of grid cells) where signed distance should still be calculated / how far should be extrapolated.
+        :param distance: Optional maximal distance (in number of grid cells, i.e. local coordinates) where signed distance should still be calculated / how far should be extrapolated.
         :return s_distance: tensor containing signed distance field
         :return ext_field: a new Field with extrapolated values
     """
     ext_data = input_field.data
+    dx = input_field.dx
     if isinstance(input_field, StaggeredGrid):
         ext_data = input_field.staggered_tensor()
         active_mask = math.pad(active_mask, [[0,0]] + [[0,1]] * input_field.rank + [[0,0]], "constant")
@@ -174,7 +174,7 @@ def extrapolate(domain, input_field, active_mask, distance=10, dx=1.0):
     # surface_mask == 1 doesn't output a tensor, just a scalar, but >= works.
     # Initialize the distance with 0 at the surface
     # Previously initialized with -0.5*dx, i.e. the cell is completely full (center is 0.5*dx inside the fluid surface). For stability and looks this was changed to 0 * dx, i.e. the cell is only half full. This way small changes to the SDF won't directly change neighbouring empty cells to fluidcells.
-    s_distance = math.where((surface_mask >= 1), -0.0*dx * math.ones_like(s_distance), s_distance)
+    s_distance = math.where((surface_mask >= 1), -0.0 * math.ones_like(s_distance), s_distance)
     
         
     directions = np.array(list(itertools.product(
@@ -195,7 +195,7 @@ def extrapolate(domain, input_field, active_mask, distance=10, dx=1.0):
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
             d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
-            d_dist += dx * np.sqrt(d.dot(d)) * signs
+            d_dist += np.sqrt((dx*d).dot(dx*d)) * signs
 
 
             if (d.dot(d) == 1) and (d >= 0).all():
@@ -224,7 +224,7 @@ def extrapolate(domain, input_field, active_mask, distance=10, dx=1.0):
 
             d_dist = math.pad(s_distance, [[0,0]] + [([0,1] if d[i] == -1 else [1,0] if d[i] == 1 else [0,0]) for i in dims] + [[0,0]], "symmetric")
             d_dist = d_dist[(slice(None),) + d_slice + (slice(None),)]
-            d_dist += dx * np.sqrt(d.dot(d)) * signs
+            d_dist += np.sqrt((dx*d).dot(dx*d)) * signs
 
             # We only want to update velocity that is outside of fluid
             updates = (math.abs(d_dist) < math.abs(buffered_distance)) & (surface_mask <= 0)
