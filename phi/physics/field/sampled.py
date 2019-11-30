@@ -1,16 +1,18 @@
 from .flag import SAMPLE_POINTS
 from .field import Field
 from .grid import CenteredGrid
-from .staggered_grid import StaggeredGrid
-from phi import struct, math
+from .staggered_grid import StaggeredGrid, unstack_staggered_tensor
 from phi.physics.gridliquid import extrapolate
+from phi.physics.domain import Domain
+from phi.physics.material import *
+from phi import struct, math
 import numpy as np
 
 
 @struct.definition()
 class SampledField(Field):
 
-    def __init__(self, name, domain, sample_points, data=1, mode='add', point_count=None, **kwargs):
+    def __init__(self, name, sample_points, data=1, mode='add', point_count=None, **kwargs):
         Field.__init__(self, **struct.kwargs(locals(), ignore=['point_count']))
         self._point_count = point_count
 
@@ -21,34 +23,42 @@ class SampledField(Field):
         if isinstance(other_field, SampledField) and other_field.sample_points is self.sample_points:
             return self
         elif isinstance(other_field, CenteredGrid):
-            return self.center_sample().at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
+            return self.center_sample(other_field).at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
 
         elif isinstance(other_field, StaggeredGrid):
-            return self.stagger_sample().at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
+            return self.stagger_sample(other_field).at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
 
         else:
             return self
 
-    def center_sample(self):
-        # Need to divide point coordinates by dx if we want it to be correct on the grid
-
+    def center_sample(self, field):
+        """
+    Samples the SampledField at the centers of a CenteredGrid. The value of the field parameter does not influence the result, only the resolution and box of the field.
+        :param field: Field that contains valid resolution and box
+        :return : sampled CenteredGrid
+        """
         valid_indices = math.to_int(math.floor(self.sample_points))
-        valid_indices = math.minimum(math.maximum(0, valid_indices), self.domain.resolution-1)
+        valid_indices = math.minimum(math.maximum(0, valid_indices), field.resolution-1)
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
 
-        scattered = math.scatter(self.sample_points, valid_indices, self.data, self.domain.centered_shape().data, duplicates_handling=self.mode)
+        scattered = math.scatter(self.sample_points, valid_indices, self.data, math.concat([[valid_indices.shape[0]], field.resolution, [1]], axis=-1), duplicates_handling=self.mode)
 
-        return self.domain.centered_grid(scattered)
+        return field.copied_with(data=scattered)
 
 
-    def stagger_sample(self):
+    def stagger_sample(self, field):
+        """
+    Samples the SampledField on a StaggeredGrid (see where the values of StaggeredGrids are defined in the documentation). The value of the field parameter does not influence the result, only the resolution and box of the field.
+        :param field: Field that contains valid resolution and box
+        :return : sampled StaggeredGrid
+        """
         valid_indices = math.to_int(math.floor(self.sample_points))
-        valid_indices = math.minimum(math.maximum(0, valid_indices), self.domain.resolution-1)
+        valid_indices = math.minimum(math.maximum(0, valid_indices), field.resolution-1)
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
 
-        active_mask = math.scatter(self.sample_points, valid_indices, 1, self.domain.centered_shape().data, duplicates_handling='any')
+        active_mask = math.scatter(self.sample_points, valid_indices, 1, math.concat([[valid_indices.shape[0]], field.resolution, [1]], axis=-1), duplicates_handling='any')
 
         mask = math.pad(active_mask, [[0, 0]] + [[1, 1]] * self.rank + [[0, 0]], "constant")
 
@@ -59,15 +69,15 @@ class SampledField(Field):
         
         result = []
         oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
-        staggered_shape = [i+1 for i in self.domain.resolution]
+        staggered_shape = [i+1 for i in field.resolution]
 
-        dims = range(self.domain.rank)
+        dims = range(field.rank)
         for d in dims: 
             staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0.0 * oneD_ones) for i in dims], axis=-1)
 
             indices = math.to_int(math.floor(self.sample_points + staggered_offset))
             
-            valid_indices = math.maximum(0, math.minimum(indices, self.domain.resolution))
+            valid_indices = math.maximum(0, math.minimum(indices, field.resolution))
             valid_indices = batch_indices(valid_indices)
 
             values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
@@ -78,9 +88,10 @@ class SampledField(Field):
             active_mask = math.minimum(mask[(slice(None),) + d_slice + (slice(None),)], active_mask)
             active_mask = math.minimum(mask[(slice(None),) + u_slice + (slice(None),)], active_mask)
         
-        grid_values = self.domain.staggered_grid(math.concat(result, axis=-1))
+        staggered_tensor_prep = unstack_staggered_tensor(math.concat(result, axis=-1))
+        grid_values = StaggeredGrid.from_tensors('staggered', staggered_tensor_prep)
         # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
-        _, grid_values = extrapolate(self.domain, grid_values, active_mask, distance=2)
+        _, grid_values = extrapolate(Domain(field.resolution, SLIPPERY, field.box), grid_values, active_mask, distance=2)
 
         return grid_values
 
@@ -95,10 +106,6 @@ class SampledField(Field):
     def mode(self, mode):
         assert mode in ('add', 'mean', 'any')
         return mode
-
-    @struct.prop()
-    def domain(self, d):
-        return d
 
     @struct.attr()
     def sample_points(self, sample_points):

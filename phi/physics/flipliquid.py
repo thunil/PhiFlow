@@ -4,7 +4,7 @@ from phi.physics.field.sampled import *
 
 
 
-def get_domain(liquid, obstacles):
+def get_particle_domain(liquid, obstacles):
     if liquid.domaincache is None or not liquid.domaincache.is_valid(obstacles):
         if obstacles is not None:
             obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
@@ -34,11 +34,11 @@ class FlipLiquidPhysics(Physics):
     def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         # We advect as the last part of the step, because we must make sure we have divergence free velocity fields. We cannot advect first assuming the input is divergence free because it never will be due to the velocities being stored on the particles.
 
-        fluiddomain = get_domain(liquid, obstacles)
-        fluiddomain._active = liquid.active_mask.center_sample().data
+        fluiddomain = get_particle_domain(liquid, obstacles)
+        fluiddomain._active = liquid.active_mask.center_sample(liquid.centered).data
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
-        velocity_field = liquid.velocity.stagger_sample()
+        velocity_field = liquid.velocity.stagger_sample(liquid.staggered)
 
         velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, gravity, dt)
         div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
@@ -124,8 +124,11 @@ class FlipLiquid(DomainState):
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid'), **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
 
-        self._domaincache = get_domain(self, ())
-        self._domaincache._active = self.active_mask.center_sample().data
+        self.centered = self.centered_grid('centered', 0)
+        self.staggered = self.staggered_grid('staggered', 0)
+
+        self._domaincache = get_particle_domain(self, ())
+        self._domaincache._active = self.active_mask.center_sample(self.centered).data
 
 
     def default_physics(self):
@@ -137,15 +140,15 @@ class FlipLiquid(DomainState):
 
     @struct.attr(default=0.0)
     def velocity(self, v):
-        return SampledField('velocity', self.domain, self.points, data=v, mode='mean')
+        return SampledField('velocity', self.points, data=v, mode='mean')
 
     @property
     def density(self):
-        return SampledField('density', self.domain, self.points, data=1.0, mode='add')
+        return SampledField('density', self.points, data=1.0, mode='add')
 
     @property
     def active_mask(self):
-        return SampledField('active_mask', self.domain, self.points, data=1.0, mode='any')
+        return SampledField('active_mask', self.points, data=1.0, mode='any')
 
     # Domaincache sort of redundant, can be merged with active_mask
     @struct.attr(default=None)
