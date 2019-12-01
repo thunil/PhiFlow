@@ -22,43 +22,41 @@ class SampledField(Field):
     def at(self, other_field, collapse_dimensions=True, force_optimization=False, return_self_if_compatible=False):
         if isinstance(other_field, SampledField) and other_field.sample_points is self.sample_points:
             return self
-        elif isinstance(other_field, CenteredGrid):
-            return self.center_sample(other_field).at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
-
+        elif isinstance(other_field, (CenteredGrid, Domain)):
+            return self._grid_sample(other_field.box, other_field.resolution)
         elif isinstance(other_field, StaggeredGrid):
-            return self.stagger_sample(other_field).at(other_field, collapse_dimensions, force_optimization, return_self_if_compatible)
+            return self._stagger_sample(other_field.box, other_field.resolution)
 
         else:
             return self
 
-    def center_sample(self, field):
+    def _grid_sample(self, box, resolution):
         """
-    Samples the SampledField at the centers of a CenteredGrid. The value of the field parameter does not influence the result, only the resolution and box of the field.
-        :param field: Field that contains valid resolution and box
-        :return : sampled CenteredGrid
+    Samples this field on a regular grid.
+        :param box: physical dimensions of the grid
+        :param resolution: grid resolution
+        :return: CenteredGrid
         """
         valid_indices = math.to_int(math.floor(self.sample_points))
-        valid_indices = math.minimum(math.maximum(0, valid_indices), field.resolution-1)
+        valid_indices = math.minimum(math.maximum(0, valid_indices), resolution - 1)
+        # Correct format for math.scatter
+        valid_indices = batch_indices(valid_indices)
+        scattered = math.scatter(self.sample_points, valid_indices, self.data, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling=self.mode)
+        return CenteredGrid(self.name+'_centered', data=scattered, box=box, extrapolation='constant')
+
+    def _stagger_sample(self, box, resolution):
+        """
+    Samples this field on a staggered grid.
+        :param box: physical dimensions of the grid
+        :param resolution: grid resolution
+        :return: StaggeredGrid
+        """
+        valid_indices = math.to_int(math.floor(self.sample_points))
+        valid_indices = math.minimum(math.maximum(0, valid_indices), resolution - 1)
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
 
-        scattered = math.scatter(self.sample_points, valid_indices, self.data, math.concat([[valid_indices.shape[0]], field.resolution, [1]], axis=-1), duplicates_handling=self.mode)
-
-        return field.copied_with(data=scattered)
-
-
-    def stagger_sample(self, field):
-        """
-    Samples the SampledField on a StaggeredGrid (see where the values of StaggeredGrids are defined in the documentation). The value of the field parameter does not influence the result, only the resolution and box of the field.
-        :param field: Field that contains valid resolution and box
-        :return : sampled StaggeredGrid
-        """
-        valid_indices = math.to_int(math.floor(self.sample_points))
-        valid_indices = math.minimum(math.maximum(0, valid_indices), field.resolution-1)
-        # Correct format for math.scatter
-        valid_indices = batch_indices(valid_indices)
-
-        active_mask = math.scatter(self.sample_points, valid_indices, 1, math.concat([[valid_indices.shape[0]], field.resolution, [1]], axis=-1), duplicates_handling='any')
+        active_mask = math.scatter(self.sample_points, valid_indices, 1, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling='any')
 
         mask = math.pad(active_mask, [[0, 0]] + [[1, 1]] * self.rank + [[0, 0]], "constant")
 
@@ -68,16 +66,16 @@ class SampledField(Field):
             values = self.data
         
         result = []
-        oneD_ones = math.unstack(math.ones_like(values), axis=-1)[0]
-        staggered_shape = [i+1 for i in field.resolution]
+        ones_1d = math.unstack(math.ones_like(values), axis=-1)[0]
+        staggered_shape = [i + 1 for i in resolution]
 
-        dims = range(field.rank)
+        dims = range(len(resolution))
         for d in dims: 
-            staggered_offset = math.stack([(0.5 * oneD_ones if i == d else 0.0 * oneD_ones) for i in dims], axis=-1)
+            staggered_offset = math.stack([(0.5 * ones_1d if i == d else 0.0 * ones_1d) for i in dims], axis=-1)
 
             indices = math.to_int(math.floor(self.sample_points + staggered_offset))
             
-            valid_indices = math.maximum(0, math.minimum(indices, field.resolution))
+            valid_indices = math.maximum(0, math.minimum(indices, resolution))
             valid_indices = batch_indices(valid_indices)
 
             values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
@@ -91,10 +89,8 @@ class SampledField(Field):
         staggered_tensor_prep = unstack_staggered_tensor(math.concat(result, axis=-1))
         grid_values = StaggeredGrid.from_tensors('staggered', staggered_tensor_prep)
         # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
-        _, grid_values = extrapolate(Domain(field.resolution, SLIPPERY, field.box), grid_values, active_mask, distance=2)
-
+        _, grid_values = extrapolate(Domain(resolution, SLIPPERY, box), grid_values, active_mask, distance=2)
         return grid_values
-
 
     @struct.attr()
     def data(self, data):
@@ -119,8 +115,7 @@ class SampledField(Field):
                 data_shape = (self._batch_size, self._point_count, self.component_count)
             else:
                 data_shape = ()
-            return self.copied_with(data=data_shape,
-                                    sample_points=(self._batch_size, self._point_count, self.rank))
+            return self.copied_with(data=data_shape, sample_points=(self._batch_size, self._point_count, self.rank))
 
     @property
     def rank(self):
@@ -205,7 +200,6 @@ def random_grid_to_coords(array, particles_per_cell=1):
         index_array.append(math.concat(temp, axis=0))
     try:
         index_array = math.stack(index_array)
+        return index_array
     except ValueError:
         raise ValueError("all arrays in the batch must have the same number of active cells.")
-    
-    return index_array
