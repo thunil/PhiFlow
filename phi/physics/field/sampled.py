@@ -68,10 +68,11 @@ class SampledField(Field):
         result = []
         ones_1d = math.unstack(math.ones_like(values), axis=-1)[0]
         staggered_shape = [i + 1 for i in resolution]
+        dx = box.size / resolution
 
         dims = range(len(resolution))
         for d in dims: 
-            staggered_offset = math.stack([(0.5 * ones_1d if i == d else 0.0 * ones_1d) for i in dims], axis=-1)
+            staggered_offset = math.stack([(0.5 * dx[i] * ones_1d if i == d else 0.0 * ones_1d) for i in dims], axis=-1)
 
             indices = math.to_int(math.floor(self.sample_points + staggered_offset))
             

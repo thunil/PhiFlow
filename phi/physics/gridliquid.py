@@ -106,6 +106,7 @@ def liquid_divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
     divergence_field = ext_velocity.divergence(physical_units=False)
     pressure, iteration = solve_pressure(divergence_field, fluiddomain, pressure_solver=pressure_solver)
     pressure_gradient = StaggeredGrid.gradient(pressure)
+    pressure_gradient = pressure_gradient.copied_with(data=[pressure_gradient.data[i] * velocity.dx[i] for i in range(velocity.rank)])
     velocity -= fluiddomain.with_hard_boundary_conditions(pressure_gradient)
     return velocity
 

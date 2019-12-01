@@ -93,7 +93,8 @@ Supports obstacles, density effects and global gravity.
 
         # Interpolate the change from the grid and add it to the particle velocity
         _, ext_gradp = extrapolate(fluiddomain.domain, velocity_field_change, extrapolate_mask, distance=2)
-        gradp_particles = ext_gradp.sample_at(points)
+        # Sample_at requires physical coordinates
+        gradp_particles = ext_gradp.sample_at(points * ext_gradp.dx)
 
         return gradp_particles
 
@@ -103,10 +104,11 @@ Supports obstacles, density effects and global gravity.
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         # Runge-Kutta 3rd order advection scheme
-        velocity_rk1 = ext_velocity.sample_at(points)
-        velocity_rk2 = ext_velocity.sample_at(points + 0.5 * dt * velocity_rk1)
-        velocity_rk3 = ext_velocity.sample_at(points + 0.5 * dt * velocity_rk2)
-        velocity_rk4 = ext_velocity.sample_at(points + 1 * dt * velocity_rk3)
+        # Sample_at requires physical coordinates
+        velocity_rk1 = ext_velocity.sample_at(points * ext_velocity.dx)
+        velocity_rk2 = ext_velocity.sample_at(points * ext_velocity.dx + 0.5 * dt * velocity_rk1)
+        velocity_rk3 = ext_velocity.sample_at(points * ext_velocity.dx + 0.5 * dt * velocity_rk2)
+        velocity_rk4 = ext_velocity.sample_at(points * ext_velocity.dx + 1 * dt * velocity_rk3)
 
         new_points = points + 1 / 6 * dt * (1 * velocity_rk1 + 2 * velocity_rk2 + 2 * velocity_rk3 + 1 * velocity_rk4)
         return new_points
