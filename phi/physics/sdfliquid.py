@@ -115,13 +115,7 @@ class SDFLiquid(DomainState):
 
     def __init__(self, domain, density=0.0, velocity=0.0, distance=30, tags=('sdfliquid', 'velocityfield'), **kwargs):
         DomainState.__init__(self,**struct.kwargs(locals()))
-
-        self._domaincache = get_domain(self, ())
-        self._active_mask = create_binary_mask(self.density.data, threshold=0)
-        self._domaincache._active = self._active_mask
-        self._sdf_data, _ = extrapolate(self.domain, self.velocity, self._active_mask, distance=distance)
-        self._sdf = self.centered_grid('sdf', self._sdf_data)
-
+        
 
     def default_physics(self):
         return SDFLIQUID
@@ -133,17 +127,25 @@ class SDFLiquid(DomainState):
     @struct.attr(default=0.0)
     def velocity(self, v):
         return self.staggered_grid('velocity', v)
-
-    @struct.attr(default=0.0)
-    def sdf(self, s):
-        return self.centered_grid('SDF', s)
-
-    @struct.attr(default=0.0)
+    
+    @struct.attr(default=None, dependencies=['density'])
     def active_mask(self, a):
+        if a is None:
+            a = create_binary_mask(self.density.data, threshold=0)
         return a
 
-    @struct.attr(default=None)
+    @struct.attr(default=None, dependencies=[DomainState.domain, 'velocity', 'active_mask', 'distance'])
+    def sdf(self, s):
+        if s is None:
+            s, _ = extrapolate(self.domain, self.velocity, self.active_mask, distance=self.distance)
+
+        return self.centered_grid('SDF', s)
+
+    @struct.attr(default=None, dependencies=['velocity', 'active_mask'])
     def domaincache(self, d):
+        if d is None:
+            d = get_domain(self, ())
+            d._active = self.active_mask
         return d
 
     @struct.attr(default=0.0)
