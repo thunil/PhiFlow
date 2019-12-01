@@ -49,7 +49,7 @@ Supports obstacles, density effects and global gravity.
         fluiddomain._active = liquid.active_mask.at(liquid.domain).data
 
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
-        velocity_field = liquid.velocity.at(liquid.staggered)
+        velocity_field = liquid.velocity.at(liquid.staggered_grid('staggered', 0))
 
         velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, gravity, dt)
         div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain,
@@ -136,8 +136,6 @@ class FlipLiquid(DomainState):
 
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid', ), **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
-        self.centered = self.centered_grid('centered', 0)
-        self.staggered = self.staggered_grid('staggered', 0)
         self._domaincache = get_particle_domain(self, ())
         self._domaincache._active = self.active_mask.at(domain).data
 

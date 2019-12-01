@@ -152,6 +152,9 @@ class SDFLiquid(DomainState):
 
     @struct.prop(default=10)
     def distance(self, d):
+        """
+    Defines the distance in grid cells over which should be extrapolated, i.e. distance over which the SDF value is correct.
+        """
         return d
 
     def __repr__(self):
@@ -200,8 +203,5 @@ def recompute_sdf(sdf, active_mask, velocity, distance=10, dt=1.0):
 
     distance_limit = -distance * (2 * active_mask - 1)
     s_distance = math.where(math.abs(s_distance) < distance, s_distance, distance_limit)
-
-    # Rough error correction for disappearing SDF
-    s_distance -= dt * math.max(math.abs(velocity.staggered_tensor())) * 0.01
 
     return sdf.copied_with(data=s_distance)
