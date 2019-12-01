@@ -5,8 +5,8 @@ from phi.flow import *
 class TestGridLiquid(TestCase):
     def test_direct_liquid(self):
         liquid = GridLiquid(Domain([16, 16]))
-        assert liquid.default_physics() == GRIDLIQUID
-        liquid2 = GRIDLIQUID.step(liquid)
+        assert liquid.default_physics() == GRID_LIQUID
+        liquid2 = GRID_LIQUID.step(liquid)
         assert(liquid2.age == 1.0)
         assert(liquid.age == 0.0)
         assert(liquid2.name == liquid.name)
