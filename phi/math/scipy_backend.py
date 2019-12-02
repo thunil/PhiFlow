@@ -44,7 +44,7 @@ class SciPyBackend(Backend):
         else:
             return (x/y)
 
-    def random_like(self, shape):
+    def random_uniform(self, shape):
         return np.random.random(shape).astype('f')
 
     def rank(self, value):

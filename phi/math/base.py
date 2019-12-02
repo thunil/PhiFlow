@@ -23,7 +23,7 @@ class Backend:
     def as_tensor(self, x):
         raise NotImplementedError()
 
-    def random_like(self, array):
+    def random_uniform(self, shape):
         raise NotImplementedError(self)
 
     def stack(self, values, axis=0):
@@ -272,8 +272,8 @@ class DynamicBackend(Backend):
     def as_tensor(self, x):
         return self.choose_backend(x).as_tensor(x)
 
-    def random_like(self, tensor):
-        return self.choose_backend(tensor).random_like(tensor)
+    def random_uniform(self, tensor):
+        return self.choose_backend(tensor).random_uniform(tensor)
 
     def stack(self, values, axis=0):
         return self.choose_backend(values).stack(values, axis)
