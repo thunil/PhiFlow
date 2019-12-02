@@ -44,15 +44,17 @@ def indices_tensor(tensor, dtype=np.float32):
     return idx.astype(dtype)
 
 
-def normalize_to(target, source=1):
+def normalize_to(target, source=1, epsilon=1e-5):
     """
     Multiplies the target so that its total content matches the source.
 
     :param target: a tensor
     :param source: a tensor or number
+    :param epsilon: small number to prevent division by zero or None.
     :return: normalized tensor of the same shape as target
     """
-    return target * (math.sum(source) / math.sum(target))
+    denominator = math.maximum(math.sum(target), epsilon) if epsilon is not None else math.sum(target)
+    return target * (math.sum(source) / denominator)
 
 
 def batch_align(tensor, innate_dims, target):
@@ -76,6 +78,16 @@ def batch_align_scalar(tensor, innate_spatial_dims, target):
 
 
 def blur(field, radius, cutoff=None, kernel="1/1+x"):
+    """
+Warning: This function can cause NaN in the gradients, reason unknown.
+
+Runs a blur kernel over the given tensor.
+    :param field: tensor
+    :param radius: weight function curve scale
+    :param cutoff: kernel size
+    :param kernel: Type of blur kernel (str). Must be in ('1/1+x', 'gauss')
+    :return:
+    """
     if cutoff is None:
         cutoff = min(int(round(radius * 3)), *field.shape[1:-1])
 
@@ -93,6 +105,9 @@ def blur(field, radius, cutoff=None, kernel="1/1+x"):
 
 
 def l1_loss(tensor, batch_norm=True, reduce_batches=True):
+    if struct.isstruct(tensor):
+        all_tensors = struct.flatten(tensor)
+        return sum(l1_loss(tensor, batch_norm, reduce_batches) for tensor in all_tensors)
     if reduce_batches:
         total_loss = math.sum(math.abs(tensor))
     else:

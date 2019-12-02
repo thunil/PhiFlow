@@ -1,8 +1,11 @@
 import numpy as np
+import six
 
 from phi import math, struct
 from phi.geom import AABox
 from phi.geom.geometry import assert_same_rank
+from phi.struct.functions import mappable
+from phi.struct.tensorop import collapse
 
 from .field import Field, propagate_flags_children
 from .flag import SAMPLE_POINTS
@@ -26,7 +29,7 @@ class CenteredGrid(Field):
     def resolution(self):
         return math.as_tensor(math.staticshape(self.data)[1:-1])
 
-    @struct.prop(dependencies=Field.data)
+    @struct.constant(dependencies=Field.data)
     def box(self, box):
         return AABox.to_box(box, resolution_hint=self.resolution)
 
@@ -38,17 +41,21 @@ class CenteredGrid(Field):
     def rank(self):
         return math.spatial_rank(self.data)
 
-    @struct.prop(default='boundary')
+    @struct.constant(default='boundary')
     def extrapolation(self, extrapolation):
-        assert extrapolation in ('periodic', 'constant', 'boundary'), extrapolation
-        return extrapolation
+        if extrapolation is None:
+            return 'boundary'
+        assert extrapolation in ('periodic', 'constant', 'boundary') or isinstance(extrapolation, (tuple, list)), extrapolation
+        return collapse(extrapolation)
 
-    @struct.prop(default='linear')
+    @struct.constant(default='linear')
     def interpolation(self, interpolation):
         assert interpolation == 'linear'
         return interpolation
 
     def sample_at(self, points, collapse_dimensions=True):
+        if not isinstance(self.extrapolation, six.string_types):
+            return self._padded_resample(points)
         local_points = self.box.global_to_local(points)
         local_points = local_points * math.to_float(self.resolution) - 0.5
         if self.extrapolation == 'periodic':
@@ -115,10 +122,11 @@ class CenteredGrid(Field):
             return 'Grid[invalid]'
 
     def padded(self, widths):
-        data = math.pad(self.data, [[0, 0]]+widths+[[0, 0]], _pad_mode(self.extrapolation))
+        extrapolation = self.extrapolation if isinstance(self.extrapolation, six.string_types) else ['constant'] + list(self.extrapolation) + ['constant']
+        data = math.pad(self.data, [[0, 0]]+widths+[[0, 0]], _pad_mode(extrapolation))
         w_lower, w_upper = np.transpose(widths)
         box = AABox(self.box.lower - w_lower * self.dx, self.box.upper + w_upper * self.dx)
-        return CenteredGrid(self.name, data, box, batch_size=self._batch_size)
+        return CenteredGrid(self.name, data, box, batch_size=self._batch_size, extrapolation=self.extrapolation)
 
     @staticmethod
     def getpoints(box, resolution):
@@ -136,6 +144,19 @@ class CenteredGrid(Field):
             laplace = math.laplace(self.data, padding=_pad_mode(self.extrapolation))
             return laplace / self.dx[0] ** 2
 
+    def normalized(self, total, epsilon=1e-5):
+        if isinstance(total, CenteredGrid):
+            total = total.data
+        normalize_data = math.normalize_to(self.data, total, epsilon)
+        return self.with_data(normalize_data)
+
+    def _padded_resample(self, points):
+        data = self.padded([[1,1]] * self.rank).data
+        local_points = self.box.global_to_local(points)
+        local_points = local_points * math.to_float(self.resolution) + 0.5  # depends on amount of padding
+        resampled = math.resample(data, local_points, boundary='replicate', interpolation=self.interpolation)
+        return resampled
+
 
 def _required_paddings_transposed(box, dx, target):
     lower = math.to_int(math.ceil(math.maximum(0, box.lower - target.lower) / dx))
@@ -143,6 +164,7 @@ def _required_paddings_transposed(box, dx, target):
     return [lower, upper]
 
 
+@mappable()
 def _pad_mode(extrapolation):
     if extrapolation == 'periodic':
         return 'wrap'

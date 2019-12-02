@@ -8,6 +8,7 @@ from phi.physics.domain import Domain
 from phi.physics.field import CenteredGrid, manta
 from phi import struct
 from phi.physics.smoke import Smoke
+from phi.struct.tensorop import collapse, collapsed_gather_nd, expand
 
 
 def generate_test_structs():
@@ -26,7 +27,7 @@ class TestStruct(TestCase):
                 self.assertEqual(obj, obj2)
                 obj3 = struct.map(lambda t: t, obj, recursive=True)
                 self.assertEqual(obj, obj3)
-                obj4 = struct.map(lambda t: t, obj, include_properties=True)
+                obj4 = struct.map(lambda t: t, obj, item_condition=struct.ALL_ITEMS)
                 self.assertEqual(obj, obj4)
 
     def test_flatten(self):
@@ -70,3 +71,17 @@ class TestStruct(TestCase):
             b = CenteredGrid('b', 'b')
             stacked = struct.map(lambda *x: x, struct.zip([a, b]))
             numpy.testing.assert_equal(stacked.data, ('a', 'b'))
+
+    def test_collapse(self):
+        self.assertEqual(0, collapse(numpy.zeros([2, 2])))
+        self.assertEqual(0, collapse(numpy.zeros([2, 2]).tolist()))
+        self.assertEqual(('a', 'a', 'b'), tuple(collapse(['a', ('a', 'a'), 'b'])))
+
+    def collapsed_gather_nd(self):
+        self.assertEqual('a', collapsed_gather_nd('a', [1, 2, 3, 4, 5]))
+        self.assertEqual('b', collapsed_gather_nd(['a', 'b'], [1, 0]))
+        self.assertEqual(('b', 'b'), collapsed_gather_nd(['a', ('b', 'b')], [1, 0], leaf_condition=lambda x: isinstance(x, tuple)))
+
+    def test_expand(self):
+        numpy.testing.assert_equal(expand(1, shape=(2,2)), [[1,1], [1,1]])
+        numpy.testing.assert_equal(expand(['a', ('b', 'c')], shape=(2,2)), [['a', 'a'], ['b', 'c']])

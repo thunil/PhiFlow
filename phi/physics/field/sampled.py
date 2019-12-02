@@ -99,12 +99,12 @@ class SampledField(Field):
             data = math.zeros_like(self.sample_points) + data
         return data
 
-    @struct.prop(default='add')
+    @struct.constant(default='add')
     def mode(self, mode):
         assert mode in ('add', 'mean', 'any')
         return mode
 
-    @struct.attr()
+    @struct.variable()
     def sample_points(self, sample_points):
         assert math.ndims(sample_points) == 3, sample_points.shape
         return sample_points

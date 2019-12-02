@@ -15,6 +15,14 @@ class Backend:
     def is_applicable(self, values):
         return False
 
+    # --- Abstract math functions ---
+
+    def is_tensor(self, x):
+        raise NotImplementedError()
+
+    def as_tensor(self, x):
+        raise NotImplementedError()
+
     def random_like(self, array):
         raise NotImplementedError(self)
 
@@ -49,7 +57,7 @@ class Backend:
 
     def divide_no_nan(self, x, y):
         raise NotImplementedError(self)
-    
+
     def where(self, condition, x=None, y=None):
         raise NotImplementedError(self)
 
@@ -219,7 +227,7 @@ class Backend:
     def tile(self, value, multiples):
         raise NotImplementedError(self)
 
-    # With default implementation
+    # --- Math function with default implementation ---
 
     def ndims(self, tensor):
         return len(self.staticshape(tensor))
@@ -255,8 +263,17 @@ class DynamicBackend(Backend):
                 return True
         return False
 
+    def is_tensor(self, x):
+        try:
+            return self.choose_backend(x).is_tensor(x)
+        except NoBackendFound:
+            return False
+
+    def as_tensor(self, x):
+        return self.choose_backend(x).as_tensor(x)
+
     def random_like(self, tensor):
-        return self.choose_backend(tensor).random_like(self.shape(tensor))
+        return self.choose_backend(tensor).random_like(tensor)
 
     def stack(self, values, axis=0):
         return self.choose_backend(values).stack(values, axis)
@@ -300,7 +317,7 @@ class DynamicBackend(Backend):
 
     def range(self, start, limit=None, delta=1, dtype=None):
         return self.choose_backend((start, limit, delta)).range(start, limit, delta, dtype)
-        
+
     def zeros_like(self, tensor):
         return self.choose_backend(tensor).zeros_like(tensor)
 
@@ -313,10 +330,8 @@ class DynamicBackend(Backend):
     def matmul(self, A, b):
         return self.choose_backend((A, b)).matmul(A, b)
 
-    def while_loop(self, cond, body, loop_vars, shape_invariants=None, parallel_iterations=10, back_prop=True,
-                   swap_memory=False, name=None, maximum_iterations=None):
-        return self.choose_backend(loop_vars).while_loop(cond, body, loop_vars, shape_invariants, parallel_iterations,
-                                                         back_prop, swap_memory, name, maximum_iterations)
+    def while_loop(self, cond, body, loop_vars, shape_invariants=None, parallel_iterations=10, back_prop=True, swap_memory=False, name=None, maximum_iterations=None):
+        return self.choose_backend(loop_vars).while_loop(cond, body, loop_vars, shape_invariants, parallel_iterations, back_prop, swap_memory, name, maximum_iterations)
 
     def abs(self, x):
         return self.choose_backend(x).abs(x)
