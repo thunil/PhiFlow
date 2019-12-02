@@ -31,4 +31,5 @@ class FlipDemo(App):
         self.steps = 0
 
 
+FlipDemo().prepare().step()
 show(framerate=3, display=('Fluid', 'Velocity'))

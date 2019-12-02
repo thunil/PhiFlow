@@ -25,7 +25,7 @@ def get_domain(liquid, obstacles):
         if liquid.domaincache is None:
             active_mask = mask
         else:
-            active_mask = mask * liquid.domaincache.active()
+            active_mask = mask * liquid.domaincache.active_tensor()
         return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
     else:
         return liquid.domaincache
@@ -47,7 +47,7 @@ Supports obstacles, density effects and global gravity.
     def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         fluiddomain = get_domain(liquid, obstacles)
         fluiddomain._active = create_binary_mask(liquid.density.data, threshold=0.1)
-        s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), distance=self.extrapolation_distance)
+        s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active_tensor(), distance=self.extrapolation_distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         density = advect.semi_lagrangian(liquid.density, ext_velocity, dt=dt)
@@ -79,19 +79,19 @@ class GridLiquid(DomainState):
     def default_physics(self):
         return GRID_LIQUID
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def density(self, d):
         return self.centered_grid('density', d)
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def velocity(self, v):
         return self.staggered_grid('velocity', v)
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def signed_distance(self, s):
         return self.centered_grid('SDF', s)
 
-    @struct.attr(default=None)
+    @struct.variable(default=None)
     def domaincache(self, d):
         return d
 
@@ -101,7 +101,7 @@ class GridLiquid(DomainState):
 
 def liquid_divergence_free(liquid, velocity, fluiddomain, pressure_solver=None):
     assert isinstance(velocity, StaggeredGrid)
-    _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active(), distance=2)
+    _, ext_velocity = extrapolate(liquid.domain, velocity, fluiddomain.active_tensor(), distance=2)
     ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
     divergence_field = ext_velocity.divergence(physical_units=False)
     pressure, iteration = solve_pressure(divergence_field, fluiddomain, pressure_solver=pressure_solver)

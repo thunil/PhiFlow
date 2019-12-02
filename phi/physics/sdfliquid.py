@@ -33,17 +33,17 @@ class SDFLiquidPhysics(Physics):
         # We take max of the dx, because currently my implementation only accepts scalar dx, i.e. constant ratio rescaling.
         fluiddomain._active = self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt)
 
-        sdf = recompute_sdf(sdf, fluiddomain.active(), velocity, distance=liquid.distance, dt=dt)
+        sdf = recompute_sdf(sdf, fluiddomain.active_tensor(), velocity, distance=liquid.distance, dt=dt)
 
         velocity = self.apply_forces(liquid, velocity, gravity, dt)
         velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
-        return liquid.copied_with(sdf=sdf, velocity=velocity, domaincache=fluiddomain, active_mask=fluiddomain.active(), age=liquid.age + dt)
+        return liquid.copied_with(sdf=sdf, velocity=velocity, domaincache=fluiddomain, active_mask=fluiddomain.active_tensor(), age=liquid.age + dt)
 
     @staticmethod
     def advect(liquid, fluiddomain, dt):
         # Advect liquid SDF and velocity using extrapolated velocity
-        _, ext_velocity_free = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active(), distance=liquid.distance)
+        _, ext_velocity_free = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active_tensor(), distance=liquid.distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity_free)
 
         # When advecting SDF we don't want to replicate boundary values when the sample coordinates are out of bounds, we want the fluid to move further away from the boundary. We increase the distance when sampling outside of the boundary.
@@ -118,39 +118,39 @@ class SDFLiquid(DomainState):
     def default_physics(self):
         return SDF_LIQUID
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def density(self, d):
         return self.centered_grid('density', d)
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def velocity(self, v):
         return self.staggered_grid('velocity', v)
     
-    @struct.attr(default=None, dependencies=['density'])
+    @struct.variable(default=None, dependencies=['density'])
     def active_mask(self, a):
         if a is None:
             a = create_binary_mask(self.density.data, threshold=0)
         return a
 
-    @struct.attr(default=None, dependencies=[DomainState.domain, 'velocity', 'active_mask', 'distance'])
+    @struct.variable(default=None, dependencies=[DomainState.domain, 'velocity', 'active_mask', 'distance'])
     def sdf(self, s):
         if s is None:
             s, _ = extrapolate(self.domain, self.velocity, self.active_mask, distance=self.distance)
 
         return self.centered_grid('SDF', s)
 
-    @struct.attr(default=None, dependencies=['velocity', 'active_mask'])
+    @struct.variable(default=None, dependencies=['velocity', 'active_mask'])
     def domaincache(self, d):
         if d is None:
             d = get_domain(self, ())
             d._active = self.active_mask
         return d
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def trained_forces(self, f):
         return self.staggered_grid('trained_forces', f)
 
-    @struct.prop(default=10)
+    @struct.constant(default=10)
     def distance(self, d):
         """
     Defines the distance in grid cells over which should be extrapolated, i.e. distance over which the SDF value is correct.

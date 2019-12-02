@@ -51,6 +51,7 @@ class SampledField(Field):
         :param resolution: grid resolution
         :return: StaggeredGrid
         """
+        resolution = np.array(resolution)
         valid_indices = math.to_int(math.floor(self.sample_points))
         valid_indices = math.minimum(math.maximum(0, valid_indices), resolution - 1)
         # Correct format for math.scatter
@@ -88,12 +89,12 @@ class SampledField(Field):
             active_mask = math.minimum(mask[(slice(None),) + u_slice + (slice(None),)], active_mask)
         
         staggered_tensor_prep = unstack_staggered_tensor(math.concat(result, axis=-1))
-        grid_values = StaggeredGrid.from_tensors('staggered', staggered_tensor_prep)
+        grid_values = StaggeredGrid('staggered', staggered_tensor_prep)
         # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
         _, grid_values = extrapolate(Domain(resolution, SLIPPERY, box), grid_values, active_mask, distance=2)
         return grid_values
 
-    @struct.attr()
+    @struct.variable()
     def data(self, data):
         if isinstance(data, (tuple, list, np.ndarray)):
             data = math.zeros_like(self.sample_points) + data
@@ -197,7 +198,7 @@ def random_grid_to_coords(array, particles_per_cell=1):
         temp = []
         for _ in range(particles_per_cell):
             # Uniform distribution over cell
-            temp.append(indices + math.random_like(indices))
+            temp.append(indices + math.random_uniform(math.shape(indices)))
         index_array.append(math.concat(temp, axis=0))
     try:
         index_array = math.stack(index_array)

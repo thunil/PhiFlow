@@ -15,8 +15,7 @@ def get_particle_domain(liquid, obstacles):
         if obstacles is not None:
             obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
             # Difference with grid-based liquid simulations
-            obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points,
-                                             collapse_dimensions=False).data
+            obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False)
             mask = 1 - obstacle_grid
         else:
             mask = math.ones(liquid.domain.centered_shape(name='active')).data
@@ -24,7 +23,7 @@ def get_particle_domain(liquid, obstacles):
         if liquid.domaincache is None:
             active_mask = mask
         else:
-            active_mask = mask * liquid.domaincache.active()
+            active_mask = mask * liquid.domaincache.active_tensor()
         return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
     else:
         return liquid.domaincache
@@ -52,8 +51,7 @@ Supports obstacles, density effects and global gravity.
         velocity_field = liquid.velocity.at(liquid.staggered_grid('staggered', 0))
 
         velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, gravity, dt)
-        div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain,
-                                                         self.pressure_solver)
+        div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
 
         velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points,
                                                                         (div_free_velocity_field - velocity_field))
@@ -100,7 +98,7 @@ Supports obstacles, density effects and global gravity.
 
     @staticmethod
     def advect_points(fluiddomain, points, velocity_field, dt):
-        _, ext_velocity = extrapolate(fluiddomain.domain, velocity_field, fluiddomain.active(), distance=30)
+        _, ext_velocity = extrapolate(fluiddomain.domain, velocity_field, fluiddomain.active_tensor(), distance=30)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         # Runge-Kutta 3rd order advection scheme
@@ -138,17 +136,16 @@ class FlipLiquid(DomainState):
 
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid', ), **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
-        self._domaincache = get_particle_domain(self, ())
-        self._domaincache._active = self.active_mask.at(domain).data
+        self._domaincache = get_particle_domain(self, ()).copied_with(active=self.active_mask.at(domain))
 
     def default_physics(self):
         return FLIP_LIQUID
 
-    @struct.attr()
+    @struct.variable()
     def points(self, points):
         return points
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def velocity(self, v):
         return SampledField('velocity', self.points, data=v, mode='mean')
 
@@ -160,15 +157,15 @@ class FlipLiquid(DomainState):
     def active_mask(self):
         return SampledField('active_mask', self.points, data=1.0, mode='any')
 
-    @struct.attr(default=None)
+    @struct.variable(default=None)
     def domaincache(self, domaincache):  # Domain cache sort of redundant, can be merged with active_mask
         return domaincache
 
-    @struct.attr(default=0.0)
+    @struct.variable(default=0.0)
     def trained_forces(self, f):
         return self.staggered_grid('trained_forces', f)
 
-    @struct.prop(default=1)
+    @struct.constant(default=1)
     def particles_per_cell(self, p):
         return p
 
