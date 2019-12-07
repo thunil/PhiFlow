@@ -1,5 +1,5 @@
 from phi import struct
-from phi.math.base import Backend
+from .base_backend import Backend
 
 
 class StructBroadcastBackend(Backend):
@@ -33,7 +33,7 @@ def broadcast_function(backend, func, args, kwargs):
         args, kwargs = build_arguments(values)
         result = backend_func(*args, **kwargs)
         return result
-    with struct.anytype():
+    with struct.unsafe():
         return struct.map(f, obj)
 
 

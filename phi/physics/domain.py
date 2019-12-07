@@ -87,67 +87,68 @@ class Domain(struct.Struct):
         assert isinstance(grid2, Domain), 'Not a Domain: %s' % type(grid2)
         return np.all(grid1.resolution == grid2.resolution) and grid1.box == grid2.box
 
-    def centered_shape(self, components=1, batch_size=1, name=None, extrapolation=None):
-        with struct.anytype():
-            return CenteredGrid(name, tensor_shape(batch_size, self.resolution, components), box=self.box, batch_size=batch_size, extrapolation=extrapolation)
+    def centered_shape(self, components=1, batch_size=1, name=None, extrapolation=None, age=0.0):
+        with struct.unsafe():
+            return CenteredGrid(tensor_shape(batch_size, self.resolution, components), age=age, box=self.box, extrapolation=extrapolation, name=name, batch_size=batch_size)
 
-    def staggered_shape(self, batch_size=1, name=None, extrapolation=None):
-        with struct.anytype():
+    def staggered_shape(self, batch_size=1, name=None, extrapolation=None, age=0.0):
+        with struct.unsafe():
             grids = []
             for axis in range(self.rank):
                 shape = _extend1(tensor_shape(batch_size, self.resolution, 1), axis)
                 box = staggered_component_box(self.resolution, axis, self.box)
-                grid = CenteredGrid(None, shape, box, batch_size=batch_size, extrapolation=extrapolation)
+                grid = CenteredGrid(shape, box, age=age, extrapolation=extrapolation, name=None, batch_size=batch_size)
                 grids.append(grid)
-            return StaggeredGrid(name, grids, box=self.box, batch_size=batch_size, extrapolation=extrapolation)
+            return StaggeredGrid(grids, age=age, box=self.box, name=name, batch_size=batch_size, extrapolation=extrapolation)
 
     def centered_grid(self, data, components=1, dtype=np.float32, name=None, batch_size=None, extrapolation=None):
-        shape = self.centered_shape(components, batch_size=batch_size, name=name, extrapolation=extrapolation)
+        if extrapolation is None:
+            extrapolation = Material.extrapolation_mode(self.boundaries)
         if callable(data):  # data is an initializer
+            shape = self.centered_shape(components, batch_size=batch_size, name=name, extrapolation=extrapolation, age=())
             try:
                 data = data(shape, dtype=dtype)
             except TypeError:
                 data = data(shape)
+            if data.age == ():
+                data._age = 0.0
         if isinstance(data, Field):
             assert_same_rank(data.rank, self.rank, 'data does not match Domain')
             data = data.at(CenteredGrid.getpoints(self.box, self.resolution))
             if name is not None:
-                data = data.copied_with(name=name)
+                data = data.copied_with(name=name, extrapolation=extrapolation)
+                data._batch_size = batch_size
             grid = data
         elif isinstance(data, (int, float)):
+            shape = self.centered_shape(components, batch_size=batch_size, name=name, extrapolation=extrapolation, age=0.0)
             grid = math.zeros(shape, dtype=dtype) + data
         else:
-            grid = CenteredGrid(name, data, box=self.box, extrapolation=extrapolation)
+            grid = CenteredGrid(data, box=self.box, extrapolation=extrapolation, name=name)
         return grid
 
     def staggered_grid(self, data, dtype=np.float32, name=None, batch_size=None, extrapolation=None):
-        shape = self.staggered_shape(batch_size=batch_size, name=name, extrapolation=extrapolation)
+        if extrapolation is None:
+            extrapolation = Material.extrapolation_mode(self.boundaries)
         if callable(data):  # data is an initializer
+            shape = self.staggered_shape(batch_size=batch_size, name=name, extrapolation=extrapolation, age=())
             try:
                 data = data(shape, dtype=dtype)
             except TypeError:
                 data = data(shape)
+            if data.age == ():
+                data._age = 0.0
+                for field in data.data: field._age = 0.0
         if isinstance(data, Field):
             assert isinstance(data, StaggeredGrid)
             assert np.all(data.resolution == self.resolution)
             assert data.box == self.box
             grid = data
         elif isinstance(data, (int, float)):
+            shape = self.staggered_shape(batch_size=batch_size, name=name, extrapolation=extrapolation)
             grid = (math.zeros(shape, dtype=dtype) + data).copied_with(flags=[DIVERGENCE_FREE])
         else:
-            grid = StaggeredGrid(name, data, self.box, batch_size=None, extrapolation=extrapolation)
+            grid = StaggeredGrid(data, self.box, name, batch_size=None, extrapolation=extrapolation)
         return grid
-
-    # def _get_paddings(self, material_condition, margin=1):
-    #     true_paddings = [[0, 0] for i in range(self.rank)]
-    #     false_paddings = [[0, 0] for i in range(self.rank)]
-    #     for dim in range(self.rank):
-    #         for upper in (False, True):
-    #             if material_condition(self.surface_material(dim, upper)):
-    #                 true_paddings[dim][upper] = margin
-    #             else:
-    #                 false_paddings[dim][upper] = margin
-    #     return [[0, 0]] + true_paddings + [[0, 0]], [[0, 0]] + false_paddings + [[0, 0]]
 
     def surface_material(self, axis=0, upper_boundary=False):
         return collapsed_gather_nd(self.boundaries, axis, upper_boundary)
@@ -189,10 +190,8 @@ class DomainState(State):
 
     def centered_grid(self, name, value, components=1, dtype=np.float32):
         extrapolation = Material.extrapolation_mode(self.domain.boundaries)
-        return self.domain.centered_grid(value, dtype=dtype, name=name, components=components,
-                                         batch_size=self._batch_size, extrapolation=extrapolation)
+        return self.domain.centered_grid(value, dtype=dtype, name=name, components=components, batch_size=self._batch_size, extrapolation=extrapolation)
 
     def staggered_grid(self, name, value, dtype=np.float32):
         extrapolation = Material.extrapolation_mode(self.domain.boundaries)
-        return self.domain.staggered_grid(value, dtype=dtype, name=name,
-                                          batch_size=self._batch_size, extrapolation=extrapolation)
+        return self.domain.staggered_grid(value, dtype=dtype, name=name, batch_size=self._batch_size, extrapolation=extrapolation)

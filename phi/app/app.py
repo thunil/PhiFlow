@@ -16,7 +16,7 @@ from os.path import isfile
 from phi.data.fluidformat import Scene, write_sim_frame
 from phi import struct
 from phi.physics.field import Field, StaggeredGrid, CenteredGrid
-from phi.physics.world import world
+from phi.physics.world import world, StateProxy
 from phi.viz.plot import PlotlyFigureBuilder
 from .value import EditableValue, EditableFloat, EditableInt, EditableBool, EditableString
 from .control import Control, Action
@@ -165,12 +165,19 @@ class App(object):
             raise KeyError('Field %s not declared. Available fields are %s' % (fieldname, self.fields.keys()))
         return self.fields[fieldname].get(self._invalidation_counter)
 
-    def add_field(self, name, generator):
+    def add_field(self, name, value):
         assert not self.prepared, 'Cannot add fields to a prepared model'
-        if not callable(generator):
-            assert isinstance(generator, (np.ndarray, Field, float, int)), 'Unsupported type for field "%s": %s' % (name, type(generator))
-            array = generator
-            generator = lambda: array
+        if isinstance(value, StateProxy):
+            def current_state():
+                return value.state
+            generator = current_state
+        elif callable(value):
+            generator = value
+        else:
+            assert isinstance(value, (np.ndarray, Field, float, int)), 'Unsupported type for field "%s": %s' % (name, type(value))
+            def get_constant():
+                return value
+            generator = get_constant
         self.fields[name] = TimeDependentField(name, generator)
 
     @property
@@ -255,7 +262,7 @@ class App(object):
                 self.add_field(field.name[0].upper() + field.name[1:], field_generator)
             return None
         old_worldstate = world.state
-        with struct.anytype():
+        with struct.unsafe():
             struct.map(add_default_field, world.state,
                        leaf_condition=lambda x: isinstance(x, (CenteredGrid, StaggeredGrid)),
                        trace=True)
@@ -380,7 +387,7 @@ class App(object):
 
         if self.record_data:
             arrays = [self.get_field(field) for field in self.recorded_fields]
-            arrays = [a.staggered if isinstance(a, StaggeredGrid) else a for a in arrays]
+            arrays = [a.staggered_tensor() if isinstance(a, StaggeredGrid) else a.data for a in arrays]
             names = [n.lower() for n in self.recorded_fields]
             files += write_sim_frame(self.directory, arrays, names, self.steps)
 

@@ -2,7 +2,7 @@
 
 This document discusses the code design of simulations and solvers within Φ<sub>*Flow*</sub>.
 If you are interested in how specific simulations work, check out their respective documentations, e.g.
-[Smoke](Smoke_Simulation.md).
+[Fluid](Fluid_Simulation.md).
 
 ### States and Physics objects
 
@@ -26,31 +26,29 @@ Once created, a state can never be changed. Every function that changes the stat
 `Physics` objects themselves are stateless, except for algorithmic or hardware-specific details.
 All properties of the physical system are stored in the state.
 
-Let's look at an example of a smoke simulation that directly uses `State`s and `Physics`.
+Let's look at an example of a fluid simulation that directly uses `State`s and `Physics`.
 
 ```python
 from phi.flow import *
 
 inflow = Inflow(box[10:20, 30:34], rate=0.1)
-state0 = Smoke(Domain([64, 64]), density=0)
-state1 = SMOKE.step(state0, dt=1.0, inflows=[inflow])
+state0 = Fluid(Domain([64, 64]), density=0, velocity=0)
+state1 = INCOMPRESSIBLE_FLOW.step(state0, dt=1.0, inflows=[inflow])
 ```
 
-There are 3 different versions of Smoke available:
+The first two lines after the import create immutable state objects. The last line executes a simulation step using the global [`Physics`](../phi/physics/physics.py) object INCOMPRESSIBLE_FLOW.
 
-1. [`Smoke`](../phi/physics/smoke.py): immutable object
-2. `World.Smoke`: mutable instance of `Smoke` directly added to the `World` instance
-3. `SMOKE`: a global instance of [`SmokePhysics`](../phi/physics/smoke.py), a subclass of [`Physics`](../phi/physics/physics.py).
-
-We could also create our own physics object, e.g. to use a specific [pressure solver](Pressure_Solvers.md):
+We could also create our own physics object, e.g. to use a specific [pressure solver](Pressure_Solvers.md), or modify the default physics object:
 
 ```python
-physics = SmokePhysics(custom_solver)
+physics = IncompressibleFlow(pressure_solver=custom_solver)
 physics.step(state0)
+# or
+INCOMPRESSIBLE_FLOW.pressure_solver = custom_solver
 ```
 
-Note that `SmokePhysics.step()` takes the additional optional arguments `inflows` and `obstacles`.
-These can be used to pass states of different simulations that interact with the smoke.
+Note that `IncompressibleFlow.step()` takes the additional optional arguments `inflows` and `obstacles`.
+These can be used to pass states of different simulations that interact with the fluid.
 In `Physics.step`, these arguments are referred to as `**dependent_states`but
 each `Physics` implementation can define which ones are appropriate for them.
 
@@ -62,7 +60,7 @@ The following table outlines the most important properties of `States` and `Phys
 | Base class      | [State](../phi/physics.physics.py)(extends [Struct](../phi/struct/stuct.py))                          | [Physics](../phi/physics/physics.py) [(phi.physics.physics)](../phi/physics/physics.py) |
 | Mutability      | Immutable                                                                                             | Stateless                                                                                |
 | Serialization   | NumPy arrays                                                                                          |                                                                                          |
-| Example classes | `StaggeredGrid`, `SmokeState`, `Obstacle`, `Inflow`,                                                  | `SmokePhysics`, `BurgersPhysics`, `Static`, `GeometryMovement`                            |
+| Example classes | `StaggeredGrid`, `Fluid`, `Obstacle`, `Inflow`,                                                  | `IncompressibleFlow`, `BurgersPhysics`, `Static`, `GeometryMovement`                            |
 
 ## NumPy vs TensorFlow
 
@@ -80,9 +78,9 @@ from phi.tf.flow import *
 
 session = Session(Scene.create('test'))
 inflow = Inflow(box[10:20, 30:34], rate=0.1)
-state_in = Smoke(Domain([64, 64]), density=placeholder, velocity=placeholder)
-state_out = SMOKE.step(state_in, dt=1.0, inflows=[inflow])
-state0 = Smoke(Domain([64, 64]), density=0)
+state_in = Fluid(Domain([64, 64]), density=placeholder, velocity=placeholder)
+state_out = INCOMPRESSIBLE_FLOW.step(state_in, dt=1.0, inflows=[inflow])
+state0 = Fluid(Domain([64, 64]), density=0)
 state1 = session.run(state_out, {state_in: state0})
 ```
 
@@ -90,11 +88,11 @@ This aligns with the typical TensorFlow workflow where `tf.Session.run` is used 
 `phi.tf.session.Session.run` simply extends the functionality by allowing `State` objects to be passed directly.
 
 While this extra code is unavoidable for machine learning applications, if you are simply running a simulation, you
-can add the states to a world (e.g. using `world.Smoke` instead of `Smoke`) and call the function
+can add the states to a world using `world.add(state)` and call the function
 `tf_bake_graph(world, session)` to automatically convert all physics objects to TensorFlow graph executions.
 
 The similarities and differences of NumPy vs TensorFlow are illustrated in the example 
-[manual_smoke_numpy_or_tf.py](../demos/manual_smoke_numpy_or_tf.py) for a simple custom smoke simulation.
+[manual_fluid_numpy_or_tf.py](../demos/manual_fluid_numpy_or_tf.py) for a simple custom fluid simulation.
 
 ## Simplified API with world
 

@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from phi import struct
 from .profiling import Timeliner
-from .util import isplaceholder
+from .util import isplaceholder, istensor
 
 
 class Session(object):
@@ -47,9 +47,14 @@ class Session(object):
                     if isplaceholder(key_tensor):
                         tensor_feed_dict[key_tensor] = value_tensor
                     return None
-                with struct.anytype(): struct.map(add_to_dict, pairs, item_condition=struct.ALL_ITEMS)
+                with struct.unsafe(): struct.map(add_to_dict, pairs, item_condition=struct.ALL_ITEMS)
 
-        tensor_fetches = struct.flatten(fetches)
+        tensor_fetches = struct.flatten(fetches, item_condition=struct.ALL_ITEMS)
+        if isinstance(fetches, (tuple, list)):
+            is_fetch = lambda x: istensor(x) or x in fetches
+        else:
+            is_fetch = lambda x: istensor(x) or x is fetches
+        tensor_fetches = tuple(filter(is_fetch, tensor_fetches))
 
         # Handle tracing
         trace = _trace_stack.get_default(raise_error=False)
@@ -62,7 +67,7 @@ class Session(object):
 
         # Summary
         if summary_key is not None and merged_summary is not None:
-            tensor_fetches = [merged_summary] + tensor_fetches
+            tensor_fetches = (merged_summary,) + tensor_fetches
 
         result_fetches = self._session.run(tensor_fetches, tensor_feed_dict, options, run_metadata)
         result_dict = {fetch: result for fetch, result in zip(tensor_fetches, result_fetches)}
@@ -81,7 +86,16 @@ class Session(object):
         if trace:
             trace.timeliner.add_run()
 
-        return struct.map(lambda fetch: result_dict[fetch], fetches)
+        def replace_tensor_with_value(fetch):
+            try:
+                if fetch in result_dict:
+                    return result_dict[fetch]
+                else:
+                    return fetch
+            except TypeError:  # not hashable
+                return fetch
+        result = struct.map(replace_tensor_with_value, fetches, item_condition=struct.ALL_ITEMS)
+        return result
 
     def profiler(self):
         os.path.isdir(self.profiling_directory) or os.makedirs(self.profiling_directory)

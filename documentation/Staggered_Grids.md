@@ -9,13 +9,13 @@ In Φ<sub>*Flow*</sub>, staggered grids are represented as instances of [Stagger
 Since each voxel has two faces per dimension, staggered grids contain more values than the corresponding centered grids.
 In memory, each component of a staggered grid is held in a different array while on disk, a single array, called `staggered_tensor`, is stored.
 
-When using a built-in simulation such as Smoke, staggered grids are generated automatically from the provided values.
+When using a built-in simulation such as Fluid, staggered grids are generated automatically from the provided values.
 New grids can also be created from the simulation object.
 ```python
 from phi.tf.flow import *
 
-centered_zeros = smoke.centered_grid('f0', 0)
-staggered_zeros = smoke.staggered_grid('v', 0)
+centered_zeros = fluid.centered_grid('f0', 0)
+staggered_zeros = fluid.staggered_grid('v', 0)
 ```
 
 
@@ -25,15 +25,15 @@ Staggered grids can be created manually from an array or tensor holding the stag
 from phi.tf.flow import *
 
 velocity_tensor = np.zeros([1, 65, 65, 2])
-staggered_field = StaggeredGrid('v', velocity_tensor)
+staggered_field = StaggeredGrid(velocity_tensor)
 ```
 
-States such as [Smoke](../phi/physics/smoke.py) ([documentation](Smoke_Simulation.md)) that use staggered grids will automatically create one if not provided.
+States such as [fluid](../phi/physics/fluid.py) ([documentation](Fluid_Simulation.md)) that use staggered grids will automatically create one if not provided.
 
 ```python
 from phi.tf.flow import *
 
-smoke = Smoke(Domain([64, 64]), velocity=placeholder)
+fluid = Fluid(Domain([64, 64]), velocity=placeholder)
 ```
 
 Staggered grids can also be created from centered fields. The first example below stores the spatial
@@ -45,7 +45,7 @@ by default the values at the boundary will drop off:
 ```python
 from phi.flow import *
 
-centered_field = CenteredGrid('f', np.ones([1, 64, 64, 1]), 1)
+centered_field = CenteredGrid(np.ones([1, 64, 64, 1]), 1)
 
 staggered_gradient = StaggeredGrid.gradient(centered_field)
 staggered_field_x = StaggeredGrid.from_scalar(centered_field, [1, 2])

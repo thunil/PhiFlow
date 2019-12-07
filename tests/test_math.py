@@ -1,6 +1,7 @@
 from unittest import TestCase
 
-import tensorflow as tf
+import numpy as np
+from phi.tf import tf
 
 # pylint: disable-msg = redefined-builtin, redefined-outer-name, unused-wildcard-import, wildcard-import
 from phi.math import *
@@ -56,8 +57,8 @@ class TestMath(TestCase):
         s = {'a': 0, 'b': 1}
         result = cos(s)
         self.assertEqual(result['a'], 1)
-        self.assertEqual(math.maximum(0.5, {'a': 0, 'b': 1}), {'a': 0.5, 'b': 1})
-        self.assertEqual(math.maximum({'a': 0, 'b': 1.5}, {'a': 0.5, 'b': 1}), {'a': 0.5, 'b': 1.5})
+        self.assertEqual(maximum(0.5, {'a': 0, 'b': 1}), {'a': 0.5, 'b': 1})
+        self.assertEqual(maximum({'a': 0, 'b': 1.5}, {'a': 0.5, 'b': 1}), {'a': 0.5, 'b': 1.5})
 
     def test_pad_wrap(self):
         tf.InteractiveSession()
@@ -88,4 +89,7 @@ class TestMath(TestCase):
         np.testing.assert_equal(p[1:-1,0], [2,4])
         np.testing.assert_equal(p[1:-1,3], [10, 10])
         print(p)
-        # TODO add TensorFlow test (no implemented yet)
+        tf.InteractiveSession()
+        a_tf = tf.constant(a, tf.float32, shape=(2,2))
+        p_tf = pad(a_tf, [[1,1], [1,1]], mode=['symmetric', ['wrap', 'constant']], constant_values=[0, [0, 10]])
+        np.testing.assert_equal(p, p_tf.eval())

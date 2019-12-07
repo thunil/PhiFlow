@@ -60,8 +60,8 @@ class TestDemos(TestCase):
     def test_heat_equilibrium(self):
         demo_run('heat_equilibrium')
 
-    def test_manual_smoke_numpy_or_tf(self):
-        demo_run('manual_smoke_numpy_or_tf')
+    def test_manual_fluid_numpy_or_tf(self):
+        demo_run('manual_fluid_numpy_or_tf')
 
     def test_marker(self):
         demo_run('marker')
@@ -75,8 +75,8 @@ class TestDemos(TestCase):
     def test_smoke_datagen_commandline(self):
         demo_run('smoke_datagen_commandline')
 
-    def test_smoke_logo(self):
-        demo_run('smoke_logo')
+    def test_fluid_logo(self):
+        demo_run('fluid_logo')
 
     def test_wavepacket(self):
         demo_run('wavepacket')
