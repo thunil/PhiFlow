@@ -42,7 +42,7 @@ class SampledField(Field):
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
         scattered = math.scatter(self.sample_points, valid_indices, self.data, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling=self.mode)
-        return CenteredGrid(self.name+'_centered', data=scattered, box=box, extrapolation='constant')
+        return CenteredGrid(data=scattered, box=box, extrapolation='constant', name=self.name+'_centered')
 
     def _stagger_sample(self, box, resolution):
         """
@@ -89,7 +89,7 @@ class SampledField(Field):
             active_mask = math.minimum(mask[(slice(None),) + u_slice + (slice(None),)], active_mask)
         
         staggered_tensor_prep = unstack_staggered_tensor(math.concat(result, axis=-1))
-        grid_values = StaggeredGrid('staggered', staggered_tensor_prep)
+        grid_values = StaggeredGrid(staggered_tensor_prep)
         # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
         _, grid_values = extrapolate(Domain(resolution, SLIPPERY, box), grid_values, active_mask, distance=2)
         return grid_values
@@ -158,7 +158,7 @@ Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of partic
     out_spatial_rank = len(indices.shape) - 2
     out_spatial_size = math.shape(indices)[1:-1]
 
-    batch_range = math.backend.choose_backend(indices).range(batch_size)
+    batch_range = math.DYNAMIC_BACKEND.choose_backend(indices).range(batch_size)
     batch_ids = math.reshape(batch_range, [batch_size] + [1] * out_spatial_rank)
     tile_shape = math.pad(out_spatial_size, [[1,0]], constant_values=1)
     batch_ids = math.expand_dims(math.tile(batch_ids, tile_shape), axis=-1)

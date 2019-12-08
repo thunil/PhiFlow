@@ -5,8 +5,9 @@ import itertools
 import numpy as np
 
 from phi import math, struct
+from phi.physics.material import Material
 from .physics import StateDependency, Physics
-from .pressuresolver.base import FluidDomain
+from .pressuresolver.solver_api import FluidDomain
 from .field import advect, StaggeredGrid, union_mask
 from .field.effect import Gravity, gravity_tensor, effect_applied
 from .domain import DomainState
@@ -17,18 +18,18 @@ def get_domain(liquid, obstacles):
     if liquid.domaincache is None or not liquid.domaincache.is_valid(obstacles):
         if obstacles is not None:
             obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
-            obstacle_grid = obstacle_mask.at(liquid.velocity.center_points, collapse_dimensions=False).data
+            obstacle_grid = obstacle_mask.at(liquid.velocity.center_points, collapse_dimensions=False)
             mask = 1 - obstacle_grid
         else:
-            mask = math.ones(liquid.domain.centered_shape(name='active')).data
+            mask = liquid.centered_grid('active', 1)
+        # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
+        extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
+        mask = mask.copied_with(extrapolation=extrapolation)
 
-        if liquid.domaincache is None:
-            active_mask = mask
-        else:
-            active_mask = mask * liquid.domaincache.active_tensor()
+        active_mask = mask * liquid.active_mask
         return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
     else:
-        return liquid.domaincache
+        return liquid.domaincache.copied_with(active=liquid.active_mask)
 
 
 class GridLiquidPhysics(Physics):
@@ -46,7 +47,7 @@ Supports obstacles, density effects and global gravity.
 
     def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         fluiddomain = get_domain(liquid, obstacles)
-        fluiddomain._active = create_binary_mask(liquid.density.data, threshold=0.1)
+        
         s_distance, ext_velocity = extrapolate(liquid.domain, liquid.velocity, fluiddomain.active_tensor(), distance=self.extrapolation_distance)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
@@ -57,7 +58,7 @@ Supports obstacles, density effects and global gravity.
             density = effect_applied(effect, density, dt=dt)
 
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        fluiddomain._active = create_binary_mask(density.data, threshold=0.1)
+        fluiddomain = fluiddomain.copied_with(active=liquid.centered_grid('active', create_binary_mask(density.data, threshold=0.1)))
 
         forces = liquid.staggered_grid('forces', 0).staggered_tensor() + dt * gravity_tensor(gravity, liquid.rank)
         velocity = velocity + liquid.domain.staggered_grid(forces)
@@ -87,6 +88,10 @@ class GridLiquid(DomainState):
     def velocity(self, v):
         return self.staggered_grid('velocity', v)
 
+    @property
+    def active_mask(self):
+        return self.centered_grid('active_mask', create_binary_mask(self.density.data, threshold=0.1))
+        
     @struct.variable(default=0.0)
     def signed_distance(self, s):
         return self.centered_grid('SDF', s)

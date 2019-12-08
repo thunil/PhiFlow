@@ -1,10 +1,11 @@
 from __future__ import division
 
 from phi import math, struct
+from phi.physics.material import Material
 from .gridliquid import extrapolate, liquid_divergence_free
 from .field.mask import union_mask
 from .field.effect import Gravity, gravity_tensor, effect_applied
-from .pressuresolver.base import FluidDomain
+from .pressuresolver.solver_api import FluidDomain
 from .physics import Physics, StateDependency
 from .domain import DomainState
 from .field.sampled import SampledField, random_grid_to_coords
@@ -18,15 +19,15 @@ def get_particle_domain(liquid, obstacles):
             obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False)
             mask = 1 - obstacle_grid
         else:
-            mask = math.ones(liquid.domain.centered_shape(name='active')).data
+            mask = liquid.centered_grid('active', 1)
+        # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
+        extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
+        mask = mask.copied_with(extrapolation=extrapolation)
 
-        if liquid.domaincache is None:
-            active_mask = mask
-        else:
-            active_mask = mask * liquid.domaincache.active_tensor()
+        active_mask = mask * liquid.active_mask.at(liquid.domain)
         return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
     else:
-        return liquid.domaincache
+        return liquid.domaincache.copied_with(active=liquid.active_mask.at(liquid.domain))
 
 
 class FlipLiquidPhysics(Physics):
@@ -45,8 +46,6 @@ Supports obstacles, density effects and global gravity.
         # We advect as the last part of the step, because we must make sure we have divergence free velocity fields. We cannot advect first assuming the input is divergence free because it never will be due to the velocities being stored on the particles.
 
         fluiddomain = get_particle_domain(liquid, obstacles)
-        fluiddomain._active = liquid.active_mask.at(liquid.domain).data
-
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = liquid.velocity.at(liquid.staggered_grid('staggered', 0))
 
@@ -80,11 +79,13 @@ Supports obstacles, density effects and global gravity.
 
     @staticmethod
     def particle_velocity_change(fluiddomain, points, velocity_field_change):
-        solid_paddings, open_paddings = fluiddomain.domain._get_paddings(lambda material: material.solid)
-        active_mask = fluiddomain._active
+        pad_values = struct.map(lambda solid: int(not solid), Material.solid(fluiddomain.domain.boundaries))
+        if isinstance(pad_values, (list, tuple)):
+            pad_values = [0] + list(pad_values) + [0]
+
+        active_mask = fluiddomain.active.data
         mask = active_mask[(slice(None),) + tuple([slice(1, -1)] * fluiddomain.rank) + (slice(None),)]
-        mask = math.pad(mask, solid_paddings, "constant", 0)
-        mask = math.pad(mask, open_paddings, "constant", 1)
+        mask = math.pad(mask, [[0,0]] + [[1, 1]] * fluiddomain.rank + [[0,0]], constant_values=pad_values)
 
         # We redefine the borders, when there is a solid wall we want to extrapolate to these cells. (Even if there is fluid in the solid wall, we overwrite it with the extrapolated value)
         extrapolate_mask = mask * active_mask
@@ -136,7 +137,7 @@ class FlipLiquid(DomainState):
 
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid', ), **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
-        self._domaincache = get_particle_domain(self, ()).copied_with(active=self.active_mask.at(domain))
+        self._domaincache = get_particle_domain(self, ())
 
     def default_physics(self):
         return FLIP_LIQUID

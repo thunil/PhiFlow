@@ -5,7 +5,7 @@ import numpy as np
 
 from phi import math, struct
 from .physics import StateDependency, Physics
-from .pressuresolver.base import FluidDomain
+from .pressuresolver.solver_api import FluidDomain
 from .field import advect, StaggeredGrid
 from .field.effect import Gravity, gravity_tensor, effect_applied
 from .domain import DomainState
@@ -24,21 +24,19 @@ class SDFLiquidPhysics(Physics):
 
     def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         fluiddomain = get_domain(liquid, obstacles)
-        # Need correct active mask for advection
-        fluiddomain._active = liquid.active_mask
 
         # Assume input has a divergence free velocity
         sdf, velocity = self.advect(liquid, fluiddomain, dt)
         # Update active mask after advection
         # We take max of the dx, because currently my implementation only accepts scalar dx, i.e. constant ratio rescaling.
-        fluiddomain._active = self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt)
+        fluiddomain = fluiddomain.copied_with(active=liquid.centered_grid('active', self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt)))
 
         sdf = recompute_sdf(sdf, fluiddomain.active_tensor(), velocity, distance=liquid.distance, dt=dt)
 
         velocity = self.apply_forces(liquid, velocity, gravity, dt)
         velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
 
-        return liquid.copied_with(sdf=sdf, velocity=velocity, domaincache=fluiddomain, active_mask=fluiddomain.active_tensor(), age=liquid.age + dt)
+        return liquid.copied_with(sdf=sdf, velocity=velocity, domaincache=fluiddomain, active_mask=fluiddomain.active, age=liquid.age + dt)
 
     @staticmethod
     def advect(liquid, fluiddomain, dt):
@@ -130,12 +128,12 @@ class SDFLiquid(DomainState):
     def active_mask(self, a):
         if a is None:
             a = create_binary_mask(self.density.data, threshold=0)
-        return a
+        return self.centered_grid('active', a)
 
     @struct.variable(default=None, dependencies=[DomainState.domain, 'velocity', 'active_mask', 'distance'])
     def sdf(self, s):
         if s is None:
-            s, _ = extrapolate(self.domain, self.velocity, self.active_mask, distance=self.distance)
+            s, _ = extrapolate(self.domain, self.velocity, self.active_mask.data, distance=self.distance)
 
         return self.centered_grid('SDF', s)
 
