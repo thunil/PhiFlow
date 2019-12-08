@@ -19,13 +19,13 @@ def get_particle_domain(liquid, obstacles):
             obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False)
             mask = 1 - obstacle_grid
         else:
-            mask = liquid.centered_grid('active', 1)
+            mask = liquid.centered_grid('mask', 1)
         # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
         extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
         mask = mask.copied_with(extrapolation=extrapolation)
 
         active_mask = mask * liquid.active_mask.at(liquid.domain)
-        return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
+        return FluidDomain(liquid.domain, obstacles, active=active_mask.copied_with(extrapolation='constant'), accessible=mask)
     else:
         return liquid.domaincache.copied_with(active=liquid.active_mask.at(liquid.domain))
 

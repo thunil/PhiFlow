@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 
 from phi import math, struct
+from phi.physics.material import Material
 from .physics import StateDependency, Physics
 from .pressuresolver.solver_api import FluidDomain
 from .field import advect, StaggeredGrid
@@ -29,7 +30,7 @@ class SDFLiquidPhysics(Physics):
         sdf, velocity = self.advect(liquid, fluiddomain, dt)
         # Update active mask after advection
         # We take max of the dx, because currently my implementation only accepts scalar dx, i.e. constant ratio rescaling.
-        fluiddomain = fluiddomain.copied_with(active=liquid.centered_grid('active', self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt)))
+        fluiddomain = fluiddomain.copied_with(active=liquid.domain.centered_grid(self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt), extrapolation='constant'))
 
         sdf = recompute_sdf(sdf, fluiddomain.active_tensor(), velocity, distance=liquid.distance, dt=dt)
 
@@ -128,7 +129,7 @@ class SDFLiquid(DomainState):
     def active_mask(self, a):
         if a is None:
             a = create_binary_mask(self.density.data, threshold=0)
-        return self.centered_grid('active', a)
+        return self.domain.centered_grid(a, extrapolation='constant')
 
     @struct.variable(default=None, dependencies=[DomainState.domain, 'velocity', 'active_mask', 'distance'])
     def sdf(self, s):

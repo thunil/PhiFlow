@@ -21,13 +21,13 @@ def get_domain(liquid, obstacles):
             obstacle_grid = obstacle_mask.at(liquid.velocity.center_points, collapse_dimensions=False)
             mask = 1 - obstacle_grid
         else:
-            mask = liquid.centered_grid('active', 1)
-        # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
+            mask = liquid.centered_grid('mask', 1)
+
         extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
         mask = mask.copied_with(extrapolation=extrapolation)
 
         active_mask = mask * liquid.active_mask
-        return FluidDomain(liquid.domain, obstacles, active=active_mask, accessible=mask)
+        return FluidDomain(liquid.domain, obstacles, active=active_mask.copied_with(extrapolation='constant'), accessible=mask)
     else:
         return liquid.domaincache.copied_with(active=liquid.active_mask)
 
@@ -58,7 +58,7 @@ Supports obstacles, density effects and global gravity.
             density = effect_applied(effect, density, dt=dt)
 
         # Update the active mask based on the new fluid-filled grid cells (for pressure solve)
-        fluiddomain = fluiddomain.copied_with(active=liquid.centered_grid('active', create_binary_mask(density.data, threshold=0.1)))
+        fluiddomain = fluiddomain.copied_with(active=liquid.domain.centered_grid(create_binary_mask(density.data, threshold=0.1), extrapolation='constant'))
 
         forces = liquid.staggered_grid('forces', 0).staggered_tensor() + dt * gravity_tensor(gravity, liquid.rank)
         velocity = velocity + liquid.domain.staggered_grid(forces)
@@ -90,7 +90,7 @@ class GridLiquid(DomainState):
 
     @property
     def active_mask(self):
-        return self.centered_grid('active_mask', create_binary_mask(self.density.data, threshold=0.1))
+        return self.domain.centered_grid(create_binary_mask(self.density.data, threshold=0.1), extrapolation='constant')
         
     @struct.variable(default=0.0)
     def signed_distance(self, s):
