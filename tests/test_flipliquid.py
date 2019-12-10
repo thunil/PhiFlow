@@ -5,8 +5,8 @@ from phi.flow import *
 class TestFlipLiquid(TestCase):
     def test_direct_liquid(self):
         liquid = FlipLiquid(Domain([16, 16]), points=np.zeros([1,0,2]))
-        assert liquid.default_physics() == FLIP_LIQUID
-        liquid2 = FLIP_LIQUID.step(liquid)
+        assert liquid.default_physics() == FLIP
+        liquid2 = FLIP.step(liquid)
         assert(liquid2.age == 1.0)
         assert(liquid.age == 0.0)
         assert(liquid2.name == liquid.name)

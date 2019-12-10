@@ -1,6 +1,4 @@
-from phi.physics.gridliquid import extrapolate
-from phi.physics.domain import Domain
-from phi.physics.material import SLIPPERY
+from phi.physics.field.util import extrapolate
 from phi import struct, math
 import numpy as np
 from .field import Field
@@ -20,6 +18,7 @@ class SampledField(Field):
         raise NotImplementedError()
 
     def at(self, other_field, collapse_dimensions=True, force_optimization=False, return_self_if_compatible=False):
+        from phi.physics.domain import Domain
         if isinstance(other_field, SampledField) and other_field.sample_points is self.sample_points:
             return self
         elif isinstance(other_field, (CenteredGrid, Domain)):
@@ -47,6 +46,7 @@ class SampledField(Field):
     def _stagger_sample(self, box, resolution):
         """
     Samples this field on a staggered grid.
+    In addition to sampling, extrapolates the field using an occupancy mask generated from the points.
         :param box: physical dimensions of the grid
         :param resolution: grid resolution
         :return: StaggeredGrid
@@ -91,7 +91,7 @@ class SampledField(Field):
         staggered_tensor_prep = unstack_staggered_tensor(math.concat(result, axis=-1))
         grid_values = StaggeredGrid(staggered_tensor_prep)
         # Fix values at boundary of liquids (using StaggeredGrid these might not receive a value, so we replace it with a value inside the liquid)
-        _, grid_values = extrapolate(Domain(resolution, SLIPPERY, box), grid_values, active_mask, distance=2)
+        grid_values, _ = extrapolate(grid_values, active_mask, voxel_distance=2)
         return grid_values
 
     @struct.variable()
@@ -112,7 +112,7 @@ class SampledField(Field):
 
     @property
     def shape(self):
-        with struct.anytype():
+        with struct.unsafe():
             if math.ndims(self.data) > 0:
                 data_shape = (self._batch_size, self._point_count, self.component_count)
             else:
@@ -151,7 +151,8 @@ class SampledField(Field):
 
 def batch_indices(indices):
     """
-Reshapes the indices, such that aside from indices they also contain batch number. For example the entry (32, 40) as coordinates of batch 2 will become (2, 32, 40).
+Reshapes the indices such that, aside from indices, they also contain batch number.
+For example the entry (32, 40) as coordinates of batch 2 will become (2, 32, 40).
 Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of particles is p and number of dimensions is d. 
     """
     batch_size = indices.shape[0]
@@ -166,39 +167,28 @@ Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of partic
     return math.concat((batch_ids, indices), axis=-1)
 
 
-def active_centers(array, particles_per_cell=1):
+def distribute_points(density, particles_per_cell=1, distribution='uniform'):
+    """
+Distribute points according to the distribution specified in density.
+    :param density: binary tensor
+    :param particles_per_cell: integer
+    :param distribution: 'uniform' or 'center'
+    :return: tensor of shape (batch_size, point_count, rank)
+    """
+    assert  distribution in ('center', 'uniform')
     index_array = []
-    batch_size = math.staticshape(array)[0] if math.staticshape(array)[0] is not None else 1
-
-    for batch in range(batch_size):
-        indices = math.where(array[batch,...,0] > 0)
-        indices = math.to_float(indices)
-
-        # For Deep Learning simulations where the target state needs to have same particle count as initial state. For all other purposes this method should be called with particles_per_cell set to the default 1.
-        temp = []
-        for _ in range(particles_per_cell):
-            # Uniform distribution over cell
-            temp.append(indices)
-        index_array.append(math.concat(temp, axis=0))
-    try:
-        index_array = math.stack(index_array)
-    except ValueError:
-        raise ValueError("all arrays in the batch must have the same number of active cells.")
-    return index_array + 0.5
-
-
-def random_grid_to_coords(array, particles_per_cell=1):
-    index_array = []
-    batch_size = math.staticshape(array)[0] if math.staticshape(array)[0] is not None else 1
+    batch_size = math.staticshape(density)[0] if math.staticshape(density)[0] is not None else 1
     
     for batch in range(batch_size):
-        indices = math.where(array[batch,...,0] > 0)
+        indices = math.where(density[batch, ..., 0] > 0)
         indices = math.to_float(indices)
 
         temp = []
         for _ in range(particles_per_cell):
-            # Uniform distribution over cell
-            temp.append(indices + math.random_uniform(math.shape(indices)))
+            if distribution == 'center':
+                temp.append(indices + 0.5)
+            elif distribution == 'uniform':
+                temp.append(indices + math.random_uniform(math.shape(indices)))
         index_array.append(math.concat(temp, axis=0))
     try:
         index_array = math.stack(index_array)

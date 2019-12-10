@@ -2,35 +2,17 @@ from __future__ import division
 
 from phi import math, struct
 from phi.physics.material import Material
-from .gridliquid import extrapolate, liquid_divergence_free
+from .gridliquid import liquid_divergence_free
+from phi.physics.field.util import extrapolate
 from .field.mask import union_mask
 from .field.effect import Gravity, gravity_tensor, effect_applied
 from .pressuresolver.solver_api import FluidDomain
 from .physics import Physics, StateDependency
 from .domain import DomainState
-from .field.sampled import SampledField, random_grid_to_coords
+from .field.sampled import SampledField, distribute_points
 
 
-def get_particle_domain(liquid, obstacles):
-    if liquid.domaincache is None or not liquid.domaincache.is_valid(obstacles):
-        if obstacles is not None:
-            obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
-            # Difference with grid-based liquid simulations
-            obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False)
-            mask = 1 - obstacle_grid
-        else:
-            mask = liquid.centered_grid('mask', 1)
-        # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
-        extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
-        mask = mask.copied_with(extrapolation=extrapolation)
-
-        active_mask = mask * liquid.active_mask.at(liquid.domain)
-        return FluidDomain(liquid.domain, obstacles, active=active_mask.copied_with(extrapolation='constant'), accessible=mask)
-    else:
-        return liquid.domaincache.copied_with(active=liquid.active_mask.at(liquid.domain))
-
-
-class FlipLiquidPhysics(Physics):
+class Flip(Physics):
     """
 Physics for Fluid Implicit Particles simulation for liquids.
 Supports obstacles, density effects and global gravity.
@@ -45,11 +27,11 @@ Supports obstacles, density effects and global gravity.
     def step(self, liquid, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         # We advect as the last part of the step, because we must make sure we have divergence free velocity fields. We cannot advect first assuming the input is divergence free because it never will be due to the velocities being stored on the particles.
 
-        fluiddomain = get_particle_domain(liquid, obstacles)
+        fluiddomain = self.get_particle_domain(liquid, obstacles)
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = liquid.velocity.at(liquid.staggered_grid('staggered', 0))
 
-        velocity_field_with_forces = self.apply_field_forces(liquid, velocity_field, gravity, dt)
+        velocity_field_with_forces = self.apply_forces(velocity_field, gravity, dt)
         div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, self.pressure_solver)
 
         velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points,
@@ -62,20 +44,19 @@ Supports obstacles, density effects and global gravity.
         inflow_density = liquid.domain.centered_grid(0)
         for effect in density_effects:
             inflow_density = effect_applied(effect, inflow_density, dt=dt)
-        inflow_points = random_grid_to_coords(inflow_density.data, liquid.particles_per_cell)
+        inflow_points = distribute_points(inflow_density.data, liquid.particles_per_cell)
         points = math.concat([points, inflow_points], axis=1)
         velocity = math.concat([velocity, 0.0 * (inflow_points)], axis=1)
 
         # Remove the particles that went out of the simulation boundaries
         points, velocity = self.remove_out_of_bounds(liquid, points, velocity)
 
-        return liquid.copied_with(points=points, velocity=velocity, domaincache=fluiddomain, age=liquid.age + dt)
+        return liquid.copied_with(points=points, velocity=velocity, age=liquid.age + dt)
 
     @staticmethod
-    def apply_field_forces(liquid, velocity_field, gravity, dt):
-        forces = dt * (gravity_tensor(gravity, liquid.rank) + liquid.trained_forces.staggered_tensor())
-        forces = liquid.domain.staggered_grid(forces)
-        return velocity_field + forces
+    def apply_forces(velocity, gravity, dt=1.0):
+        forces = dt * gravity_tensor(gravity, velocity.rank)
+        return velocity.with_data(velocity.staggered_tensor() + forces)
 
     @staticmethod
     def particle_velocity_change(fluiddomain, points, velocity_field_change):
@@ -91,7 +72,7 @@ Supports obstacles, density effects and global gravity.
         extrapolate_mask = mask * active_mask
 
         # Interpolate the change from the grid and add it to the particle velocity
-        _, ext_gradp = extrapolate(fluiddomain.domain, velocity_field_change, extrapolate_mask, distance=2)
+        ext_gradp, _ = extrapolate(velocity_field_change, extrapolate_mask, voxel_distance=2)
         # Sample_at requires physical coordinates
         gradp_particles = ext_gradp.sample_at(points * ext_gradp.dx)
 
@@ -99,7 +80,7 @@ Supports obstacles, density effects and global gravity.
 
     @staticmethod
     def advect_points(fluiddomain, points, velocity_field, dt):
-        _, ext_velocity = extrapolate(fluiddomain.domain, velocity_field, fluiddomain.active_tensor(), distance=30)
+        ext_velocity, _ = extrapolate(velocity_field, fluiddomain.active_tensor(), voxel_distance=30)
         ext_velocity = fluiddomain.with_hard_boundary_conditions(ext_velocity)
 
         # Runge-Kutta 3rd order advection scheme
@@ -128,8 +109,24 @@ Supports obstacles, density effects and global gravity.
 
         return points, velocity
 
+    @staticmethod
+    def get_particle_domain(liquid, obstacles):
+        if obstacles is not None:
+            obstacle_mask = union_mask([obstacle.geometry for obstacle in obstacles])
+            # Difference with grid-based liquid simulations
+            obstacle_grid = obstacle_mask.at(liquid.staggered_grid('center', 0).center_points, collapse_dimensions=False)
+            mask = 1 - obstacle_grid
+        else:
+            mask = liquid.centered_grid('mask', 1)
+        # If extrapolation of the accessible mask isn't constant, then no boundary conditions will be correct.
+        extrapolation = Material.accessible_extrapolation_mode(liquid.domain.boundaries)
+        mask = mask.copied_with(extrapolation=extrapolation)
 
-FLIP_LIQUID = FlipLiquidPhysics()
+        active_mask = mask * liquid.active_mask.at(liquid.domain)
+        return FluidDomain(liquid.domain, obstacles, active=active_mask.copied_with(extrapolation='constant'), accessible=mask)
+
+
+FLIP = Flip()
 
 
 @struct.definition()
@@ -137,18 +134,17 @@ class FlipLiquid(DomainState):
 
     def __init__(self, domain, points, velocity=0.0, particles_per_cell=1, tags=('flipliquid', ), **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
-        self._domaincache = get_particle_domain(self, ())
 
     def default_physics(self):
-        return FLIP_LIQUID
+        return FLIP
 
     @struct.variable()
     def points(self, points):
         return points
 
     @struct.variable(default=0.0)
-    def velocity(self, v):
-        return SampledField('velocity', self.points, data=v, mode='mean')
+    def velocity(self, velocity):
+        return SampledField('velocity', self.points, data=velocity, mode='mean')
 
     @property
     def density(self):
@@ -158,17 +154,9 @@ class FlipLiquid(DomainState):
     def active_mask(self):
         return SampledField('active_mask', self.points, data=1.0, mode='any')
 
-    @struct.variable(default=None)
-    def domaincache(self, domaincache):  # Domain cache sort of redundant, can be merged with active_mask
-        return domaincache
-
-    @struct.variable(default=0.0)
-    def trained_forces(self, f):
-        return self.staggered_grid('trained_forces', f)
-
     @struct.constant(default=1)
-    def particles_per_cell(self, p):
-        return p
+    def particles_per_cell(self, particles_per_cell):
+        return particles_per_cell
 
     def __repr__(self):
         return "Liquid[density: %s, velocity: %s]" % (self.density, self.velocity)
