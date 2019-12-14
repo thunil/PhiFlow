@@ -2,8 +2,7 @@
 
 from .physics.physics import *
 from .physics.world import *
-from .physics.gridliquid import *
-from .physics.flipliquid import *
+from .physics.liquid import *
 from .physics.schroedinger import *
 from .physics.fluid import *
 from .physics.burgers import *

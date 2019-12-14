@@ -11,7 +11,7 @@ class GridDemo(App):
         self.initial_density[:, size[-2] * 6 // 8: size[-2] * 8 // 8 - 1, size[-1] * 2 // 8: size[-1] * 6 // 8, :] = 1
         self.initial_density[:, size[-2] * 0 // 8: size[-2] * 2 // 8, size[-1] * 0 // 8: size[-1] * 8 // 8, :] = 1
         # --- Create liquid and expose fields to GUI ---
-        self.liquid = world.add(Fluid(domain, density=self.initial_density), physics=INCOMPRESSIBLE_LIQUID)
+        self.liquid = world.add(Fluid(domain, density=self.initial_density), physics=FreeSurfaceFlow())
         self.add_field('Density', lambda: self.liquid.density)
         self.add_field('Velocity', lambda: self.liquid.velocity)
 

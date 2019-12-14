@@ -16,7 +16,7 @@ class FlipDemo(App):
         self.initial_velocity = [0.0, 0.0]
         self.initial_points = distribute_points(self.initial_density, PARTICLES_PER_CELL)
         # --- Create liquid and expose fields to GUI ---
-        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, particles_per_cell=PARTICLES_PER_CELL))
+        self.liquid = world.add(FlipLiquid(domain, points=self.initial_points, velocity=self.initial_velocity, particles_per_cell=PARTICLES_PER_CELL), physics=FreeSurfaceFlow())
         self.add_field('Fluid', lambda: self.liquid.active_mask.at(domain))
         self.add_field('Density', lambda: self.liquid.density.at(domain))
         self.add_field('Velocity', lambda: self.liquid.velocity.at(self.liquid.staggered_grid('staggered', 0)))

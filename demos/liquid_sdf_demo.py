@@ -10,7 +10,7 @@ class SDFDemo(App):
         # --- Initial state ---
         initial_fluid_density = union_mask([box[:15, :], box[48:63, 20:60]])
         # --- Create liquid and expose fields to GUI ---
-        self.liquid = world.add(SDFLiquid(domain, active_mask=initial_fluid_density, distance=self.distance))
+        self.liquid = world.add(LevelsetLiquid(domain, active_mask=initial_fluid_density, distance=self.distance), physics=FreeSurfaceFlow())
         self.add_field('Fluid', lambda: self.liquid.active_mask)
         self.add_field('Signed Distance Field', lambda: self.liquid.sdf)
         self.add_field('Velocity', lambda: self.liquid.velocity)
