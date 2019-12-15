@@ -1,10 +1,16 @@
-from phi.flow import *
+from phi.tf.flow import *
 
 
-class GridDemo(App):
+DESCRIPTION = """
+This naive approach tracks the liquid using a marker density grid, just like the regular fluid simulation.
+This typically results in diminishing liquid volume over time.
+"""
+
+
+class DensityLiquidDemo(App):
 
     def __init__(self, size=(64, 80)):
-        App.__init__(self, 'Grid-based simulation', 'Grid-based liquid simulation.', stride=1)
+        App.__init__(self, 'Grid-based simulation', DESCRIPTION, stride=10)
         domain = Domain(size, SLIPPERY)
         # --- Initial state ---
         self.initial_density = domain.centered_grid(0.0).data
@@ -24,4 +30,4 @@ class GridDemo(App):
         self.steps = 0
 
 
-show(framerate=3, display=('Density', 'Velocity'))
+show(display=('Density', 'Velocity'))

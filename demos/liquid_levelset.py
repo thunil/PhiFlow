@@ -1,10 +1,16 @@
-from phi.flow import *
+from phi.tf.flow import *
 
 
-class SDFDemo(App):
+DESCRIPTION = """
+Grid-based liquid simulation using level sets to define the liquid.
+A signed distance field (SDF) is used to track the liquid where negative values correspond to filled cells.
+"""
+
+
+class LevelsetLiquidDemo(App):
 
     def __init__(self, size=(64, 80)):
-        App.__init__(self, 'SDF simulation', 'Signed Distance based liquid simulation.', stride=1)
+        App.__init__(self, 'SDF simulation', DESCRIPTION, stride=10)
         domain = Domain(size, SLIPPERY)
         self.distance = max(size)
         # --- Initial state ---
@@ -19,4 +25,4 @@ class SDFDemo(App):
         world.step(dt=0.1)
 
 
-show(framerate=3, display=('Fluid', 'Velocity'))
+show(display=('Fluid', 'Velocity'))

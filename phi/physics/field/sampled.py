@@ -40,7 +40,8 @@ class SampledField(Field):
         valid_indices = math.minimum(math.maximum(0, valid_indices), resolution - 1)
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
-        scattered = math.scatter(self.sample_points, valid_indices, self.data, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling=self.mode)
+        shape = [math.shape(valid_indices)[0]] + list(resolution) + [1]
+        scattered = math.scatter(self.sample_points, valid_indices, self.data, shape=shape, duplicates_handling=self.mode)
         return CenteredGrid(data=scattered, box=box, extrapolation='constant', name=self.name+'_centered')
 
     def _stagger_sample(self, box, resolution):
@@ -155,11 +156,11 @@ Reshapes the indices such that, aside from indices, they also contain batch numb
 For example the entry (32, 40) as coordinates of batch 2 will become (2, 32, 40).
 Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of particles is p and number of dimensions is d. 
     """
-    batch_size = indices.shape[0]
+    batch_size = math.shape(indices)[0]
     out_spatial_rank = len(indices.shape) - 2
     out_spatial_size = math.shape(indices)[1:-1]
 
-    batch_range = math.DYNAMIC_BACKEND.choose_backend(indices).range(batch_size)
+    batch_range = math.range(batch_size)
     batch_ids = math.reshape(batch_range, [batch_size] + [1] * out_spatial_rank)
     tile_shape = math.pad(out_spatial_size, [[1,0]], constant_values=1)
     batch_ids = math.expand_dims(math.tile(batch_ids, tile_shape), axis=-1)

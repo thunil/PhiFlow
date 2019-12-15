@@ -1,13 +1,19 @@
-from phi.flow import *
+from phi.tf.flow import *
 
 
 PARTICLES_PER_CELL = 8
+DESCRIPTION = """
+The Fluid Implicit Particle (FLIP) is a hybrid particle-grid approach for simulating liquids.
+It preserves liquid volume much better than purely grid-based approaches.
+
+For initialization, %d particles are randomly distributed in each occupied cell.
+""" % PARTICLES_PER_CELL
 
 
 class FlipDemo(App):
 
     def __init__(self, size=(64, 64)):
-        App.__init__(self, 'FLIP simulation', 'Fluid Implicit Particle liquid simulation.', stride=3)
+        App.__init__(self, 'FLIP simulation', DESCRIPTION, stride=10)
         domain = Domain(size, SLIPPERY, box=AABox(0, [32,32]))
         # --- Initial state ---
         self.initial_density = domain.centered_grid(0.0).data
@@ -23,7 +29,7 @@ class FlipDemo(App):
 
     def step(self):
         world.step(dt=0.1)
-        self.info('Particle count: %d' % self.liquid.points.shape[1])
+        self.info('%d: Particle count: %d' % (self.steps, self.liquid.points.shape[1]))
 
     def action_reset(self):
         self.liquid.points = distribute_points(self.initial_density, PARTICLES_PER_CELL)
@@ -31,5 +37,4 @@ class FlipDemo(App):
         self.steps = 0
 
 
-FlipDemo().prepare().step()
-show(framerate=3, display=('Fluid', 'Velocity'))
+show(display=('Fluid', 'Velocity'))
