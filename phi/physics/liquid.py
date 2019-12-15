@@ -53,6 +53,7 @@ Supports obstacles, density effects and global gravity.
         forces = liquid.staggered_grid('forces', 0).staggered_tensor() + dt * gravity_tensor(gravity, liquid.rank)
         velocity = velocity + liquid.domain.staggered_grid(forces)
         velocity = liquid_divergence_free(liquid, velocity, fluiddomain, self.pressure_solver)
+        velocity = fluiddomain.with_hard_boundary_conditions(velocity)
 
         return liquid.copied_with(density=density, velocity=velocity, age=liquid.age + dt)
 
@@ -123,6 +124,7 @@ class _LevelsetPhysics(object):
 
         velocity = self.apply_forces(velocity, gravity, dt)
         velocity = liquid_divergence_free(liquid, velocity, fluiddomain, pressure_solver)
+        velocity = fluiddomain.with_hard_boundary_conditions(velocity)
 
         return liquid.copied_with(sdf=sdf, velocity=velocity, active_mask=fluiddomain.active, age=liquid.age + dt)
 

@@ -16,7 +16,7 @@ class SDFDemo(App):
         self.add_field('Velocity', lambda: self.liquid.velocity)
 
     def step(self):
-        world.step(dt=0.3)
+        world.step(dt=0.1)
 
 
 show(framerate=3, display=('Fluid', 'Velocity'))
