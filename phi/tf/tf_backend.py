@@ -374,7 +374,7 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     batch_size = tf.shape(inputs)[0]
 
     out_spatial_rank = tensor_spatial_rank(sample_coords)
-    out_spatial_size = tf.shape(sample_coords)[1:-1]
+    out_spatial_size = sample_coords.get_shape().as_list()[1:-1]
 
     if sample_coords.shape[0] != inputs.shape[0]:
         sample_coords = tf.tile(sample_coords, [batch_size]+[1]*(len(sample_coords.shape)-1))
