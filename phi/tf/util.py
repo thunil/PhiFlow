@@ -27,12 +27,13 @@ def placeholder(shape, dtype=np.float32, basename=None, item_condition=struct.VA
     if struct.isstruct(dtype):
         def placeholder_map(trace):
             shape, dtype = trace.value
-            return tf.placeholder(dtype, shape, _tf_name(trace, basename))
+            # For FLIP we want to allow the particle count to change
+            return tf.placeholder(dtype, (shape[0], None, shape[2]) if len(shape) == 3 else shape, _tf_name(trace, basename))
         zipped = struct.zip([shape, dtype], leaf_condition=is_static_shape, item_condition=item_condition)
         return struct.map(placeholder_map, zipped, leaf_condition=is_static_shape, trace=True, item_condition=item_condition)
     else:
         f = lambda trace: tf.placeholder(dtype, trace.value, _tf_name(trace, basename))
-        return struct.map(f, shape, leaf_condition=is_static_shape, trace=True, item_condition=item_condition)
+        return struct.map(f, (shape[0], None, shape[2]) if len(shape) == 3 else shape, leaf_condition=is_static_shape, trace=True, item_condition=item_condition)
 
 
 def placeholder_like(obj, basename=None):

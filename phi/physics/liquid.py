@@ -118,7 +118,7 @@ class _LevelsetPhysics(object):
         sdf, velocity = self.advect(liquid, fluiddomain, dt)
         # Update active mask after advection
         # We take max of the dx, because currently my implementation only accepts scalar dx, i.e. constant ratio rescaling.
-        fluiddomain = fluiddomain.copied_with(active=liquid.domain.centered_grid(self.update_active_mask(sdf.data, density_effects, dx=max(sdf.dx), dt=dt), extrapolation='constant'))
+        fluiddomain = fluiddomain.copied_with(active=liquid.domain.centered_grid(self.update_active_mask(sdf, density_effects, dx=max(sdf.dx), dt=dt), extrapolation='constant'))
 
         sdf = recompute_sdf(sdf, fluiddomain.active_tensor(), velocity, distance=liquid.distance, dt=dt)
 
@@ -172,16 +172,17 @@ class _LevelsetPhysics(object):
 
     @staticmethod
     def update_active_mask(sdf, effects, dx=1.0, dt=1.0):
+        # The "sdf" parameter is a Field here, for utility when creating zero Fields
         # Find the active cells from the Signed Distance Field
 
-        ones = math.ones_like(sdf)
-        active_mask = math.where(sdf < 0.5 * dx, ones, 0.0 * ones)
-        inflow_grid = math.zeros_like(active_mask)
+        ones = math.ones_like(sdf.data)
+        active_mask = math.where(sdf.data < 0.5 * dx, ones, 0.0 * ones)
+        inflow_grid = sdf.with_data(math.zeros_like(sdf.data))
 
         for effect in effects:
             inflow_grid = effect_applied(effect, inflow_grid, dt=dt)
 
-        inflow_mask = liquid_mask(inflow_grid, threshold=0)
+        inflow_mask = liquid_mask(inflow_grid.data, threshold=0)
         # Logical OR between the masks
         active_mask = active_mask + inflow_mask - active_mask * inflow_mask
         return active_mask
@@ -289,11 +290,11 @@ Supports obstacles, density effects and global gravity.
         velocity_field_with_forces = self.apply_forces(velocity_field, gravity, dt)
         div_free_velocity_field = liquid_divergence_free(liquid, velocity_field_with_forces, fluiddomain, pressure_solver)
 
-        velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points,
+        velocity = liquid.velocity.data + self.particle_velocity_change(fluiddomain, liquid.points.data,
                                                                         (div_free_velocity_field - velocity_field))
 
         # Advect the points
-        points = self.advect_points(fluiddomain, liquid.points, div_free_velocity_field, dt)
+        points = self.advect_points(fluiddomain, liquid.points.data, div_free_velocity_field, dt)
 
         # Inflow
         inflow_density = liquid.domain.centered_grid(0)
@@ -392,22 +393,25 @@ class FlipLiquid(DomainState):
 
     @struct.variable()
     def points(self, points):
-        return points
+        if isinstance(points, SampledField):
+            return points
+        return SampledField('points', points, data=points, mode='any')
 
     @struct.variable(default=0.0)
     def velocity(self, velocity):
         if isinstance(velocity, SampledField):
             return velocity
-        else:
-            return SampledField('velocity', self.points, data=velocity, mode='mean')
+        if isinstance(velocity, (int, float)):
+            velocity = [velocity] * self.rank
+        return SampledField('velocity', self.points.data, data=velocity, mode='mean')
 
     @property
     def density(self):
-        return SampledField('density', self.points, data=1.0, mode='add')
+        return SampledField('density', self.points.data, data=1.0, mode='add')
 
     @property
     def active_mask(self):
-        return SampledField('active_mask', self.points, data=1.0, mode='any')
+        return SampledField('active_mask', self.points.data, data=1.0, mode='any')
 
     @struct.constant(default=1)
     def particles_per_cell(self, particles_per_cell):

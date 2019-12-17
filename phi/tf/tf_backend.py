@@ -381,7 +381,7 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     batch_size = tf.shape(inputs)[0]
 
     out_spatial_rank = tensor_spatial_rank(sample_coords)
-    out_spatial_size = sample_coords.get_shape().as_list()[1:-1]
+    out_spatial_size = tf.shape(sample_coords)[1:-1]
 
     if sample_coords.shape[0] != inputs.shape[0]:
         sample_coords = tf.tile(sample_coords, [batch_size]+[1]*(len(sample_coords.shape)-1))
@@ -421,7 +421,8 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
         weight_1 = [1.0 - w for w in weight_0]
 
     batch_ids = tf.reshape(tf.range(batch_size), [batch_size] + [1] * out_spatial_rank)
-    batch_ids = tf.tile(batch_ids, [1] + out_spatial_size)
+    tile_shape = tf.pad(out_spatial_size, [[1,0]], constant_values=1)
+    batch_ids = tf.tile(batch_ids, tile_shape)
     sc = (floor_coords, ceil_coords)
     binary_neighbour_ids = [[int(c) for c in format(i, '0%ib' % in_spatial_rank)] for i in range(2 ** in_spatial_rank)]
 

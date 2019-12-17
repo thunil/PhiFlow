@@ -29,7 +29,7 @@ class FlipDemo(App):
 
     def step(self):
         world.step(dt=0.1)
-        self.info('%d: Particle count: %d' % (self.steps, self.liquid.points.shape[1]))
+        self.info('%d: Particle count: %d' % (self.steps, self.liquid.points.data.shape[1]))
 
     def action_reset(self):
         self.liquid.points = distribute_points(self.initial_density, PARTICLES_PER_CELL)
