@@ -30,7 +30,11 @@ class TFBackend(Backend):
         return tf.convert_to_tensor(x)
 
     def divide_no_nan(self, x, y):
-        return tf.div_no_nan(x, y)
+        try:
+            return tf.div_no_nan(x, y)
+        except AttributeError:
+            y = tf.where(tf.equal(y, 0), y, tf.ones_like(y))
+            return x / y
 
     def random_uniform(self, shape):
         return tf.random.uniform(shape)
@@ -279,6 +283,8 @@ class TFBackend(Backend):
 
     def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
+        if isinstance(values, (int, float)):
+            values = np.array(values, np.float32)
         z = tf.zeros(shape, dtype=values.dtype)
 
         if duplicates_handling == 'add':
