@@ -91,7 +91,7 @@ class CollectiveState(struct.Struct):
                 self._states = self.states.copy()
                 if not skip_validate():
                     assert isinstance(value, State)
-                    assert value.name == name, 'Inconsisten names: trying to assign state "%s" to name "%s"' % (value.name, name)
+                    assert value.name == name, 'Inconsistent names: trying to assign state "%s" to name "%s"' % (value.name, name)
                     assert 'states' not in kwargs
                 self.states[name] = value
         return self

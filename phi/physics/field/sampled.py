@@ -40,8 +40,12 @@ class SampledField(Field):
         valid_indices = math.minimum(math.maximum(0, valid_indices), resolution - 1)
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
-        shape = [math.shape(valid_indices)[0]] + list(resolution) + [1]
-        scattered = math.scatter(self.sample_points, valid_indices, self.data, shape=shape, duplicates_handling=self.mode)
+        batch_size = math.staticshape(self.sample_points)[0] if math.staticshape(self.sample_points)[0] is not None else 1
+        shape = [batch_size] + list(resolution) + [1]
+
+        values = self.data
+
+        scattered = math.scatter(self.sample_points, valid_indices, values, shape=shape, duplicates_handling=self.mode)
         return CenteredGrid(data=scattered, box=box, extrapolation='constant', name=self.name+'_centered')
 
     def _stagger_sample(self, box, resolution):
@@ -58,16 +62,16 @@ class SampledField(Field):
         # Correct format for math.scatter
         valid_indices = batch_indices(valid_indices)
 
-        active_mask = math.scatter(self.sample_points, valid_indices, 1, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling='any')
+        ones = math.expand_dims(math.prod(math.ones_like(self.sample_points), axis=-1), axis=-1)
+
+        batch_size = math.staticshape(self.sample_points)[0] if math.staticshape(self.sample_points)[0] is not None else 1
+        active_mask = math.scatter(self.sample_points, valid_indices, ones, math.concat([[batch_size], resolution, [1]], axis=-1), duplicates_handling='any')
 
         mask = math.pad(active_mask, [[0, 0]] + [[1, 1]] * self.rank + [[0, 0]], "constant")
 
-        if isinstance(self.data, (int, float, np.ndarray)):
-            values = math.zeros_like(self.sample_points) + self.data
-        else:
-            values = self.data
-        
         result = []
+        values = self.data
+
         ones_1d = math.unstack(math.ones_like(values), axis=-1)[0]
         staggered_shape = [i + 1 for i in resolution]
         dx = box.size / resolution
@@ -82,7 +86,7 @@ class SampledField(Field):
             valid_indices = batch_indices(valid_indices)
 
             values_d = math.expand_dims(math.unstack(values, axis=-1)[d], axis=-1)
-            result.append(math.scatter(self.sample_points, valid_indices, values_d, [indices.shape[0]] + staggered_shape + [1], duplicates_handling=self.mode))
+            result.append(math.scatter(self.sample_points, valid_indices, values_d, [batch_size] + staggered_shape + [1], duplicates_handling=self.mode))
 
             d_slice = tuple([(slice(0, -2) if i == d else slice(1,-1)) for i in dims])
             u_slice = tuple([(slice(2, None) if i == d else slice(1,-1)) for i in dims])
@@ -97,7 +101,9 @@ class SampledField(Field):
 
     @struct.variable()
     def data(self, data):
-        if isinstance(data, (tuple, list, np.ndarray)):
+        if isinstance(data, (int, float)):
+            data = math.sum(math.zeros_like(self.sample_points), axis=-1, keepdims=True) + data
+        elif isinstance(data, (tuple, list, np.ndarray)):
             data = math.zeros_like(self.sample_points) + data
         return data
 
@@ -176,7 +182,7 @@ Distribute points according to the distribution specified in density.
     :param distribution: 'uniform' or 'center'
     :return: tensor of shape (batch_size, point_count, rank)
     """
-    assert  distribution in ('center', 'uniform')
+    assert distribution in ('center', 'uniform')
     index_array = []
     batch_size = math.staticshape(density)[0] if math.staticshape(density)[0] is not None else 1
     

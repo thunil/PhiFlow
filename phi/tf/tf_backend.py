@@ -285,6 +285,7 @@ class TFBackend(Backend):
             #Only for Tensorflow with custom gradient
             @tf.custom_gradient
             def scatter_density(points, indices, values):
+                # Not using tf.scatter_nd because the order of the updates is non-deterministic there
                 result = tf.tensor_scatter_add(z, indices, values)
 
                 def grad(dr):
@@ -299,9 +300,15 @@ class TFBackend(Backend):
             total = tf.tensor_scatter_add(z, indices, values)
             return (total / tf.maximum(1.0, count))
         else: # last, any, undefined
-            st = tf.SparseTensor(indices, values, shape)
-            st = tf.sparse.reorder(st)   # only needed if not ordered
-            return tf.sparse.to_dense(st)
+            # The following only works with 2D indices
+            # st = tf.SparseTensor(tf.cast(indices, tf.int64), values, shape)
+            # st = tf.sparse.reorder(st)   # only needed if not ordered
+            # return tf.sparse.to_dense(st)
+
+            # For now the same as 'mean', but the following isn't truly 'any'
+            count = tf.tensor_scatter_add(z, indices, tf.ones_like(values))
+            total = tf.tensor_scatter_add(z, indices, values)
+            return (total / tf.maximum(1.0, count))
 
     def fft(self, x):
         rank = len(x.shape) - 2

@@ -281,8 +281,8 @@ Supports obstacles, density effects and global gravity.
 
     def step(self, liquid, pressure_solver, dt=1.0, obstacles=(), gravity=Gravity(), density_effects=()):
         # We advect as the last part of the step, because we must make sure we have divergence free velocity fields. We cannot advect first assuming the input is divergence free because it never will be due to the velocities being stored on the particles.
-
         fluiddomain = self.get_particle_domain(liquid, obstacles)
+
         # Create velocity field from particle velocities and make it divergence free. Then interpolate back the change to the particle velocities.
         velocity_field = liquid.velocity.at(liquid.staggered_grid('staggered', 0))
 
@@ -396,7 +396,10 @@ class FlipLiquid(DomainState):
 
     @struct.variable(default=0.0)
     def velocity(self, velocity):
-        return SampledField('velocity', self.points, data=velocity, mode='mean')
+        if isinstance(velocity, SampledField):
+            return velocity
+        else:
+            return SampledField('velocity', self.points, data=velocity, mode='mean')
 
     @property
     def density(self):
