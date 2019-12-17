@@ -30,7 +30,11 @@ class TFBackend(Backend):
         return tf.convert_to_tensor(x)
 
     def divide_no_nan(self, x, y):
-        return tf.div_no_nan(x, y)
+        try:
+            return tf.div_no_nan(x, y)
+        except AttributeError:
+            y = tf.where(tf.equal(y, 0), y, tf.ones_like(y))
+            return x / y
 
     def random_uniform(self, shape):
         return tf.random.uniform(shape)
