@@ -279,6 +279,8 @@ class TFBackend(Backend):
 
     def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         # Change indexing so batch number is included as first element of the index, for example: [0,31,24] indexes the first batch (batch 0) and 2D coordinates (31,24).
+        if isinstance(values, (int, float)):
+            values = np.array(values, np.float32)
         z = tf.zeros(shape, dtype=values.dtype)
 
         if duplicates_handling == 'add':
@@ -299,6 +301,7 @@ class TFBackend(Backend):
             total = tf.tensor_scatter_add(z, indices, values)
             return (total / tf.maximum(1.0, count))
         else: # last, any, undefined
+            indices = self.to_int(indices, int64=True)
             st = tf.SparseTensor(indices, values, shape)
             st = tf.sparse.reorder(st)   # only needed if not ordered
             return tf.sparse.to_dense(st)
