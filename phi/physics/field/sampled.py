@@ -124,7 +124,7 @@ class SampledField(Field):
                 data_shape = (self._batch_size, self._point_count, self.component_count)
             else:
                 data_shape = ()
-            return self.copied_with(data=data_shape, sample_points=(self._batch_size, self._point_count, self.rank))
+            return self.copied_with(data=data_shape, sample_points=(self._batch_size, self._point_count, self.rank), age=())
 
     @property
     def rank(self):

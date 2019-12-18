@@ -10,7 +10,7 @@ from .util import placeholder
 
 def tf_bake_graph(world, session):
     # --- Build placeholder state ---
-    shape = world.state.shape
+    shape = _shape(world.state)
     dtype = _32_bit(math.types(world.state))
     state_in = placeholder(shape, dtype=dtype)
     dt = placeholder(())
@@ -29,7 +29,7 @@ def tf_bake_subgraph(tracker, session):
     tfworld.add(tracker.state)
     # --- Build placeholder state ---
     dtype = _32_bit(math.types(tracker.state))
-    shape = tracker.state.shape
+    shape = _shape(tracker.state)
     state_in = placeholder(shape, dtype=dtype)
     dt = placeholder(())
     # --- Build graph ---
@@ -75,3 +75,31 @@ def _32_bit(dtype):
     if dtype == np.int64:
         return np.int32
     return dtype
+
+
+def _shape(obj):
+    if hasattr(obj, 'shape'):
+        result = obj.shape
+    elif struct.isstruct(obj):
+        with struct.unsafe():
+            result = struct.map(_shape, obj, recursive=False, item_condition=struct.VARIABLES)
+    else:
+        result = math.shape(obj)
+    return result
+
+
+
+#     @property
+#     def shape(self):
+#         """
+# Similar to phi.math.shape(self) but respects unknown dimensions.
+#         """
+#         def tensorshape(tensor):
+#             if tensor is None: return None
+#             default_batched_shape = staticshape(tensor)
+#             if len(default_batched_shape) >= 2:
+#                 return (self._batch_size,) + default_batched_shape[1:]
+#             else:
+#                 return default_batched_shape
+#         with struct.unsafe():
+#             return struct.map(tensorshape, self, item_condition=struct.VARIABLES)

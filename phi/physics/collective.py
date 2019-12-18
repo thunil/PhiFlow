@@ -110,10 +110,6 @@ class CollectiveState(struct.Struct):
         result['module'] = str(self.__class__.__module__)
         return result
 
-    @property
-    def shape(self):
-        return struct.map(lambda state: state.shape, self, recursive=False)
-
 
 class CollectivePhysics(Physics):
 

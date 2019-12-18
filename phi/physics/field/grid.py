@@ -41,6 +41,11 @@ class CenteredGrid(Field):
     def rank(self):
         return math.spatial_rank(self.data)
 
+    @property
+    def shape(self):
+        with struct.unsafe():
+            return self.copied_with(age=(), data=(self._batch_size,) + math.staticshape(self.data)[1:])
+
     @struct.constant(default='boundary')
     def extrapolation(self, extrapolation):
         if extrapolation is None:
