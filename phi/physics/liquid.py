@@ -141,7 +141,7 @@ class _LevelsetPhysics(object):
         zero = math.zeros_like(liquid.sdf.data)
         padded_cells = 0
 
-        updim = True
+        updim = False
         if updim:
             # For just upper dimension
             padded = math.pad(zero, [[0, 0]] + [([1, 0] if i == (rank - 2) else [1, 1]) for i in range(rank)] + [[0, 0]], "constant", constant_values=0)
