@@ -1,4 +1,4 @@
-from phi.tf.flow import *
+from phi.flow import *
 
 
 PARTICLES_PER_CELL = 8
