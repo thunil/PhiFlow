@@ -11,7 +11,7 @@ class LevelsetLiquidDemo(App):
 
     def __init__(self, size=(64, 80)):
         App.__init__(self, 'SDF simulation', DESCRIPTION, stride=10)
-        domain = Domain(size, SLIPPERY)
+        domain = Domain(size, CLOSED)
         self.distance = max(size)
         # --- Initial state ---
         initial_fluid_density = union_mask([box[:15, :], box[48:63, 20:60]])

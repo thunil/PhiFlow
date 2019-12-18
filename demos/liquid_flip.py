@@ -14,7 +14,7 @@ class FlipDemo(App):
 
     def __init__(self, size=(64, 64)):
         App.__init__(self, 'FLIP simulation', DESCRIPTION, stride=10)
-        domain = Domain(size, SLIPPERY, box=AABox(0, [32,32]))
+        domain = Domain(size, CLOSED, box=AABox(0, [32,32]))
         # --- Initial state ---
         self.initial_density = domain.centered_grid(0.0).data
         self.initial_density[:, size[-2] * 6 // 8: size[-2] * 8 // 8 - 1, size[-1] * 2 // 8: size[-1] * 6 // 8, :] = 1
