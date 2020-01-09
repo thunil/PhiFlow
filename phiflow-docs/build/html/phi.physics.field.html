@@ -1,0 +1,1369 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.physics.field package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-physics-field-package">
+<h1>phi.physics.field package<a class="headerlink" href="#phi-physics-field-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.physics.field.advect">
+<span id="phi-physics-field-advect-module"></span><h2>phi.physics.field.advect module<a class="headerlink" href="#module-phi.physics.field.advect" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.physics.field.advect.semi_lagrangian">
+<code class="sig-prename descclassname">phi.physics.field.advect.</code><code class="sig-name descname">semi_lagrangian</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">velocity_field</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.advect.semi_lagrangian" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Semi-Lagrangian advection with simple backward lookup.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param field</dt>
+<dd class="field-odd"><p>Field to be advected</p>
+</dd>
+<dt class="field-even">param velocity_field</dt>
+<dd class="field-even"><p>Field, need not be compatible with field.</p>
+</dd>
+<dt class="field-odd">param dt</dt>
+<dd class="field-odd"><p>time step</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Field compatible with input field</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.analytic">
+<span id="phi-physics-field-analytic-module"></span><h2>phi.physics.field.analytic module<a class="headerlink" href="#module-phi.physics.field.analytic" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.analytic.AnalyticField">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.analytic.</code><code class="sig-name descname">AnalyticField</code><span class="sig-paren">(</span><em class="sig-param">rank</em>, <em class="sig-param">data=1.0</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.analytic.AnalyticField.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.analytic.AnalyticField.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.analytic.AnalyticField.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.analytic.AnalyticField.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.analytic.AnalyticField.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.analytic.AnalyticField.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.constant">
+<span id="phi-physics-field-constant-module"></span><h2>phi.physics.field.constant module<a class="headerlink" href="#module-phi.physics.field.constant" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.constant.ConstantField">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.constant.</code><code class="sig-name descname">ConstantField</code><span class="sig-paren">(</span><em class="sig-param">value=1.0</em>, <em class="sig-param">name=None</em>, <em class="sig-param">flags=(divergence-free</em>, <em class="sig-param">)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.constant.ConstantField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.constant.ConstantField.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.constant.ConstantField.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.constant.ConstantField.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.constant.ConstantField.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.constant.ConstantField.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.constant.ConstantField.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.constant.ConstantField.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.effect">
+<span id="phi-physics-field-effect-module"></span><h2>phi.physics.field.effect module<a class="headerlink" href="#module-phi.physics.field.effect" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.physics.field.effect.ColdSource">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">ColdSource</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">rate</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.ColdSource" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.effect.Fan">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">Fan</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">acceleration</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.Fan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.field.effect.FieldEffect">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">FieldEffect</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">targets</em>, <em class="sig-param">mode='grow'</em>, <em class="sig-param">tags=('effect'</em>, <em class="sig-param">)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.FieldEffect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.html#phi.physics.physics.State" title="phi.physics.physics.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.State</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.field.effect.FieldEffect.field">
+<code class="sig-name descname">field</code><a class="headerlink" href="#phi.physics.field.effect.FieldEffect.field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.effect.FieldEffect.mode">
+<code class="sig-name descname">mode</code><a class="headerlink" href="#phi.physics.field.effect.FieldEffect.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.effect.FieldEffect.targets">
+<code class="sig-name descname">targets</code><a class="headerlink" href="#phi.physics.field.effect.FieldEffect.targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.field.effect.FieldPhysics">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">FieldPhysics</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.FieldPhysics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.html#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.effect.FieldPhysics.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">effects=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.FieldPhysics.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.field.effect.Gravity">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">Gravity</code><span class="sig-paren">(</span><em class="sig-param">gravity=-9.81</em>, <em class="sig-param">name='gravity'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.Gravity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.html#phi.physics.physics.State" title="phi.physics.physics.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.State</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.field.effect.Gravity.gravity">
+<code class="sig-name descname">gravity</code><a class="headerlink" href="#phi.physics.field.effect.Gravity.gravity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.effect.HeatSource">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">HeatSource</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">rate</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.HeatSource" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.effect.Inflow">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">Inflow</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">rate=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.Inflow" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.effect.effect_applied">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">effect_applied</code><span class="sig-paren">(</span><em class="sig-param">effect</em>, <em class="sig-param">field</em>, <em class="sig-param">dt</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.effect_applied" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.effect.gravity_tensor">
+<code class="sig-prename descclassname">phi.physics.field.effect.</code><code class="sig-name descname">gravity_tensor</code><span class="sig-paren">(</span><em class="sig-param">gravity</em>, <em class="sig-param">rank</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.effect.gravity_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.field">
+<span id="phi-physics-field-field-module"></span><h2>phi.physics.field.field module<a class="headerlink" href="#module-phi.physics.field.field" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.field.Field">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">Field</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.html#phi.physics.physics.State" title="phi.physics.physics.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.State</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.field.Field.at">
+<code class="sig-name descname">at</code><span class="sig-paren">(</span><em class="sig-param">other_field</em>, <em class="sig-param">collapse_dimensions=True</em>, <em class="sig-param">force_optimization=False</em>, <em class="sig-param">return_self_if_compatible=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the same points as other_field.
+The returned Field is compatible with other_field.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param location</dt>
+<dd class="field-odd"><p>Field</p>
+</dd>
+<dt class="field-even">param collapse_dimensions</dt>
+<dd class="field-even"><p>if True, collapses dimensions to 1 along which all values would be equal.</p>
+</dd>
+<dt class="field-odd">param force_optimization</dt>
+<dd class="field-odd"><p>If true, this algorithm either uses an optimized implementation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>a new Field which samples all components of this field at the points of other_field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.field.Field.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.field.Field.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#phi.physics.field.field.Field.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.default_physics">
+<code class="sig-name descname">default_physics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.default_physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Physics object that can be used to progress this state forward in time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#phi.physics.field.field.Field.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.field.Field.flags">
+<code class="sig-name descname">flags</code><a class="headerlink" href="#phi.physics.field.field.Field.flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.has_points">
+<em class="property">property </em><code class="sig-name descname">has_points</code><a class="headerlink" href="#phi.physics.field.field.Field.has_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.field.Field.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.field.Field.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Resample this field at the given points.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param points</dt>
+<dd class="field-odd"><p>tensor or rank &gt;= 2 containing world-space vectors</p>
+</dd>
+<dt class="field-even">param collapse_dimensions</dt>
+<dd class="field-even"><p>if True, collapses dimensions to 1 along which all values would be equal.</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tensor of shape location.shape[:-1]+[components]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.field.Field.with_data">
+<code class="sig-name descname">with_data</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.Field.with_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="phi.physics.field.field.IncompatibleFieldTypes">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">IncompatibleFieldTypes</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.IncompatibleFieldTypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="phi.physics.field.field.StaggeredSamplePoints">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">StaggeredSamplePoints</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.StaggeredSamplePoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.field.broadcast_at">
+<code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">broadcast_at</code><span class="sig-paren">(</span><em class="sig-param">field1</em>, <em class="sig-param">field2</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.broadcast_at" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.field.propagate_flags_children">
+<code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">propagate_flags_children</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">child_rank</em>, <em class="sig-param">child_component_count</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.propagate_flags_children" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.field.propagate_flags_operation">
+<code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">propagate_flags_operation</code><span class="sig-paren">(</span><em class="sig-param">flags</em>, <em class="sig-param">is_linear</em>, <em class="sig-param">result_rank</em>, <em class="sig-param">result_components</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.propagate_flags_operation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.field.propagate_flags_resample">
+<code class="sig-prename descclassname">phi.physics.field.field.</code><code class="sig-name descname">propagate_flags_resample</code><span class="sig-paren">(</span><em class="sig-param">data_field</em>, <em class="sig-param">structure_flags</em>, <em class="sig-param">resulting_rank</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.field.propagate_flags_resample" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.flag">
+<span id="phi-physics-field-flag-module"></span><h2>phi.physics.field.flag module<a class="headerlink" href="#module-phi.physics.field.flag" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.flag.Cubic">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.flag.</code><code class="sig-name descname">Cubic</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">is_data_bound</em>, <em class="sig-param">is_structure_bound</em>, <em class="sig-param">propagators=()</em>, <em class="sig-param">field_types=()</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.flag.Cubic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.flag.Flag" title="phi.physics.field.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.flag.Flag</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.field.flag.Flag">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.flag.</code><code class="sig-name descname">Flag</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">is_data_bound</em>, <em class="sig-param">is_structure_bound</em>, <em class="sig-param">propagators=()</em>, <em class="sig-param">field_types=()</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.flag.Flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.field.flag.Flag.field_types">
+<code class="sig-name descname">field_types</code><a class="headerlink" href="#phi.physics.field.flag.Flag.field_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.flag.Flag.is_applicable">
+<code class="sig-name descname">is_applicable</code><span class="sig-paren">(</span><em class="sig-param">spatial_rank</em>, <em class="sig-param">component_count</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.flag.Flag.is_applicable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.flag.Flag.is_data_bound">
+<code class="sig-name descname">is_data_bound</code><a class="headerlink" href="#phi.physics.field.flag.Flag.is_data_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.flag.Flag.is_structure_bound">
+<code class="sig-name descname">is_structure_bound</code><a class="headerlink" href="#phi.physics.field.flag.Flag.is_structure_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.flag.Flag.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#phi.physics.field.flag.Flag.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.flag.Flag.propagates">
+<code class="sig-name descname">propagates</code><span class="sig-paren">(</span><em class="sig-param">propagator</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.flag.Flag.propagates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.flag.Flag.propagators">
+<code class="sig-name descname">propagators</code><a class="headerlink" href="#phi.physics.field.flag.Flag.propagators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.field.flag.SamplePoints">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.flag.</code><code class="sig-name descname">SamplePoints</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">is_data_bound</em>, <em class="sig-param">is_structure_bound</em>, <em class="sig-param">propagators=()</em>, <em class="sig-param">field_types=()</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.flag.SamplePoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.flag.Flag" title="phi.physics.field.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.flag.Flag</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.grid">
+<span id="phi-physics-field-grid-module"></span><h2>phi.physics.field.grid module<a class="headerlink" href="#module-phi.physics.field.grid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.grid.CenteredGrid">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.grid.</code><code class="sig-name descname">CenteredGrid</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">box=None</em>, <em class="sig-param">extrapolation='boundary'</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.at">
+<code class="sig-name descname">at</code><span class="sig-paren">(</span><em class="sig-param">other_field</em>, <em class="sig-param">collapse_dimensions=True</em>, <em class="sig-param">force_optimization=False</em>, <em class="sig-param">return_self_if_compatible=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the same points as other_field.
+The returned Field is compatible with other_field.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param location</dt>
+<dd class="field-odd"><p>Field</p>
+</dd>
+<dt class="field-even">param collapse_dimensions</dt>
+<dd class="field-even"><p>if True, collapses dimensions to 1 along which all values would be equal.</p>
+</dd>
+<dt class="field-odd">param force_optimization</dt>
+<dd class="field-odd"><p>If true, this algorithm either uses an optimized implementation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>a new Field which samples all components of this field at the points of other_field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.axis_padded">
+<code class="sig-name descname">axis_padded</code><span class="sig-paren">(</span><em class="sig-param">axis</em>, <em class="sig-param">lower</em>, <em class="sig-param">upper</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.axis_padded" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.grid.CenteredGrid.box">
+<code class="sig-name descname">box</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.dx">
+<em class="property">property </em><code class="sig-name descname">dx</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.dx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.grid.CenteredGrid.extrapolation">
+<code class="sig-name descname">extrapolation</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.extrapolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.getpoints">
+<em class="property">static </em><code class="sig-name descname">getpoints</code><span class="sig-paren">(</span><em class="sig-param">box</em>, <em class="sig-param">resolution</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.getpoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.grid.CenteredGrid.interpolation">
+<code class="sig-name descname">interpolation</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.interpolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.laplace">
+<code class="sig-name descname">laplace</code><span class="sig-paren">(</span><em class="sig-param">physical_units=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.laplace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.normalized">
+<code class="sig-name descname">normalized</code><span class="sig-paren">(</span><em class="sig-param">total</em>, <em class="sig-param">epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.normalized" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.padded">
+<code class="sig-name descname">padded</code><span class="sig-paren">(</span><em class="sig-param">widths</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.padded" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.resolution">
+<em class="property">property </em><code class="sig-name descname">resolution</code><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.resolution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.grid.CenteredGrid.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.grid.CenteredGrid.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.manta">
+<span id="phi-physics-field-manta-module"></span><h2>phi.physics.field.manta module<a class="headerlink" href="#module-phi.physics.field.manta" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.physics.field.manta.centered_grid">
+<code class="sig-prename descclassname">phi.physics.field.manta.</code><code class="sig-name descname">centered_grid</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">name='manta_centered'</em>, <em class="sig-param">crop_valid=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.manta.centered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.manta.staggered_grid">
+<code class="sig-prename descclassname">phi.physics.field.manta.</code><code class="sig-name descname">staggered_grid</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">name='manta_staggered'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.manta.staggered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.mask">
+<span id="phi-physics-field-mask-module"></span><h2>phi.physics.field.mask module<a class="headerlink" href="#module-phi.physics.field.mask" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.mask.GeometryMask">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.mask.</code><code class="sig-name descname">GeometryMask</code><span class="sig-paren">(</span><em class="sig-param">geometries</em>, <em class="sig-param">value=1.0</em>, <em class="sig-param">name=None</em>, <em class="sig-param">flags=()</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.GeometryMask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.mask.GeometryMask.geometries">
+<code class="sig-name descname">geometries</code><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.geometries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.mask.GeometryMask.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.GeometryMask.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.mask.mask">
+<code class="sig-prename descclassname">phi.physics.field.mask.</code><code class="sig-name descname">mask</code><span class="sig-paren">(</span><em class="sig-param">geometry</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.mask.union_mask">
+<code class="sig-prename descclassname">phi.physics.field.mask.</code><code class="sig-name descname">union_mask</code><span class="sig-paren">(</span><em class="sig-param">geometries</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.mask.union_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.sampled">
+<span id="phi-physics-field-sampled-module"></span><h2>phi.physics.field.sampled module<a class="headerlink" href="#module-phi.physics.field.sampled" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.sampled.SampledField">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.sampled.</code><code class="sig-name descname">SampledField</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">sample_points</em>, <em class="sig-param">data=1</em>, <em class="sig-param">mode='add'</em>, <em class="sig-param">point_count=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.SampledField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.at">
+<code class="sig-name descname">at</code><span class="sig-paren">(</span><em class="sig-param">other_field</em>, <em class="sig-param">collapse_dimensions=True</em>, <em class="sig-param">force_optimization=False</em>, <em class="sig-param">return_self_if_compatible=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.SampledField.at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the same points as other_field.
+The returned Field is compatible with other_field.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param location</dt>
+<dd class="field-odd"><p>Field</p>
+</dd>
+<dt class="field-even">param collapse_dimensions</dt>
+<dd class="field-even"><p>if True, collapses dimensions to 1 along which all values would be equal.</p>
+</dd>
+<dt class="field-odd">param force_optimization</dt>
+<dd class="field-odd"><p>If true, this algorithm either uses an optimized implementation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>a new Field which samples all components of this field at the points of other_field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.SampledField.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.sampled.SampledField.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.sampled.SampledField.mode">
+<code class="sig-name descname">mode</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.SampledField.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.sampled.SampledField.sample_points">
+<code class="sig-name descname">sample_points</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.sample_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#phi.physics.field.sampled.SampledField.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to phi.math.shape(self) but respects unknown dimensions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.sampled.SampledField.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.SampledField.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.sampled.batch_indices">
+<code class="sig-prename descclassname">phi.physics.field.sampled.</code><code class="sig-name descname">batch_indices</code><span class="sig-paren">(</span><em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.batch_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reshapes the indices such that, aside from indices, they also contain batch number.
+For example the entry (32, 40) as coordinates of batch 2 will become (2, 32, 40).
+Transform shape (b, p, d) to (b, p, d+1) where batch size is b, number of particles is p and number of dimensions is d.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.sampled.distribute_points">
+<code class="sig-prename descclassname">phi.physics.field.sampled.</code><code class="sig-name descname">distribute_points</code><span class="sig-paren">(</span><em class="sig-param">density</em>, <em class="sig-param">particles_per_cell=1</em>, <em class="sig-param">distribution='uniform'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.sampled.distribute_points" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Distribute points according to the distribution specified in density.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param density</dt>
+<dd class="field-odd"><p>binary tensor</p>
+</dd>
+<dt class="field-even">param particles_per_cell</dt>
+<dd class="field-even"><p>integer</p>
+</dd>
+<dt class="field-odd">param distribution</dt>
+<dd class="field-odd"><p>‘uniform’ or ‘center’</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>tensor of shape (batch_size, point_count, rank)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.staggered_grid">
+<span id="phi-physics-field-staggered-grid-module"></span><h2>phi.physics.field.staggered_grid module<a class="headerlink" href="#module-phi.physics.field.staggered_grid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.field.staggered_grid.</code><code class="sig-name descname">StaggeredGrid</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">box=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.field.field.Field" title="phi.physics.field.field.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.field.Field</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.at">
+<code class="sig-name descname">at</code><span class="sig-paren">(</span><em class="sig-param">other_field</em>, <em class="sig-param">collapse_dimensions=True</em>, <em class="sig-param">force_optimization=False</em>, <em class="sig-param">return_self_if_compatible=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the same points as other_field.
+The returned Field is compatible with other_field.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param location</dt>
+<dd class="field-odd"><p>Field</p>
+</dd>
+<dt class="field-even">param collapse_dimensions</dt>
+<dd class="field-even"><p>if True, collapses dimensions to 1 along which all values would be equal.</p>
+</dd>
+<dt class="field-odd">param force_optimization</dt>
+<dd class="field-odd"><p>If true, this algorithm either uses an optimized implementation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>a new Field which samples all components of this field at the points of other_field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.at_centers">
+<code class="sig-name descname">at_centers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.at_centers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.box">
+<code class="sig-name descname">box</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.center_points">
+<em class="property">property </em><code class="sig-name descname">center_points</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.center_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.compatible">
+<code class="sig-name descname">compatible</code><span class="sig-paren">(</span><em class="sig-param">other_field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.compatible" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if two Fields have the same sample points and values are stored in the same order.
+For performance reasons, this method does not actually check every single point.
+Even if this method returns False, the sample points may still be the same.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param other_field</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>True if both Fields have the same sample points.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.component_count">
+<em class="property">property </em><code class="sig-name descname">component_count</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.component_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of components of this Field.
+The components can be sampled at the same points or at different points (like with StaggeredGrids).</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.divergence">
+<code class="sig-name descname">divergence</code><span class="sig-paren">(</span><em class="sig-param">physical_units=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.divergence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.dtype">
+<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.dx">
+<em class="property">property </em><code class="sig-name descname">dx</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.dx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.extrapolation">
+<code class="sig-name descname">extrapolation</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.extrapolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.from_scalar">
+<em class="property">static </em><code class="sig-name descname">from_scalar</code><span class="sig-paren">(</span><em class="sig-param">scalar_field</em>, <em class="sig-param">axis_forces</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.from_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.gradient">
+<em class="property">static </em><code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">scalar_field</em>, <em class="sig-param">padding_mode='replicate'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.points">
+<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Field containing all sample points of this field.
+The returned Field is compatible with this one.
+If the components of this field are sampled at different locations, this method raises StaggeredSamplePoints.
+If this field has no sample points, points is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>vector Field</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial rank of the field (1 for 1D, 2 for 2D, 3 for 3D).
+Note that this does not indicate the shape of the data array.
+If the field is independent of the dimensionality, the rank property is None.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.resolution">
+<code class="sig-name descname">resolution</code><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.resolution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.staggered_tensor">
+<code class="sig-name descname">staggered_tensor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.staggered_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.field.staggered_grid.StaggeredGrid.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.StaggeredGrid.unstack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split the Field by components.
+If the field only has one component, returns a list containing itself.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple of Fields</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.staggered_grid.stack_staggered_components">
+<code class="sig-prename descclassname">phi.physics.field.staggered_grid.</code><code class="sig-name descname">stack_staggered_components</code><span class="sig-paren">(</span><em class="sig-param">tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.stack_staggered_components" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.staggered_grid.staggered_component_box">
+<code class="sig-prename descclassname">phi.physics.field.staggered_grid.</code><code class="sig-name descname">staggered_component_box</code><span class="sig-paren">(</span><em class="sig-param">resolution</em>, <em class="sig-param">axis</em>, <em class="sig-param">box_like=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.staggered_component_box" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.staggered_grid.unstack_staggered_tensor">
+<code class="sig-prename descclassname">phi.physics.field.staggered_grid.</code><code class="sig-name descname">unstack_staggered_tensor</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.staggered_grid.unstack_staggered_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field.util">
+<span id="phi-physics-field-util-module"></span><h2>phi.physics.field.util module<a class="headerlink" href="#module-phi.physics.field.util" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.physics.field.util.create_surface_mask">
+<code class="sig-prename descclassname">phi.physics.field.util.</code><code class="sig-name descname">create_surface_mask</code><span class="sig-paren">(</span><em class="sig-param">liquid_mask</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.util.create_surface_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes inner contours of the liquid_mask.
+A cell i is flagged 1 if liquid_mask[i] = 1 and it has a non-liquid neighbour.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param liquid_mask</dt>
+<dd class="field-odd"><p>binary tensor</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>tensor</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.util.data_bounds">
+<code class="sig-prename descclassname">phi.physics.field.util.</code><code class="sig-name descname">data_bounds</code><span class="sig-paren">(</span><em class="sig-param">field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.util.data_bounds" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.util.diffuse">
+<code class="sig-prename descclassname">phi.physics.field.util.</code><code class="sig-name descname">diffuse</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">amount</em>, <em class="sig-param">substeps=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.util.diffuse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.field.util.extrapolate">
+<code class="sig-prename descclassname">phi.physics.field.util.</code><code class="sig-name descname">extrapolate</code><span class="sig-paren">(</span><em class="sig-param">input_field</em>, <em class="sig-param">valid_mask</em>, <em class="sig-param">voxel_distance=10</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.field.util.extrapolate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Create a signed distance field for the grid, where negative signs are fluid cells and positive signs are empty cells. The fluid surface is located at the points where the interpolated value is zero. Then extrapolate the input field into the air cells.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param domain</dt>
+<dd class="field-odd"><p>Domain that can create new Fields</p>
+</dd>
+<dt class="field-even">param input_field</dt>
+<dd class="field-even"><p>Field to be extrapolated</p>
+</dd>
+<dt class="field-odd">param valid_mask</dt>
+<dd class="field-odd"><p>One dimensional binary mask indicating where fluid is present</p>
+</dd>
+<dt class="field-even">param voxel_distance</dt>
+<dd class="field-even"><p>Optional maximal distance (in number of grid cells) where signed distance should still be calculated / how far should be extrapolated.</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>ext_field: a new Field with extrapolated values, s_distance: tensor containing signed distance field, depending only on the valid_mask</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.field">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.physics.field" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.physics.field.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

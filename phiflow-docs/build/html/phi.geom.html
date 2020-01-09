@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.geom package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-geom-package">
+<h1>phi.geom package<a class="headerlink" href="#phi-geom-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.geom.geometry">
+<span id="phi-geom-geometry-module"></span><h2>phi.geom.geometry module<a class="headerlink" href="#module-phi.geom.geometry" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.geom.geometry.AABox">
+<em class="property">class </em><code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">AABox</code><span class="sig-paren">(</span><em class="sig-param">lower</em>, <em class="sig-param">upper</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.geom.geometry.Geometry" title="phi.geom.geometry.Geometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.geom.geometry.Geometry</span></code></a></p>
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.contains">
+<code class="sig-name descname">contains</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.contains" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.get_lower">
+<code class="sig-name descname">get_lower</code><span class="sig-paren">(</span><em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.get_lower" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.get_upper">
+<code class="sig-name descname">get_upper</code><span class="sig-paren">(</span><em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.get_upper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.global_to_local">
+<code class="sig-name descname">global_to_local</code><span class="sig-paren">(</span><em class="sig-param">global_position</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.global_to_local" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.local_to_global">
+<code class="sig-name descname">local_to_global</code><span class="sig-paren">(</span><em class="sig-param">local_position</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.local_to_global" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.geom.geometry.AABox.lower">
+<code class="sig-name descname">lower</code><a class="headerlink" href="#phi.geom.geometry.AABox.lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.geom.geometry.AABox.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.geom.geometry.AABox.size">
+<code class="sig-name descname">size</code><a class="headerlink" href="#phi.geom.geometry.AABox.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.to_box">
+<em class="property">static </em><code class="sig-name descname">to_box</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">resolution_hint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.to_box" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.geom.geometry.AABox.upper">
+<code class="sig-name descname">upper</code><a class="headerlink" href="#phi.geom.geometry.AABox.upper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.value_at">
+<code class="sig-name descname">value_at</code><span class="sig-paren">(</span><em class="sig-param">global_position</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.value_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples the geometry at the given locations and returns a binary mask, labelling the points as inside=1, outside=0.
+:param location: tensor of the shape (batch_size, …, rank)
+:return: float tensor of same shape as location but with shape[-1]=1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.AABox.without_axis">
+<code class="sig-name descname">without_axis</code><span class="sig-paren">(</span><em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.AABox.without_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.geom.geometry.AABoxGenerator">
+<em class="property">class </em><code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">AABoxGenerator</code><a class="headerlink" href="#phi.geom.geometry.AABoxGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.geom.geometry.Geometry">
+<em class="property">class </em><code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">Geometry</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.Geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<dl class="method">
+<dt id="phi.geom.geometry.Geometry.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.geom.geometry.Geometry.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.Geometry.value_at">
+<code class="sig-name descname">value_at</code><span class="sig-paren">(</span><em class="sig-param">location</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.Geometry.value_at" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Samples the geometry at the given locations and returns a binary mask, labelling the points as inside=1, outside=0.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param location</dt>
+<dd class="field-odd"><p>tensor of the shape (batch_size, …, rank)</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>float tensor of same shape as location but with shape[-1]=1</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.geom.geometry.Sphere">
+<em class="property">class </em><code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">Sphere</code><span class="sig-paren">(</span><em class="sig-param">center</em>, <em class="sig-param">radius</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.Sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.geom.geometry.Geometry" title="phi.geom.geometry.Geometry"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.geom.geometry.Geometry</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.geom.geometry.Sphere.center">
+<code class="sig-name descname">center</code><a class="headerlink" href="#phi.geom.geometry.Sphere.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.geom.geometry.Sphere.radius">
+<code class="sig-name descname">radius</code><a class="headerlink" href="#phi.geom.geometry.Sphere.radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.Sphere.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.geom.geometry.Sphere.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.geom.geometry.Sphere.value_at">
+<code class="sig-name descname">value_at</code><span class="sig-paren">(</span><em class="sig-param">location</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.Sphere.value_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samples the geometry at the given locations and returns a binary mask, labelling the points as inside=1, outside=0.
+:param location: tensor of the shape (batch_size, …, rank)
+:return: float tensor of same shape as location but with shape[-1]=1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.geom.geometry.assert_same_rank">
+<code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">assert_same_rank</code><span class="sig-paren">(</span><em class="sig-param">rank1</em>, <em class="sig-param">rank2</em>, <em class="sig-param">error_message</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.assert_same_rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.geom.geometry.union">
+<code class="sig-prename descclassname">phi.geom.geometry.</code><code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">geometries</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.geom.geometry.union" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.geom">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.geom" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.geom.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

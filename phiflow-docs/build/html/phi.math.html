@@ -1,0 +1,1579 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.math package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-math-package">
+<h1>phi.math package<a class="headerlink" href="#phi-math-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.math.base_backend">
+<span id="phi-math-base-backend-module"></span><h2>phi.math.base_backend module<a class="headerlink" href="#module-phi.math.base_backend" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.math.base_backend.Backend">
+<em class="property">class </em><code class="sig-prename descclassname">phi.math.base_backend.</code><code class="sig-name descname">Backend</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.abs">
+<code class="sig-name descname">abs</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.all">
+<code class="sig-name descname">all</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.any">
+<code class="sig-name descname">any</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.any" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.as_tensor">
+<code class="sig-name descname">as_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.as_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.batch_gather">
+<code class="sig-name descname">batch_gather</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">batches</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.batch_gather" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.boolean_mask">
+<code class="sig-name descname">boolean_mask</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.boolean_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.cast">
+<code class="sig-name descname">cast</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">dtype</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.cast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.ceil">
+<code class="sig-name descname">ceil</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.ceil" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.concat">
+<code class="sig-name descname">concat</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.conv">
+<code class="sig-name descname">conv</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">kernel</em>, <em class="sig-param">padding='same'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.conv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.cos">
+<code class="sig-name descname">cos</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.cos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.dimrange">
+<code class="sig-name descname">dimrange</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.dimrange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.divide_no_nan">
+<code class="sig-name descname">divide_no_nan</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.divide_no_nan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes x/y but returns 0 if y=0.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.dot">
+<code class="sig-name descname">dot</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">axes</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.dot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.dtype">
+<code class="sig-name descname">dtype</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.equal">
+<code class="sig-name descname">equal</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.exp">
+<code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.exp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.expand_dims">
+<code class="sig-name descname">expand_dims</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">axis=0</em>, <em class="sig-param">number=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.expand_dims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.fft">
+<code class="sig-name descname">fft</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.flatten">
+<code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.floor">
+<code class="sig-name descname">floor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.floor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.gather">
+<code class="sig-name descname">gather</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.gather" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.gather_nd">
+<code class="sig-name descname">gather_nd</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.gather_nd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.ifft">
+<code class="sig-name descname">ifft</code><span class="sig-paren">(</span><em class="sig-param">k</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.ifft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional inverse FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.imag">
+<code class="sig-name descname">imag</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.imag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.is_applicable">
+<code class="sig-name descname">is_applicable</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.is_applicable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.is_tensor">
+<code class="sig-name descname">is_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.is_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.isfinite">
+<code class="sig-name descname">isfinite</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.isfinite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.matches_name">
+<code class="sig-name descname">matches_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.matches_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.matmul">
+<code class="sig-name descname">matmul</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.matmul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.max">
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.maximum">
+<code class="sig-name descname">maximum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.maximum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.min">
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.min" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.minimum">
+<code class="sig-name descname">minimum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.minimum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.mul">
+<code class="sig-name descname">mul</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.mul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.ndims">
+<code class="sig-name descname">ndims</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.ndims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.ones_like">
+<code class="sig-name descname">ones_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.ones_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.pad">
+<code class="sig-name descname">pad</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">pad_width</em>, <em class="sig-param">mode='constant'</em>, <em class="sig-param">constant_values=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.pad" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Pad a tensor.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param value</dt>
+<dd class="field-odd"><p>tensor</p>
+</dd>
+<dt class="field-even">param pad_width</dt>
+<dd class="field-even"><p>2D tensor specifying the number of values padded to the edges of each axis in the form [[before axis 0, after axis 0], …] including batch and component axes.</p>
+</dd>
+<dt class="field-odd">param mode</dt>
+<dd class="field-odd"><p>‘constant’,
+‘reflect’,
+‘replicate’,
+‘circular’
+(‘wrap’ is deprecated, use ‘circular’ instead, ‘symmetric’ may not be supported by all backends and defaults to ‘replicate’).</p>
+</dd>
+<dt class="field-even">param constant_values</dt>
+<dd class="field-even"><p>used for out-of-bounds points if mode=’constant’</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.prod">
+<code class="sig-name descname">prod</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.prod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.py_func">
+<code class="sig-name descname">py_func</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">Tout</em>, <em class="sig-param">shape_out</em>, <em class="sig-param">stateful=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">grad=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.py_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.random_uniform">
+<code class="sig-name descname">random_uniform</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.random_uniform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.range">
+<code class="sig-name descname">range</code><span class="sig-paren">(</span><em class="sig-param">start</em>, <em class="sig-param">limit=None</em>, <em class="sig-param">delta=1</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.real">
+<code class="sig-name descname">real</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.real" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sample_coords</em>, <em class="sig-param">interpolation='linear'</em>, <em class="sig-param">boundary='constant'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.resample" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Interpolates a regular grid at the sample coordinates.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param inputs</dt>
+<dd class="field-odd"><p>grid data</p>
+</dd>
+<dt class="field-even">param sample_coords</dt>
+<dd class="field-even"><p>tensor of floating grid locations. The last dimension must match the dimensions of inputs. The first grid point of dimension i lies at position 0, the last at data.shape[i]-1.</p>
+</dd>
+<dt class="field-odd">param interpolation</dt>
+<dd class="field-odd"><p>only ‘linear’ is currently supported</p>
+</dd>
+<dt class="field-even">param boundary</dt>
+<dd class="field-even"><p>‘constant’/’zero’,
+‘replicate’,
+‘circular’
+(‘symmetric’ may not be supported by all backends and defaults to ‘replicate’)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.reshape">
+<code class="sig-name descname">reshape</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.reshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.round">
+<code class="sig-name descname">round</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.round" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.scatter">
+<code class="sig-name descname">scatter</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em>, <em class="sig-param">duplicates_handling='undefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method expects the first dimension of indices and values to be the batch dimension.
+The batch dimension need not be specified in the indices array.</p>
+<p>All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – </p></li>
+<li><p><strong>values</strong> – </p></li>
+<li><p><strong>shape</strong> – </p></li>
+<li><p><strong>duplicates_handling</strong> – one of (‘undefined’, ‘add’, ‘mean’, ‘any’, ‘last’, ‘no duplicates’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sign">
+<code class="sig-name descname">sign</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sin">
+<code class="sig-name descname">sin</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sparse_tensor">
+<code class="sig-name descname">sparse_tensor</code><span class="sig-paren">(</span><em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sparse_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sqrt">
+<code class="sig-name descname">sqrt</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.stack">
+<code class="sig-name descname">stack</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.staticshape">
+<code class="sig-name descname">staticshape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.staticshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.std">
+<code class="sig-name descname">std</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.std" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sub">
+<code class="sig-name descname">sub</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.tile">
+<code class="sig-name descname">tile</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">multiples</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.tile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.to_complex">
+<code class="sig-name descname">to_complex</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.to_complex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.to_float">
+<code class="sig-name descname">to_float</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.to_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.to_int">
+<code class="sig-name descname">to_int</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">int64=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.to_int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.unstack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.where">
+<code class="sig-name descname">where</code><span class="sig-paren">(</span><em class="sig-param">condition</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.where" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.while_loop">
+<code class="sig-name descname">while_loop</code><span class="sig-paren">(</span><em class="sig-param">cond</em>, <em class="sig-param">body</em>, <em class="sig-param">loop_vars</em>, <em class="sig-param">shape_invariants=None</em>, <em class="sig-param">parallel_iterations=10</em>, <em class="sig-param">back_prop=True</em>, <em class="sig-param">swap_memory=False</em>, <em class="sig-param">name=None</em>, <em class="sig-param">maximum_iterations=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.while_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.with_custom_gradient">
+<code class="sig-name descname">with_custom_gradient</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">inputs</em>, <em class="sig-param">gradient</em>, <em class="sig-param">input_index=0</em>, <em class="sig-param">output_index=None</em>, <em class="sig-param">name_base='custom_gradient_func'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.with_custom_gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.Backend.zeros_like">
+<code class="sig-name descname">zeros_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.Backend.zeros_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.math.base_backend.DynamicBackend">
+<em class="property">class </em><code class="sig-prename descclassname">phi.math.base_backend.</code><code class="sig-name descname">DynamicBackend</code><a class="headerlink" href="#phi.math.base_backend.DynamicBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.math.base_backend.Backend" title="phi.math.base_backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.math.base_backend.Backend</span></code></a></p>
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.abs">
+<code class="sig-name descname">abs</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.add_backend">
+<code class="sig-name descname">add_backend</code><span class="sig-paren">(</span><em class="sig-param">backend</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.add_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.all">
+<code class="sig-name descname">all</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.any">
+<code class="sig-name descname">any</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.any" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.as_tensor">
+<code class="sig-name descname">as_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.as_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.boolean_mask">
+<code class="sig-name descname">boolean_mask</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.boolean_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.cast">
+<code class="sig-name descname">cast</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">dtype</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.cast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.ceil">
+<code class="sig-name descname">ceil</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.ceil" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.choose_backend">
+<code class="sig-name descname">choose_backend</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.choose_backend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.concat">
+<code class="sig-name descname">concat</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.conv">
+<code class="sig-name descname">conv</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">kernel</em>, <em class="sig-param">padding='SAME'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.conv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.cos">
+<code class="sig-name descname">cos</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.cos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.divide_no_nan">
+<code class="sig-name descname">divide_no_nan</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.divide_no_nan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes x/y but returns 0 if y=0.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.dot">
+<code class="sig-name descname">dot</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">axes</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.dot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.dtype">
+<code class="sig-name descname">dtype</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.equal">
+<code class="sig-name descname">equal</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.exp">
+<code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.exp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.expand_dims">
+<code class="sig-name descname">expand_dims</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">axis=0</em>, <em class="sig-param">number=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.expand_dims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.fft">
+<code class="sig-name descname">fft</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.floor">
+<code class="sig-name descname">floor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.floor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.gather">
+<code class="sig-name descname">gather</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.gather" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.gather_nd">
+<code class="sig-name descname">gather_nd</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.gather_nd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.ifft">
+<code class="sig-name descname">ifft</code><span class="sig-paren">(</span><em class="sig-param">k</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.ifft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional inverse FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.imag">
+<code class="sig-name descname">imag</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.imag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.is_applicable">
+<code class="sig-name descname">is_applicable</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.is_applicable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.is_tensor">
+<code class="sig-name descname">is_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.is_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.isfinite">
+<code class="sig-name descname">isfinite</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.isfinite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.matmul">
+<code class="sig-name descname">matmul</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.matmul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.max">
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.maximum">
+<code class="sig-name descname">maximum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.maximum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.min">
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.min" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.minimum">
+<code class="sig-name descname">minimum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.minimum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.mul">
+<code class="sig-name descname">mul</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.mul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.ones_like">
+<code class="sig-name descname">ones_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.ones_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.pad">
+<code class="sig-name descname">pad</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">pad_width</em>, <em class="sig-param">mode='constant'</em>, <em class="sig-param">constant_values=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pad a tensor.
+:param value: tensor
+:param pad_width: 2D tensor specifying the number of values padded to the edges of each axis in the form [[before axis 0, after axis 0], …] including batch and component axes.
+:param mode:</p>
+<blockquote>
+<div><p>‘constant’,
+‘reflect’,
+‘replicate’,
+‘circular’
+(‘wrap’ is deprecated, use ‘circular’ instead, ‘symmetric’ may not be supported by all backends and defaults to ‘replicate’).</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>constant_values</strong> – used for out-of-bounds points if mode=’constant’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.prod">
+<code class="sig-name descname">prod</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.prod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.py_func">
+<code class="sig-name descname">py_func</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">Tout</em>, <em class="sig-param">shape_out</em>, <em class="sig-param">stateful=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">grad=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.py_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.random_uniform">
+<code class="sig-name descname">random_uniform</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.random_uniform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.range">
+<code class="sig-name descname">range</code><span class="sig-paren">(</span><em class="sig-param">start</em>, <em class="sig-param">limit=None</em>, <em class="sig-param">delta=1</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.real">
+<code class="sig-name descname">real</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.real" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sample_coords</em>, <em class="sig-param">interpolation='linear'</em>, <em class="sig-param">boundary='constant'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates a regular grid at the sample coordinates.
+:param inputs: grid data
+:param sample_coords: tensor of floating grid locations. The last dimension must match the dimensions of inputs. The first grid point of dimension i lies at position 0, the last at data.shape[i]-1.
+:param interpolation: only ‘linear’ is currently supported
+:param boundary:</p>
+<blockquote>
+<div><p>‘constant’/’zero’,
+‘replicate’,
+‘circular’
+(‘symmetric’ may not be supported by all backends and defaults to ‘replicate’)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.reshape">
+<code class="sig-name descname">reshape</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.reshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.round">
+<code class="sig-name descname">round</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.round" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.scatter">
+<code class="sig-name descname">scatter</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em>, <em class="sig-param">duplicates_handling='undefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method expects the first dimension of indices and values to be the batch dimension.
+The batch dimension need not be specified in the indices array.</p>
+<p>All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – </p></li>
+<li><p><strong>values</strong> – </p></li>
+<li><p><strong>shape</strong> – </p></li>
+<li><p><strong>duplicates_handling</strong> – one of (‘undefined’, ‘add’, ‘mean’, ‘any’, ‘last’, ‘no duplicates’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sign">
+<code class="sig-name descname">sign</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sin">
+<code class="sig-name descname">sin</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sparse_tensor">
+<code class="sig-name descname">sparse_tensor</code><span class="sig-paren">(</span><em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sparse_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sqrt">
+<code class="sig-name descname">sqrt</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.stack">
+<code class="sig-name descname">stack</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.staticshape">
+<code class="sig-name descname">staticshape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.staticshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.std">
+<code class="sig-name descname">std</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.std" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sub">
+<code class="sig-name descname">sub</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sub" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.tile">
+<code class="sig-name descname">tile</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">multiples</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.tile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.to_complex">
+<code class="sig-name descname">to_complex</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.to_complex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.to_float">
+<code class="sig-name descname">to_float</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">float64=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.to_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.to_int">
+<code class="sig-name descname">to_int</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">int64=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.to_int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.unstack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.where">
+<code class="sig-name descname">where</code><span class="sig-paren">(</span><em class="sig-param">condition</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.where" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.while_loop">
+<code class="sig-name descname">while_loop</code><span class="sig-paren">(</span><em class="sig-param">cond</em>, <em class="sig-param">body</em>, <em class="sig-param">loop_vars</em>, <em class="sig-param">shape_invariants=None</em>, <em class="sig-param">parallel_iterations=10</em>, <em class="sig-param">back_prop=True</em>, <em class="sig-param">swap_memory=False</em>, <em class="sig-param">name=None</em>, <em class="sig-param">maximum_iterations=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.while_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.with_custom_gradient">
+<code class="sig-name descname">with_custom_gradient</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">inputs</em>, <em class="sig-param">gradient</em>, <em class="sig-param">input_index=0</em>, <em class="sig-param">output_index=None</em>, <em class="sig-param">name_base='custom_gradient_func'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.with_custom_gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.base_backend.DynamicBackend.zeros_like">
+<code class="sig-name descname">zeros_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.DynamicBackend.zeros_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="phi.math.base_backend.NoBackendFound">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.math.base_backend.</code><code class="sig-name descname">NoBackendFound</code><span class="sig-paren">(</span><em class="sig-param">msg</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.base_backend.NoBackendFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.math.blas">
+<span id="phi-math-blas-module"></span><h2>phi.math.blas module<a class="headerlink" href="#module-phi.math.blas" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.math.blas.conjugate_gradient">
+<code class="sig-prename descclassname">phi.math.blas.</code><code class="sig-name descname">conjugate_gradient</code><span class="sig-paren">(</span><em class="sig-param">k</em>, <em class="sig-param">apply_A</em>, <em class="sig-param">initial_x=None</em>, <em class="sig-param">accuracy=1e-05</em>, <em class="sig-param">max_iterations=1024</em>, <em class="sig-param">back_prop=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.blas.conjugate_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the linear system of equations Ax=k using the conjugate gradient (CG) algorithm.
+The implementation is based on <a class="reference external" href="https://nvlpubs.nist.gov/nistpubs/jres/049/jresv49n6p409_A1b.pdf">https://nvlpubs.nist.gov/nistpubs/jres/049/jresv49n6p409_A1b.pdf</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> – Right-hand-side vector</p></li>
+<li><p><strong>apply_A</strong> – function that takes x and calculates Ax</p></li>
+<li><p><strong>initial_x</strong> – initial guess for the value of x</p></li>
+<li><p><strong>accuracy</strong> – the algorithm terminates once <a href="#id1"><span class="problematic" id="id2">|Ax-k|</span></a> ≤ accuracy for every element. If None, the algorithm runs until max_iterations is reached.</p></li>
+<li><p><strong>max_iterations</strong> – maximum number of CG iterations to perform</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Pair containing the result for x and the number of iterations performed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.math.math_util">
+<span id="phi-math-math-util-module"></span><h2>phi.math.math_util module<a class="headerlink" href="#module-phi.math.math_util" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.math.math_util.is_static_shape">
+<code class="sig-prename descclassname">phi.math.math_util.</code><code class="sig-name descname">is_static_shape</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.math_util.is_static_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.math_util.randfreq">
+<code class="sig-prename descclassname">phi.math.math_util.</code><code class="sig-name descname">randfreq</code><span class="sig-paren">(</span><em class="sig-param">shape</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em>, <em class="sig-param">power=8</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.math_util.randfreq" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.math.nd">
+<span id="phi-math-nd-module"></span><h2>phi.math.nd module<a class="headerlink" href="#module-phi.math.nd" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.math.nd.all_dimensions">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">all_dimensions</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.all_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.axes">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">axes</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.axis_gradient">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">axis_gradient</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">spatial_axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.axis_gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.batch_align">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">batch_align</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">innate_dims</em>, <em class="sig-param">target</em>, <em class="sig-param">convert_to_same_backend=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.batch_align" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.batch_align_scalar">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">batch_align_scalar</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">innate_spatial_dims</em>, <em class="sig-param">target</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.batch_align_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.blur">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">blur</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">radius</em>, <em class="sig-param">cutoff=None</em>, <em class="sig-param">kernel='1/1+x'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.blur" title="Permalink to this definition">¶</a></dt>
+<dd><p>Warning: This function can cause NaN in the gradients, reason unknown.</p>
+<dl class="simple">
+<dt>Runs a blur kernel over the given tensor.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param field</dt>
+<dd class="field-odd"><p>tensor</p>
+</dd>
+<dt class="field-even">param radius</dt>
+<dd class="field-even"><p>weight function curve scale</p>
+</dd>
+<dt class="field-odd">param cutoff</dt>
+<dd class="field-odd"><p>kernel size</p>
+</dd>
+<dt class="field-even">param kernel</dt>
+<dd class="field-even"><p>Type of blur kernel (str). Must be in (‘1/1+x’, ‘gauss’)</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.divergence">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">divergence</code><span class="sig-paren">(</span><em class="sig-param">vel</em>, <em class="sig-param">dx=1</em>, <em class="sig-param">difference='central'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.divergence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the spatial divergence of a vector channel from finite differences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vel</strong> – tensor of shape (batch size, spatial dimensions…, spatial rank)</p></li>
+<li><p><strong>dx</strong> – distance between adjacent grid points (default 1)</p></li>
+<li><p><strong>difference</strong> – type of difference, one of (‘forward’, ‘central’) (default ‘forward’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tensor of shape (batch size, spatial dimensions…, 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.downsample2x">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">downsample2x</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">interpolation='linear'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.downsample2x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.fftfreq">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">fftfreq</code><span class="sig-paren">(</span><em class="sig-param">resolution</em>, <em class="sig-param">mode='vector'</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.fftfreq" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.fourier_laplace">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">fourier_laplace</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.fourier_laplace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.gradient">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">dx=1</em>, <em class="sig-param">difference='forward'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the gradient of a scalar channel from finite differences.
+The gradient vectors are in reverse order, lowest dimension first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> – channel with shape (batch_size, spatial_dimensions…, 1)</p></li>
+<li><p><strong>dx</strong> – physical distance between grid points (default 1)</p></li>
+<li><p><strong>difference</strong> – type of difference, one of (‘forward’, ‘backward’, ‘central’) (default ‘forward’)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>tensor of shape (batch_size, spatial_dimensions…, spatial rank)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.indices_tensor">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">indices_tensor</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.indices_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an index tensor of the same spatial shape as the given tensor.
+Each index denotes the location within the tensor starting from zero.
+Indices are encoded as vectors in the index tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> – a tensor of shape (batch size, spatial dimensions…, component size)</p></li>
+<li><p><strong>dtype</strong> – a numpy data type (default float32)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an index tensor of shape (1, spatial dimensions…, spatial rank)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.interpolate_linear">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">interpolate_linear</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">upper_weight</em>, <em class="sig-param">dimensions</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.interpolate_linear" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> – </p></li>
+<li><p><strong>upper_weight</strong> – tensor of floats (leading dimensions must be 1) or nan to ignore interpolation along this axis</p></li>
+<li><p><strong>dimensions</strong> – list or tuple of dimensions (first spatial axis=1) to be interpolated. Other axes are ignored.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.is_scalar">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">is_scalar</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.is_scalar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.l1_loss">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">l1_loss</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">batch_norm=True</em>, <em class="sig-param">reduce_batches=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.l1_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.l2_loss">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">l2_loss</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">batch_norm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.l2_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.l_n_loss">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">l_n_loss</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">n</em>, <em class="sig-param">batch_norm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.l_n_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.laplace">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">laplace</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">padding='replicate'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.laplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spatial Laplace operator as defined for scalar fields.
+If a vector field is passed, the laplace is computed component-wise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> – n-dimensional field of shape (batch, spacial dimensions…, components)</p></li>
+<li><p><strong>padding</strong> – ‘valid’, ‘constant’, ‘reflect’, ‘replicate’, ‘cyclic’</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.normalize_to">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">normalize_to</code><span class="sig-paren">(</span><em class="sig-param">target</em>, <em class="sig-param">source=1</em>, <em class="sig-param">epsilon=1e-05</em>, <em class="sig-param">batch_dims=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.normalize_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiplies the target so that its total content matches the source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> – a tensor</p></li>
+<li><p><strong>source</strong> – a tensor or number</p></li>
+<li><p><strong>epsilon</strong> – small number to prevent division by zero or None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>normalized tensor of the same shape as target</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.spatial_dimensions">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">spatial_dimensions</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.spatial_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.spatial_rank">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">spatial_rank</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.spatial_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>The spatial rank of a tensor is ndims - 2.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.spatial_sum">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">spatial_sum</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.spatial_sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.nd.upsample2x">
+<code class="sig-prename descclassname">phi.math.nd.</code><code class="sig-name descname">upsample2x</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">interpolation='linear'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.nd.upsample2x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.math.scipy_backend">
+<span id="phi-math-scipy-backend-module"></span><h2>phi.math.scipy_backend module<a class="headerlink" href="#module-phi.math.scipy_backend" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.math.scipy_backend.SciPyBackend">
+<em class="property">class </em><code class="sig-prename descclassname">phi.math.scipy_backend.</code><code class="sig-name descname">SciPyBackend</code><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.math.base_backend.Backend" title="phi.math.base_backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.math.base_backend.Backend</span></code></a></p>
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.abs">
+<code class="sig-name descname">abs</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.abs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.all">
+<code class="sig-name descname">all</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.any">
+<code class="sig-name descname">any</code><span class="sig-paren">(</span><em class="sig-param">boolean_tensor</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.any" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.as_tensor">
+<code class="sig-name descname">as_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.as_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.boolean_mask">
+<code class="sig-name descname">boolean_mask</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.boolean_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.cast">
+<code class="sig-name descname">cast</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">dtype</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.cast" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.ceil">
+<code class="sig-name descname">ceil</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.ceil" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.concat">
+<code class="sig-name descname">concat</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.concat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.conv">
+<code class="sig-name descname">conv</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">kernel</em>, <em class="sig-param">padding='SAME'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.conv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.cos">
+<code class="sig-name descname">cos</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.cos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.divide_no_nan">
+<code class="sig-name descname">divide_no_nan</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.divide_no_nan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes x/y but returns 0 if y=0.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.dot">
+<code class="sig-name descname">dot</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">axes</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.dot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.dtype">
+<code class="sig-name descname">dtype</code><span class="sig-paren">(</span><em class="sig-param">array</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.dtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.equal">
+<code class="sig-name descname">equal</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.exp">
+<code class="sig-name descname">exp</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.exp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.expand_dims">
+<code class="sig-name descname">expand_dims</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">axis=0</em>, <em class="sig-param">number=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.expand_dims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.fft">
+<code class="sig-name descname">fft</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.fft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.floor">
+<code class="sig-name descname">floor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.floor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.gather">
+<code class="sig-name descname">gather</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.gather" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.gather_nd">
+<code class="sig-name descname">gather_nd</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.gather_nd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.ifft">
+<code class="sig-name descname">ifft</code><span class="sig-paren">(</span><em class="sig-param">k</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.ifft" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the n-dimensional inverse FFT along all but the first and last dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> – tensor of dimension 3 or higher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.imag">
+<code class="sig-name descname">imag</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.imag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.is_applicable">
+<code class="sig-name descname">is_applicable</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.is_applicable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.is_tensor">
+<code class="sig-name descname">is_tensor</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.is_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.isfinite">
+<code class="sig-name descname">isfinite</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.isfinite" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.matmul">
+<code class="sig-name descname">matmul</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.matmul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.max">
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.maximum">
+<code class="sig-name descname">maximum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.maximum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.min">
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.min" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.minimum">
+<code class="sig-name descname">minimum</code><span class="sig-paren">(</span><em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.minimum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.ones_like">
+<code class="sig-name descname">ones_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.ones_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.pad">
+<code class="sig-name descname">pad</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">pad_width</em>, <em class="sig-param">mode='constant'</em>, <em class="sig-param">constant_values=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.pad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pad a tensor.
+:param value: tensor
+:param pad_width: 2D tensor specifying the number of values padded to the edges of each axis in the form [[before axis 0, after axis 0], …] including batch and component axes.
+:param mode:</p>
+<blockquote>
+<div><p>‘constant’,
+‘reflect’,
+‘replicate’,
+‘circular’
+(‘wrap’ is deprecated, use ‘circular’ instead, ‘symmetric’ may not be supported by all backends and defaults to ‘replicate’).</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>constant_values</strong> – used for out-of-bounds points if mode=’constant’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.prod">
+<code class="sig-name descname">prod</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.prod" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.py_func">
+<code class="sig-name descname">py_func</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">Tout</em>, <em class="sig-param">shape_out</em>, <em class="sig-param">stateful=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">grad=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.py_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.random_uniform">
+<code class="sig-name descname">random_uniform</code><span class="sig-paren">(</span><em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.random_uniform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.range">
+<code class="sig-name descname">range</code><span class="sig-paren">(</span><em class="sig-param">start</em>, <em class="sig-param">limit=None</em>, <em class="sig-param">delta=1</em>, <em class="sig-param">dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.rank">
+<code class="sig-name descname">rank</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.real">
+<code class="sig-name descname">real</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.real" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">sample_coords</em>, <em class="sig-param">interpolation='linear'</em>, <em class="sig-param">boundary='constant'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates a regular grid at the sample coordinates.
+:param inputs: grid data
+:param sample_coords: tensor of floating grid locations. The last dimension must match the dimensions of inputs. The first grid point of dimension i lies at position 0, the last at data.shape[i]-1.
+:param interpolation: only ‘linear’ is currently supported
+:param boundary:</p>
+<blockquote>
+<div><p>‘constant’/’zero’,
+‘replicate’,
+‘circular’
+(‘symmetric’ may not be supported by all backends and defaults to ‘replicate’)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.reshape">
+<code class="sig-name descname">reshape</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.reshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.round">
+<code class="sig-name descname">round</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.round" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.scatter">
+<code class="sig-name descname">scatter</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em>, <em class="sig-param">duplicates_handling='undefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method expects the first dimension of indices and values to be the batch dimension.
+The batch dimension need not be specified in the indices array.</p>
+<p>All indices must be non-negative and are expected to be within bounds. Otherwise the behaviour is undefined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> – </p></li>
+<li><p><strong>values</strong> – </p></li>
+<li><p><strong>shape</strong> – </p></li>
+<li><p><strong>duplicates_handling</strong> – one of (‘undefined’, ‘add’, ‘mean’, ‘any’, ‘last’, ‘no duplicates’)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.sign">
+<code class="sig-name descname">sign</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.sign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.sin">
+<code class="sig-name descname">sin</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.sin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.sparse_tensor">
+<code class="sig-name descname">sparse_tensor</code><span class="sig-paren">(</span><em class="sig-param">indices</em>, <em class="sig-param">values</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.sparse_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.sqrt">
+<code class="sig-name descname">sqrt</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.sqrt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.stack">
+<code class="sig-name descname">stack</code><span class="sig-paren">(</span><em class="sig-param">values</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.staticshape">
+<code class="sig-name descname">staticshape</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.staticshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.std">
+<code class="sig-name descname">std</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">axis=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.std" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">axis=None</em>, <em class="sig-param">keepdims=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.tile">
+<code class="sig-name descname">tile</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">multiples</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.tile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.to_complex">
+<code class="sig-name descname">to_complex</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.to_complex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.to_float">
+<code class="sig-name descname">to_float</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">float64=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.to_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.to_int">
+<code class="sig-name descname">to_int</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">int64=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.to_int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.unstack">
+<code class="sig-name descname">unstack</code><span class="sig-paren">(</span><em class="sig-param">tensor</em>, <em class="sig-param">axis=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.unstack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.where">
+<code class="sig-name descname">where</code><span class="sig-paren">(</span><em class="sig-param">condition</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.where" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.while_loop">
+<code class="sig-name descname">while_loop</code><span class="sig-paren">(</span><em class="sig-param">cond</em>, <em class="sig-param">body</em>, <em class="sig-param">loop_vars</em>, <em class="sig-param">shape_invariants=None</em>, <em class="sig-param">parallel_iterations=10</em>, <em class="sig-param">back_prop=True</em>, <em class="sig-param">swap_memory=False</em>, <em class="sig-param">name=None</em>, <em class="sig-param">maximum_iterations=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.while_loop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.with_custom_gradient">
+<code class="sig-name descname">with_custom_gradient</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">inputs</em>, <em class="sig-param">gradient</em>, <em class="sig-param">input_index=0</em>, <em class="sig-param">output_index=None</em>, <em class="sig-param">name_base='custom_gradient_func'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.with_custom_gradient" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.math.scipy_backend.SciPyBackend.zeros_like">
+<code class="sig-name descname">zeros_like</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.SciPyBackend.zeros_like" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.scipy_backend.clamp">
+<code class="sig-prename descclassname">phi.math.scipy_backend.</code><code class="sig-name descname">clamp</code><span class="sig-paren">(</span><em class="sig-param">coordinates</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.clamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.scipy_backend.tensor_spatial_rank">
+<code class="sig-prename descclassname">phi.math.scipy_backend.</code><code class="sig-name descname">tensor_spatial_rank</code><span class="sig-paren">(</span><em class="sig-param">field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.scipy_backend.tensor_spatial_rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.math.struct_backend">
+<span id="phi-math-struct-backend-module"></span><h2>phi.math.struct_backend module<a class="headerlink" href="#module-phi.math.struct_backend" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.math.struct_backend.StructBroadcastBackend">
+<em class="property">class </em><code class="sig-prename descclassname">phi.math.struct_backend.</code><code class="sig-name descname">StructBroadcastBackend</code><span class="sig-paren">(</span><em class="sig-param">backend</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.struct_backend.StructBroadcastBackend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.math.base_backend.Backend" title="phi.math.base_backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.math.base_backend.Backend</span></code></a></p>
+<dl class="method">
+<dt id="phi.math.struct_backend.StructBroadcastBackend.is_applicable">
+<code class="sig-name descname">is_applicable</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.struct_backend.StructBroadcastBackend.is_applicable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.math.struct_backend.argument_assembler">
+<code class="sig-prename descclassname">phi.math.struct_backend.</code><code class="sig-name descname">argument_assembler</code><span class="sig-paren">(</span><em class="sig-param">args</em>, <em class="sig-param">kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.struct_backend.argument_assembler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.struct_backend.broadcast_function">
+<code class="sig-prename descclassname">phi.math.struct_backend.</code><code class="sig-name descname">broadcast_function</code><span class="sig-paren">(</span><em class="sig-param">backend</em>, <em class="sig-param">func</em>, <em class="sig-param">args</em>, <em class="sig-param">kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.struct_backend.broadcast_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.math.struct_backend.build_keymap">
+<code class="sig-prename descclassname">phi.math.struct_backend.</code><code class="sig-name descname">build_keymap</code><span class="sig-paren">(</span><em class="sig-param">args</em>, <em class="sig-param">kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.math.struct_backend.build_keymap" title="Permalink to this definition">¶</a></dt>
+<dd><p>maps key to (False, value) or (True, key); keys are integers for args and strings for kwargs</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.math">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.math" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.math.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

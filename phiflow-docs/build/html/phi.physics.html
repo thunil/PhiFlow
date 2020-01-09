@@ -1,0 +1,1120 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.physics package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-physics-package">
+<h1>phi.physics package<a class="headerlink" href="#phi-physics-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="phi.physics.field.html">phi.physics.field package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.advect">phi.physics.field.advect module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.analytic">phi.physics.field.analytic module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.constant">phi.physics.field.constant module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.effect">phi.physics.field.effect module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.field">phi.physics.field.field module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.flag">phi.physics.field.flag module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.grid">phi.physics.field.grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.manta">phi.physics.field.manta module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.mask">phi.physics.field.mask module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.sampled">phi.physics.field.sampled module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.staggered_grid">phi.physics.field.staggered_grid module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field.util">phi.physics.field.util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.field.html#module-phi.physics.field">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="phi.physics.pressuresolver.html">phi.physics.pressuresolver package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#module-phi.physics.pressuresolver.geom">phi.physics.pressuresolver.geom module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#module-phi.physics.pressuresolver.multiscale">phi.physics.pressuresolver.multiscale module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#module-phi.physics.pressuresolver.solver_api">phi.physics.pressuresolver.solver_api module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#module-phi.physics.pressuresolver.sparse">phi.physics.pressuresolver.sparse module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phi.physics.pressuresolver.html#module-phi.physics.pressuresolver">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.physics.burgers">
+<span id="phi-physics-burgers-module"></span><h2>phi.physics.burgers module<a class="headerlink" href="#module-phi.physics.burgers" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.burgers.Burgers">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.burgers.</code><code class="sig-name descname">Burgers</code><span class="sig-paren">(</span><em class="sig-param">viscosity=0.1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.burgers.Burgers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.burgers.Burgers.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">v</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">effects=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.burgers.Burgers.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.collective">
+<span id="phi-physics-collective-module"></span><h2>phi.physics.collective module<a class="headerlink" href="#module-phi.physics.collective" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.collective.CollectivePhysics">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.collective.</code><code class="sig-name descname">CollectivePhysics</code><a class="headerlink" href="#phi.physics.collective.CollectivePhysics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.collective.CollectivePhysics.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">physics</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectivePhysics.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectivePhysics.for_">
+<code class="sig-name descname">for_</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectivePhysics.for_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectivePhysics.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectivePhysics.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectivePhysics.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">collectivestate</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">**dependent_states</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectivePhysics.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectivePhysics.substep">
+<code class="sig-name descname">substep</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">collectivestate</em>, <em class="sig-param">dt</em>, <em class="sig-param">override_physics=None</em>, <em class="sig-param">partial_next_collectivestate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectivePhysics.substep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.collective.CollectiveState">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.collective.</code><code class="sig-name descname">CollectiveState</code><span class="sig-paren">(</span><em class="sig-param">states=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.all_instances">
+<code class="sig-name descname">all_instances</code><span class="sig-paren">(</span><em class="sig-param">cls</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.all_instances" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.all_with_tag">
+<code class="sig-name descname">all_with_tag</code><span class="sig-paren">(</span><em class="sig-param">tag</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.all_with_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.default_physics">
+<code class="sig-name descname">default_physics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.default_physics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.find">
+<code class="sig-name descname">find</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.find" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#phi.physics.collective.CollectiveState.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.state_added">
+<code class="sig-name descname">state_added</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.state_added" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.state_removed">
+<code class="sig-name descname">state_removed</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.state_removed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.collective.CollectiveState.state_replaced">
+<code class="sig-name descname">state_replaced</code><span class="sig-paren">(</span><em class="sig-param">new_state</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.collective.CollectiveState.state_replaced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.collective.CollectiveState.states">
+<code class="sig-name descname">states</code><a class="headerlink" href="#phi.physics.collective.CollectiveState.states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.domain">
+<span id="phi-physics-domain-module"></span><h2>phi.physics.domain module<a class="headerlink" href="#module-phi.physics.domain" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.domain.Domain">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.domain.</code><code class="sig-name descname">Domain</code><span class="sig-paren">(</span><em class="sig-param">resolution</em>, <em class="sig-param">boundaries=open</em>, <em class="sig-param">box=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.domain.Domain.boundaries">
+<code class="sig-name descname">boundaries</code><a class="headerlink" href="#phi.physics.domain.Domain.boundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.domain.Domain.box">
+<code class="sig-name descname">box</code><a class="headerlink" href="#phi.physics.domain.Domain.box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.cell_index">
+<code class="sig-name descname">cell_index</code><span class="sig-paren">(</span><em class="sig-param">global_position</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.cell_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.center_points">
+<code class="sig-name descname">center_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.center_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.centered_grid">
+<code class="sig-name descname">centered_grid</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">components=1</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em>, <em class="sig-param">name=None</em>, <em class="sig-param">batch_size=None</em>, <em class="sig-param">extrapolation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.centered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.centered_shape">
+<code class="sig-name descname">centered_shape</code><span class="sig-paren">(</span><em class="sig-param">components=1</em>, <em class="sig-param">batch_size=1</em>, <em class="sig-param">name=None</em>, <em class="sig-param">extrapolation=None</em>, <em class="sig-param">age=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.centered_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.equal">
+<em class="property">static </em><code class="sig-name descname">equal</code><span class="sig-paren">(</span><em class="sig-param">grid1</em>, <em class="sig-param">grid2</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.indices">
+<code class="sig-name descname">indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a grid containing the index-location as components.
+Each index denotes the location within the tensor starting from zero.
+Indices are encoded as vectors in the index tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dtype</strong> – a numpy data type (default float32)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an index tensor of shape (1, spatial dimensions…, spatial rank)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.domain.Domain.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.domain.Domain.resolution">
+<code class="sig-name descname">resolution</code><a class="headerlink" href="#phi.physics.domain.Domain.resolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.staggered_grid">
+<code class="sig-name descname">staggered_grid</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em>, <em class="sig-param">name=None</em>, <em class="sig-param">batch_size=None</em>, <em class="sig-param">extrapolation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.staggered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.staggered_points">
+<code class="sig-name descname">staggered_points</code><span class="sig-paren">(</span><em class="sig-param">dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.staggered_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.staggered_shape">
+<code class="sig-name descname">staggered_shape</code><span class="sig-paren">(</span><em class="sig-param">batch_size=1</em>, <em class="sig-param">name=None</em>, <em class="sig-param">extrapolation=None</em>, <em class="sig-param">age=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.staggered_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.Domain.surface_material">
+<code class="sig-name descname">surface_material</code><span class="sig-paren">(</span><em class="sig-param">axis=0</em>, <em class="sig-param">upper_boundary=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.Domain.surface_material" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.domain.DomainState">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.domain.</code><code class="sig-name descname">DomainState</code><span class="sig-paren">(</span><em class="sig-param">batch_size=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.DomainState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.State" title="phi.physics.physics.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.State</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.domain.DomainState.centered_grid">
+<code class="sig-name descname">centered_grid</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em>, <em class="sig-param">components=1</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.DomainState.centered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.domain.DomainState.domain">
+<code class="sig-name descname">domain</code><a class="headerlink" href="#phi.physics.domain.DomainState.domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.DomainState.rank">
+<em class="property">property </em><code class="sig-name descname">rank</code><a class="headerlink" href="#phi.physics.domain.DomainState.rank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.DomainState.resolution">
+<em class="property">property </em><code class="sig-name descname">resolution</code><a class="headerlink" href="#phi.physics.domain.DomainState.resolution" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.domain.DomainState.staggered_grid">
+<code class="sig-name descname">staggered_grid</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.DomainState.staggered_grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.domain.tensor_shape">
+<code class="sig-prename descclassname">phi.physics.domain.</code><code class="sig-name descname">tensor_shape</code><span class="sig-paren">(</span><em class="sig-param">batch_size</em>, <em class="sig-param">resolution</em>, <em class="sig-param">components</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.domain.tensor_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.fluid">
+<span id="phi-physics-fluid-module"></span><h2>phi.physics.fluid module<a class="headerlink" href="#module-phi.physics.fluid" title="Permalink to this headline">¶</a></h2>
+<p>Definition of Fluid, IncompressibleFlow as well as fluid-related functions.</p>
+<dl class="class">
+<dt id="phi.physics.fluid.Fluid">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.fluid.</code><code class="sig-name descname">Fluid</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">density=0.0</em>, <em class="sig-param">velocity=0.0</em>, <em class="sig-param">buoyancy_factor=0.0</em>, <em class="sig-param">tags=('fluid'</em>, <em class="sig-param">'velocityfield')</em>, <em class="sig-param">name='fluid'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.Fluid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.domain.DomainState" title="phi.physics.domain.DomainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.domain.DomainState</span></code></a></p>
+<p>A Fluid state consists of a density field (centered grid) and a velocity field (staggered grid).</p>
+<dl class="attribute">
+<dt id="phi.physics.fluid.Fluid.buoyancy_factor">
+<code class="sig-name descname">buoyancy_factor</code><a class="headerlink" href="#phi.physics.fluid.Fluid.buoyancy_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.fluid.Fluid.default_physics">
+<code class="sig-name descname">default_physics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.Fluid.default_physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Physics object that can be used to progress this state forward in time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.fluid.Fluid.density">
+<code class="sig-name descname">density</code><a class="headerlink" href="#phi.physics.fluid.Fluid.density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.fluid.Fluid.velocity">
+<code class="sig-name descname">velocity</code><a class="headerlink" href="#phi.physics.fluid.Fluid.velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.fluid.IncompressibleFlow">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.fluid.</code><code class="sig-name descname">IncompressibleFlow</code><span class="sig-paren">(</span><em class="sig-param">pressure_solver=None</em>, <em class="sig-param">make_input_divfree=False</em>, <em class="sig-param">make_output_divfree=True</em>, <em class="sig-param">conserve_density=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.IncompressibleFlow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<p>Physics modelling the incompressible Navier-Stokes equations.
+Supports buoyancy proportional to the marker density.
+Supports obstacles, density effects, velocity effects, global gravity.</p>
+<dl class="method">
+<dt id="phi.physics.fluid.IncompressibleFlow.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">fluid, dt=1.0, obstacles=(), gravity=Gravity[name=&quot;gravity&quot;], density_effects=(), velocity_effects=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.IncompressibleFlow.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.fluid.buoyancy">
+<code class="sig-prename descclassname">phi.physics.fluid.</code><code class="sig-name descname">buoyancy</code><span class="sig-paren">(</span><em class="sig-param">density</em>, <em class="sig-param">gravity</em>, <em class="sig-param">buoyancy_factor</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.buoyancy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Computes the buoyancy force proportional to the density.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param density</dt>
+<dd class="field-odd"><p>CenteredGrid</p>
+</dd>
+<dt class="field-even">param gravity</dt>
+<dd class="field-even"><p>vector or float</p>
+</dd>
+<dt class="field-odd">param buoyancy_factor</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>StaggeredGrid for the domain of the density</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.fluid.divergence_free">
+<code class="sig-prename descclassname">phi.physics.fluid.</code><code class="sig-name descname">divergence_free</code><span class="sig-paren">(</span><em class="sig-param">velocity</em>, <em class="sig-param">domain=None</em>, <em class="sig-param">obstacles=()</em>, <em class="sig-param">pressure_solver=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.divergence_free" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Projects the given velocity field by solving for and subtracting the pressure.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param velocity</dt>
+<dd class="field-odd"><p>StaggeredGrid</p>
+</dd>
+<dt class="field-even">param domain</dt>
+<dd class="field-even"><p>Domain matching the velocity field, used for boundary conditions</p>
+</dd>
+<dt class="field-odd">param obstacles</dt>
+<dd class="field-odd"><p>list of Obstacles</p>
+</dd>
+<dt class="field-even">param pressure_solver</dt>
+<dd class="field-even"><p>PressureSolver. Uses default solver if none provided.</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>divergence-free velocity as StaggeredGrid</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.fluid.solve_pressure">
+<code class="sig-prename descclassname">phi.physics.fluid.</code><code class="sig-name descname">solve_pressure</code><span class="sig-paren">(</span><em class="sig-param">divergence</em>, <em class="sig-param">fluiddomain</em>, <em class="sig-param">pressure_solver=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.fluid.solve_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the pressure from the given velocity or velocity divergence using the specified solver.
+:param divergence: CenteredGrid
+:param fluiddomain: FluidDomain instance
+:param pressure_solver: PressureSolver to use, None for default
+:return: scalar tensor or CenteredGrid, depending on the type of divergence</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.heat">
+<span id="phi-physics-heat-module"></span><h2>phi.physics.heat module<a class="headerlink" href="#module-phi.physics.heat" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.heat.HeatDiffusion">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.heat.</code><code class="sig-name descname">HeatDiffusion</code><span class="sig-paren">(</span><em class="sig-param">diffusivity=0.1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.heat.HeatDiffusion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.heat.HeatDiffusion.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">temperature</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">effects=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.heat.HeatDiffusion.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.material">
+<span id="phi-physics-material-module"></span><h2>phi.physics.material module<a class="headerlink" href="#module-phi.physics.material" title="Permalink to this headline">¶</a></h2>
+<p>Surface material definitions including constants.</p>
+<dl class="class">
+<dt id="phi.physics.material.Material">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.material.</code><code class="sig-name descname">Material</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.material.Material" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<p>Defines a surface material including the boundary conditions.</p>
+<dl class="attribute">
+<dt id="phi.physics.material.Material.accessible_extrapolation_mode">
+<code class="sig-name descname">accessible_extrapolation_mode</code><a class="headerlink" href="#phi.physics.material.Material.accessible_extrapolation_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.material.Material.extrapolation_mode">
+<code class="sig-name descname">extrapolation_mode</code><a class="headerlink" href="#phi.physics.material.Material.extrapolation_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.material.Material.friction">
+<code class="sig-name descname">friction</code><a class="headerlink" href="#phi.physics.material.Material.friction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.material.Material.friction_multiplier">
+<code class="sig-name descname">friction_multiplier</code><span class="sig-paren">(</span><em class="sig-param">dt=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.material.Material.friction_multiplier" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Computes the velocity multiplication factor for fluid that moves along the surface for time dt.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param dt</dt>
+<dd class="field-odd"><p>time spent near surface (float)</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>factor (float)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.material.Material.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#phi.physics.material.Material.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.material.Material.periodic">
+<code class="sig-name descname">periodic</code><a class="headerlink" href="#phi.physics.material.Material.periodic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.material.Material.solid">
+<code class="sig-name descname">solid</code><a class="headerlink" href="#phi.physics.material.Material.solid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.obstacle">
+<span id="phi-physics-obstacle-module"></span><h2>phi.physics.obstacle module<a class="headerlink" href="#module-phi.physics.obstacle" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.obstacle.GeometryMovement">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.obstacle.</code><code class="sig-name descname">GeometryMovement</code><span class="sig-paren">(</span><em class="sig-param">geometry_function</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.obstacle.GeometryMovement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.obstacle.GeometryMovement.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">**dependent_states</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.obstacle.GeometryMovement.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.obstacle.Obstacle">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.obstacle.</code><code class="sig-name descname">Obstacle</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">material=slippery</em>, <em class="sig-param">velocity=0</em>, <em class="sig-param">tags=('obstacle'</em>, <em class="sig-param">)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.obstacle.Obstacle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.State" title="phi.physics.physics.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.State</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.obstacle.Obstacle.geometry">
+<code class="sig-name descname">geometry</code><a class="headerlink" href="#phi.physics.obstacle.Obstacle.geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.obstacle.Obstacle.material">
+<code class="sig-name descname">material</code><a class="headerlink" href="#phi.physics.obstacle.Obstacle.material" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.obstacle.Obstacle.velocity">
+<code class="sig-name descname">velocity</code><a class="headerlink" href="#phi.physics.obstacle.Obstacle.velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.physics">
+<span id="phi-physics-physics-module"></span><h2>phi.physics.physics module<a class="headerlink" href="#module-phi.physics.physics" title="Permalink to this headline">¶</a></h2>
+<p>Defines base classes for all simulations such as State and Physics.</p>
+<dl class="class">
+<dt id="phi.physics.physics.Physics">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.physics.</code><code class="sig-name descname">Physics</code><span class="sig-paren">(</span><em class="sig-param">dependencies=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.Physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A Physics object describes a set of physical laws that can be used to simulate a system by moving from state to state, tracing out a trajectory.
+Physics objects are stateless and always support an empty constructor.</p>
+<dl class="method">
+<dt id="phi.physics.physics.Physics.blocking_dependencies">
+<em class="property">property </em><code class="sig-name descname">blocking_dependencies</code><a class="headerlink" href="#phi.physics.physics.Physics.blocking_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.physics.Physics.non_blocking_dependencies">
+<em class="property">property </em><code class="sig-name descname">non_blocking_dependencies</code><a class="headerlink" href="#phi.physics.physics.Physics.non_blocking_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.physics.Physics.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">**dependent_states</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.Physics.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.physics.State">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.physics.</code><code class="sig-name descname">State</code><span class="sig-paren">(</span><em class="sig-param">batch_size=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.State" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.struct.html#phi.struct.struct.Struct" title="phi.struct.struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.struct.struct.Struct</span></code></a></p>
+<p>States describe one configuration of a physical system.</p>
+<p>State objects are generally immutable, i.e. once created the state cannot be changed.
+Instead, new State objects are created when the state changes.
+This guarantees that previously acquired states are not altered by other parts of the code which is convenient when working with sequence data.</p>
+<p>States are identified by their unique name.</p>
+<dl class="attribute">
+<dt id="phi.physics.physics.State.age">
+<code class="sig-name descname">age</code><a class="headerlink" href="#phi.physics.physics.State.age" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.physics.State.default_physics">
+<code class="sig-name descname">default_physics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.State.default_physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Physics object that can be used to progress this state forward in time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.physics.State.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#phi.physics.physics.State.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.physics.State.shape">
+<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#phi.physics.physics.State.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to phi.math.shape(self) but respects unknown dimensions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.physics.State.state">
+<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#phi.physics.physics.State.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>self</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>return</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.physics.State.tags">
+<code class="sig-name descname">tags</code><a class="headerlink" href="#phi.physics.physics.State.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.physics.StateDependency">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.physics.</code><code class="sig-name descname">StateDependency</code><span class="sig-paren">(</span><em class="sig-param">parameter_name</em>, <em class="sig-param">tag</em>, <em class="sig-param">single_state=False</em>, <em class="sig-param">blocking=False</em>, <em class="sig-param">state_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.StateDependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>StateDependencies can be used by Physics objects to request information about other states.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.physics.Static">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.physics.</code><code class="sig-name descname">Static</code><span class="sig-paren">(</span><em class="sig-param">dependencies=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.Static" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<p>Physics for states with no natural evolution.</p>
+<dl class="method">
+<dt id="phi.physics.physics.Static.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">**dependent_states</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.physics.Static.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does not alter the state except for increasing its age.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="phi-physics-plasma-module">
+<h2>phi.physics.plasma module<a class="headerlink" href="#phi-physics-plasma-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.physics.schroedinger">
+<span id="phi-physics-schroedinger-module"></span><h2>phi.physics.schroedinger module<a class="headerlink" href="#module-phi.physics.schroedinger" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.physics.schroedinger.HarmonicPotential">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">HarmonicPotential</code><span class="sig-paren">(</span><em class="sig-param">center</em>, <em class="sig-param">unit_distance</em>, <em class="sig-param">maximum_value=1.0</em>, <em class="sig-param">data=1.0</em>, <em class="sig-param">name='harmonic'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.HarmonicPotential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.field.html#phi.physics.field.analytic.AnalyticField" title="phi.physics.field.analytic.AnalyticField"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.analytic.AnalyticField</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.HarmonicPotential.center">
+<code class="sig-name descname">center</code><a class="headerlink" href="#phi.physics.schroedinger.HarmonicPotential.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.HarmonicPotential.maximum_value">
+<code class="sig-name descname">maximum_value</code><a class="headerlink" href="#phi.physics.schroedinger.HarmonicPotential.maximum_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.schroedinger.HarmonicPotential.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.HarmonicPotential.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.HarmonicPotential.unit_distance">
+<code class="sig-name descname">unit_distance</code><a class="headerlink" href="#phi.physics.schroedinger.HarmonicPotential.unit_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.schroedinger.QuantumWave">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">QuantumWave</code><span class="sig-paren">(</span><em class="sig-param">domain</em>, <em class="sig-param">amplitude=1</em>, <em class="sig-param">mass=0.1</em>, <em class="sig-param">tags=('qwave'</em>, <em class="sig-param">)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.QuantumWave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.domain.DomainState" title="phi.physics.domain.DomainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.domain.DomainState</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.QuantumWave.amplitude">
+<code class="sig-name descname">amplitude</code><a class="headerlink" href="#phi.physics.schroedinger.QuantumWave.amplitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.schroedinger.QuantumWave.default_physics">
+<code class="sig-name descname">default_physics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.QuantumWave.default_physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Physics object that can be used to progress this state forward in time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.QuantumWave.mass">
+<code class="sig-name descname">mass</code><a class="headerlink" href="#phi.physics.schroedinger.QuantumWave.mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.schroedinger.Schroedinger">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">Schroedinger</code><span class="sig-paren">(</span><em class="sig-param">margin=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.Schroedinger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.physics.physics.Physics" title="phi.physics.physics.Physics"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.physics.Physics</span></code></a></p>
+<dl class="method">
+<dt id="phi.physics.schroedinger.Schroedinger.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">potentials=()</em>, <em class="sig-param">obstacles=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.Schroedinger.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the next state of a physical system, given the current state.
+Solves the simulation for a time increment self.dt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> – current state</p></li>
+<li><p><strong>dt</strong> – time increment, float (can be positive, negative or zero)</p></li>
+<li><p><strong>dependent_states</strong> – dict from String to List&lt;State&gt;</p></li>
+</ul>
+</dd>
+</dl>
+<p>:return next state of the same type as state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.schroedinger.SinPotential">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">SinPotential</code><span class="sig-paren">(</span><em class="sig-param">k</em>, <em class="sig-param">phase_offset=0</em>, <em class="sig-param">data=1.0</em>, <em class="sig-param">name='harmonic'</em>, <em class="sig-param">dtype=&lt;class 'numpy.float32'&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.SinPotential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.field.html#phi.physics.field.analytic.AnalyticField" title="phi.physics.field.analytic.AnalyticField"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.analytic.AnalyticField</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.SinPotential.dtype">
+<code class="sig-name descname">dtype</code><a class="headerlink" href="#phi.physics.schroedinger.SinPotential.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.SinPotential.k">
+<code class="sig-name descname">k</code><a class="headerlink" href="#phi.physics.schroedinger.SinPotential.k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.SinPotential.phase_offset">
+<code class="sig-name descname">phase_offset</code><a class="headerlink" href="#phi.physics.schroedinger.SinPotential.phase_offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.schroedinger.SinPotential.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.SinPotential.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.schroedinger.StepPotential">
+<code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">StepPotential</code><span class="sig-paren">(</span><em class="sig-param">geometry</em>, <em class="sig-param">height</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.StepPotential" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.schroedinger.WavePacket">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">WavePacket</code><span class="sig-paren">(</span><em class="sig-param">center</em>, <em class="sig-param">size</em>, <em class="sig-param">wave_vector</em>, <em class="sig-param">name='wave_packet'</em>, <em class="sig-param">data=1.0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.WavePacket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="phi.physics.field.html#phi.physics.field.analytic.AnalyticField" title="phi.physics.field.analytic.AnalyticField"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.physics.field.analytic.AnalyticField</span></code></a></p>
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.WavePacket.center">
+<code class="sig-name descname">center</code><a class="headerlink" href="#phi.physics.schroedinger.WavePacket.center" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.schroedinger.WavePacket.sample_at">
+<code class="sig-name descname">sample_at</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">collapse_dimensions=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.WavePacket.sample_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample this field at the given points.
+:param points: tensor or rank &gt;= 2 containing world-space vectors
+:param collapse_dimensions: if True, collapses dimensions to 1 along which all values would be equal.
+:return: tensor of shape location.shape[:-1]+[components]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.WavePacket.size">
+<code class="sig-name descname">size</code><a class="headerlink" href="#phi.physics.schroedinger.WavePacket.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phi.physics.schroedinger.WavePacket.wave_vector">
+<code class="sig-name descname">wave_vector</code><a class="headerlink" href="#phi.physics.schroedinger.WavePacket.wave_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an item type of a struct, a variable or a constant.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.schroedinger.normalize_probability">
+<code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">normalize_probability</code><span class="sig-paren">(</span><em class="sig-param">probability_amplitude</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.normalize_probability" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.physics.schroedinger.psquare">
+<code class="sig-prename descclassname">phi.physics.schroedinger.</code><code class="sig-name descname">psquare</code><span class="sig-paren">(</span><em class="sig-param">complex</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.schroedinger.psquare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.world">
+<span id="phi-physics-world-module"></span><h2>phi.physics.world module<a class="headerlink" href="#module-phi.physics.world" title="Permalink to this headline">¶</a></h2>
+<p>Worlds are used to manage simulations consisting of multiple states.
+A world uses a CollectiveState with CollectivePhysics to resolve state dependencies.
+Worlds also facilitate referencing states when performing a forward simulation.</p>
+<p>A default World, called <cite>world</cite> is provided for convenience.</p>
+<dl class="class">
+<dt id="phi.physics.world.StateProxy">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.world.</code><code class="sig-name descname">StateProxy</code><span class="sig-paren">(</span><em class="sig-param">enclosing_world</em>, <em class="sig-param">state_name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.StateProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>StateProxy mirrors all data_dict of a state in an associated world.
+While State objects are generally immutable, StateProxy also implements setting any attribute of the state.
+When an attribute is set, a copy of the state with the new value replaces the old state in the world.
+This object then mirrors the values of the new state.</p>
+<p>After world.step() is invoked, all Proxies of that world will mirror the state after stepping.</p>
+<p>To reference the current immutable state of</p>
+<dl class="method">
+<dt id="phi.physics.world.StateProxy.physics">
+<em class="property">property </em><code class="sig-name descname">physics</code><a class="headerlink" href="#phi.physics.world.StateProxy.physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Physics object used by the referenced world for the system.
+If not specified manually, the default physics is returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.StateProxy.state">
+<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#phi.physics.world.StateProxy.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds and returns the state in the referenced world that matches the StateProxy’s state_name.
+:return: State</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.StateProxy.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">dt=1.0</em>, <em class="sig-param">physics=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.StateProxy.step" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Steps this system in the referenced world. Other states are not affected.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param dt</dt>
+<dd class="field-odd"><p>time increment</p>
+</dd>
+<dt class="field-even">param physics</dt>
+<dd class="field-even"><p>specific Physics object to use, defaults to self.physics</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.physics.world.World">
+<em class="property">class </em><code class="sig-prename descclassname">phi.physics.world.</code><code class="sig-name descname">World</code><span class="sig-paren">(</span><em class="sig-param">batch_size=None</em>, <em class="sig-param">add_default_objects=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A world object defines a global state as well as a set of rules (Physics objects) that definition how the state evolves.</p>
+<p>The world manages dependencies among the contained simulations and provides convenience methods for creating proxies for specific simulations.</p>
+<p>The method world.step() evolves the whole state or optionally a specific state in time.</p>
+<dl class="method">
+<dt id="phi.physics.world.World.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">state</em>, <em class="sig-param">physics=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.add" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Adds a State to the world that will be stepped forward in time each time world.step() is invoked.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param state</dt>
+<dd class="field-odd"><p>State</p>
+</dd>
+<dt class="field-even">param physics</dt>
+<dd class="field-even"><p>optional Physics to use during world.step(). Defaults to state.default_physics()</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>StateProxy referencing the current state of the added system. If world.state is updated (e.g. because world.step() was called), the StateProxy will refer to the updated values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.add_all">
+<code class="sig-name descname">add_all</code><span class="sig-paren">(</span><em class="sig-param">*states</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.add_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a collection of states to the system using world.add(state).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.age">
+<em class="property">property </em><code class="sig-name descname">age</code><a class="headerlink" href="#phi.physics.world.World.age" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for world.state.age</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.get_physics">
+<code class="sig-name descname">get_physics</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.get_physics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Looks up the Physics object associated with a given State or StateProxy.
+If no Physics object was registered manually, the state.default_physics() object is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>state</strong> – State or StateProxy contained in this world</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Physics</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.remove" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Remove a system or collection of systems from the world.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param obj</dt>
+<dd class="field-odd"><p>one of the following: State, state name, subclass of State, tuple or list thereof</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">batch_size=None</em>, <em class="sig-param">add_default_objects=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the world to the default configuration.
+This removes all States and observers.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param batch_size</dt>
+<dd class="field-odd"><p>int or None</p>
+</dd>
+<dt class="field-even">param add_default_objects</dt>
+<dd class="field-even"><p>if True, adds defaults like Gravity</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.state">
+<em class="property">property </em><code class="sig-name descname">state</code><a class="headerlink" href="#phi.physics.world.World.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current state of the world.
+:return: CollectiveState</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">state=None</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">physics=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evolves the current world state by a time increment dt.
+If state is provided, only that state is evolved, leaving the others untouched.
+The optional physics parameter can then be used to override the default physics.
+Otherwise, all states are evolved.</p>
+<p>Calling World.step resolves all dependencies among simulations and then calls Physics.step on each simulation to evolve the states.</p>
+<dl class="simple">
+<dt>Invoking this method alters the world state. To to_field a copy of the state, use <code class="xref py py-func docutils literal notranslate"><span class="pre">World.stepped</span></code> instead.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param state</dt>
+<dd class="field-odd"><p>State, StateProxy or None</p>
+</dd>
+<dt class="field-even">param dt</dt>
+<dd class="field-even"><p>time increment</p>
+</dd>
+<dt class="field-odd">param physics</dt>
+<dd class="field-odd"><p>Physics object for the state or None for default</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>evolved state if a specific state was provided</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.physics.world.World.stepped">
+<code class="sig-name descname">stepped</code><span class="sig-paren">(</span><em class="sig-param">state=None</em>, <em class="sig-param">dt=1.0</em>, <em class="sig-param">physics=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.world.World.stepped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to step() but does not change the state of the world. Instead, the new state is returned.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics.worldutil">
+<span id="phi-physics-worldutil-module"></span><h2>phi.physics.worldutil module<a class="headerlink" href="#module-phi.physics.worldutil" title="Permalink to this headline">¶</a></h2>
+<p>High-level world utility and convenience functions.</p>
+<dl class="function">
+<dt id="phi.physics.worldutil.obstacle_mask">
+<code class="sig-prename descclassname">phi.physics.worldutil.</code><code class="sig-name descname">obstacle_mask</code><span class="sig-paren">(</span><em class="sig-param">world_or_proxy</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.physics.worldutil.obstacle_mask" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Builds a binary Field, masking all obstacles in the world.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param world_or_proxy</dt>
+<dd class="field-odd"><p>World or StateProxy object</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>Field</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.physics">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.physics" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.physics.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

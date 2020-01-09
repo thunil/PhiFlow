@@ -1,0 +1,677 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.data package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-data-package">
+<h1>phi.data package<a class="headerlink" href="#phi-data-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="phi-data-augment-module">
+<h2>phi.data.augment module<a class="headerlink" href="#phi-data-augment-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="phi-data-data-module">
+<h2>phi.data.data module<a class="headerlink" href="#phi-data-data-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.data.dataset">
+<span id="phi-data-dataset-module"></span><h2>phi.data.dataset module<a class="headerlink" href="#module-phi.data.dataset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.dataset.Dataset">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.dataset.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.count">
+<code class="sig-name descname">count</code><span class="sig-paren">(</span><em class="sig-param">lookup_unknown=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.load">
+<em class="property">static </em><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">directory</em>, <em class="sig-param">indices=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">max_scenes=None</em>, <em class="sig-param">assume_same_frames=True</em>, <em class="sig-param">assume_same_shapes=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.on_change">
+<code class="sig-name descname">on_change</code><span class="sig-paren">(</span><em class="sig-param">callback</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.on_change" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.dataset.Dataset.remove_on_change">
+<code class="sig-name descname">remove_on_change</code><span class="sig-paren">(</span><em class="sig-param">callback</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.dataset.Dataset.remove_on_change" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.data.fluidformat">
+<span id="phi-data-fluidformat-module"></span><h2>phi.data.fluidformat module<a class="headerlink" href="#module-phi.data.fluidformat" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.fluidformat.Scene">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">Scene</code><span class="sig-paren">(</span><em class="sig-param">dir</em>, <em class="sig-param">category</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.at">
+<em class="property">static </em><code class="sig-name descname">at</code><span class="sig-paren">(</span><em class="sig-param">sim_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.at" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.copy_calling_script">
+<code class="sig-name descname">copy_calling_script</code><span class="sig-paren">(</span><em class="sig-param">stack_level=1</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.copy_calling_script" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.copy_src">
+<code class="sig-name descname">copy_src</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.copy_src" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.create">
+<em class="property">static </em><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">directory</em>, <em class="sig-param">category=None</em>, <em class="sig-param">count=1</em>, <em class="sig-param">mkdir=True</em>, <em class="sig-param">copy_calling_script=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.exists_config">
+<code class="sig-name descname">exists_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.exists_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.fieldnames">
+<em class="property">property </em><code class="sig-name descname">fieldnames</code><a class="headerlink" href="#phi.data.fluidformat.Scene.fieldnames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.frames">
+<em class="property">property </em><code class="sig-name descname">frames</code><a class="headerlink" href="#phi.data.fluidformat.Scene.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.get_frames">
+<code class="sig-name descname">get_frames</code><span class="sig-paren">(</span><em class="sig-param">mode='intersect'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.get_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.list">
+<em class="property">static </em><code class="sig-name descname">list</code><span class="sig-paren">(</span><em class="sig-param">directory</em>, <em class="sig-param">category=None</em>, <em class="sig-param">indexfilter=None</em>, <em class="sig-param">max_count=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.mkdir">
+<code class="sig-name descname">mkdir</code><span class="sig-paren">(</span><em class="sig-param">subdir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.path">
+<em class="property">property </em><code class="sig-name descname">path</code><a class="headerlink" href="#phi.data.fluidformat.Scene.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.properties">
+<em class="property">property </em><code class="sig-name descname">properties</code><a class="headerlink" href="#phi.data.fluidformat.Scene.properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.put_property">
+<code class="sig-name descname">put_property</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.put_property" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">frame=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.read_array">
+<code class="sig-name descname">read_array</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em>, <em class="sig-param">frame</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.read_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.read_sim_frames">
+<code class="sig-name descname">read_sim_frames</code><span class="sig-paren">(</span><em class="sig-param">fieldnames=None</em>, <em class="sig-param">frames=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.read_sim_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.remove" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.subpath">
+<code class="sig-name descname">subpath</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">create=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.subpath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">names=None</em>, <em class="sig-param">frame=0</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.Scene.write_sim_frame">
+<code class="sig-name descname">write_sim_frame</code><span class="sig-paren">(</span><em class="sig-param">arrays</em>, <em class="sig-param">fieldnames</em>, <em class="sig-param">frame</em>, <em class="sig-param">check_same_dimensions=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.Scene.write_sim_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.fluidformat.SceneBatch">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">SceneBatch</code><span class="sig-paren">(</span><em class="sig-param">scenes</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.SceneBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.fluidformat.Scene" title="phi.data.fluidformat.Scene"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.fluidformat.Scene</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.fluidformat.SceneBatch.batch_size">
+<em class="property">property </em><code class="sig-name descname">batch_size</code><a class="headerlink" href="#phi.data.fluidformat.SceneBatch.batch_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.SceneBatch.read_array">
+<code class="sig-name descname">read_array</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em>, <em class="sig-param">frame</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.SceneBatch.read_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.SceneBatch.read_sim_frames">
+<code class="sig-name descname">read_sim_frames</code><span class="sig-paren">(</span><em class="sig-param">fieldnames=None</em>, <em class="sig-param">frames=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.SceneBatch.read_sim_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.fluidformat.SceneBatch.write_sim_frame">
+<code class="sig-name descname">write_sim_frame</code><span class="sig-paren">(</span><em class="sig-param">arrays</em>, <em class="sig-param">fieldnames</em>, <em class="sig-param">frame</em>, <em class="sig-param">check_same_dimensions=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.SceneBatch.write_sim_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.first_frame">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">first_frame</code><span class="sig-paren">(</span><em class="sig-param">simpath</em>, <em class="sig-param">fieldname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.first_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.get_fieldnames">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">get_fieldnames</code><span class="sig-paren">(</span><em class="sig-param">simpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.get_fieldnames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.get_frames">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">get_frames</code><span class="sig-paren">(</span><em class="sig-param">simpath</em>, <em class="sig-param">fieldname=None</em>, <em class="sig-param">mode='intersect'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.get_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.read_sim_frame">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">read_sim_frame</code><span class="sig-paren">(</span><em class="sig-param">simpath</em>, <em class="sig-param">fieldnames</em>, <em class="sig-param">frame</em>, <em class="sig-param">set_missing_to_none=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.read_sim_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.read_sim_frames">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">read_sim_frames</code><span class="sig-paren">(</span><em class="sig-param">simpath</em>, <em class="sig-param">fieldnames=None</em>, <em class="sig-param">frames=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.read_sim_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.read_zipped_array">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">read_zipped_array</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.read_zipped_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.slugify">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">slugify</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.slugify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes string, converts to lowercase, removes non-alpha characters,
+and converts spaces to hyphens.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.write_sim_frame">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">write_sim_frame</code><span class="sig-paren">(</span><em class="sig-param">simpath</em>, <em class="sig-param">arrays</em>, <em class="sig-param">fieldnames</em>, <em class="sig-param">frame</em>, <em class="sig-param">check_same_dimensions=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.write_sim_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.data.fluidformat.write_zipped_array">
+<code class="sig-prename descclassname">phi.data.fluidformat.</code><code class="sig-name descname">write_zipped_array</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">array</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.fluidformat.write_zipped_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.data.reader">
+<span id="phi-data-reader-module"></span><h2>phi.data.reader module<a class="headerlink" href="#module-phi.data.reader" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.reader.BatchReader">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.reader.</code><code class="sig-name descname">BatchReader</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">fields</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.reader.BatchReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.data.reader.BatchReader.all_batches">
+<code class="sig-name descname">all_batches</code><span class="sig-paren">(</span><em class="sig-param">batch_size=1</em>, <em class="sig-param">last='clip'</em>, <em class="sig-param">loop=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.reader.BatchReader.all_batches" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.reader.BatchReader.dataset">
+<em class="property">property </em><code class="sig-name descname">dataset</code><a class="headerlink" href="#phi.data.reader.BatchReader.dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.data.reader.list_swap_axes">
+<code class="sig-prename descclassname">phi.data.reader.</code><code class="sig-name descname">list_swap_axes</code><span class="sig-paren">(</span><em class="sig-param">list_in</em>, <em class="sig-param">concatenate=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.reader.list_swap_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.data.source">
+<span id="phi-data-source-module"></span><h2>phi.data.source module<a class="headerlink" href="#module-phi.data.source" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.source.DataSource">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.source.</code><code class="sig-name descname">DataSource</code><a class="headerlink" href="#phi.data.source.DataSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.data.source.DataSource.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.DataSource.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterable object to read all frames of this DataSource.
+The iterator need not provide a length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.DataSource.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em>, <em class="sig-param">frames</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.DataSource.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a NumPy array (or list of arrays) holding the data for a given fieldname.
+The batch size of the array (or list length) is equal to len(frames).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fieldname</strong> – stream identifier string</p></li>
+<li><p><strong>frames</strong> – list or tuple of frames</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.DataSource.list_fieldnames">
+<code class="sig-name descname">list_fieldnames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.DataSource.list_fieldnames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all fieldnames contained in this source.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.DataSource.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.DataSource.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a 1D tensor holding the tensor shape of a single data point from the fieldname.
+The first entry, specifying the batch dimension, must be equal to 1.</p>
+<p>If the shape cannot be determined, this method returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fieldname</strong> – stream identifier string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.DataSource.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.DataSource.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of data points in this source.</p>
+<p>If the source is infinite, returns numpy.inf.
+If the size is unknown at this point and lookup=False, returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lookup</strong> – If the size should be determined if unknown</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.source.SceneSource">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.source.</code><code class="sig-name descname">SceneSource</code><span class="sig-paren">(</span><em class="sig-param">scene</em>, <em class="sig-param">frames=None</em>, <em class="sig-param">shape_map=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.source.DataSource" title="phi.data.source.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.source.DataSource</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.source.SceneSource.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource.frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterable object to read all frames of this DataSource.
+The iterator need not provide a length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.SceneSource.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em>, <em class="sig-param">frames</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a NumPy array (or list of arrays) holding the data for a given fieldname.
+The batch size of the array (or list length) is equal to len(frames).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fieldname</strong> – stream identifier string</p></li>
+<li><p><strong>frames</strong> – list or tuple of frames</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.SceneSource.list_fieldnames">
+<code class="sig-name descname">list_fieldnames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource.list_fieldnames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all fieldnames contained in this source.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.SceneSource.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">fieldname</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a 1D tensor holding the tensor shape of a single data point from the fieldname.
+The first entry, specifying the batch dimension, must be equal to 1.</p>
+<p>If the shape cannot be determined, this method returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fieldname</strong> – stream identifier string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.data.source.SceneSource.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.SceneSource.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of data points in this source.</p>
+<p>If the source is infinite, returns numpy.inf.
+If the size is unknown at this point and lookup=False, returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lookup</strong> – If the size should be determined if unknown</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="phi.data.source.UnknownShapeError">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.data.source.</code><code class="sig-name descname">UnknownShapeError</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.source.UnknownShapeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.data.stream">
+<span id="phi-data-stream-module"></span><h2>phi.data.stream module<a class="headerlink" href="#module-phi.data.stream" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.stream.DataStream">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">DataStream</code><a class="headerlink" href="#phi.data.stream.DataStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="phi.data.stream.DataStream.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.DataStream.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.DataStream.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.DataStream.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.DataStream.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.DataStream.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.DataStream.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.DataStream.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.stream.DerivedStream">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">DerivedStream</code><span class="sig-paren">(</span><em class="sig-param">input_streams</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.DerivedStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DataStream" title="phi.data.stream.DataStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DataStream</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.stream.ElementwiseOperationStream">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">ElementwiseOperationStream</code><span class="sig-paren">(</span><em class="sig-param">input_streams</em>, <em class="sig-param">function</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.ElementwiseOperationStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DerivedStream" title="phi.data.stream.DerivedStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DerivedStream</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.stream.ElementwiseOperationStream.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.ElementwiseOperationStream.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.ElementwiseOperationStream.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.ElementwiseOperationStream.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.ElementwiseOperationStream.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.ElementwiseOperationStream.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.ElementwiseOperationStream.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.ElementwiseOperationStream.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.stream.FrameSelect">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">FrameSelect</code><span class="sig-paren">(</span><em class="sig-param">selector</em>, <em class="sig-param">stream</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.FrameSelect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DerivedStream" title="phi.data.stream.DerivedStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DerivedStream</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.stream.FrameSelect.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.FrameSelect.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.FrameSelect.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.FrameSelect.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.FrameSelect.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.FrameSelect.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.FrameSelect.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.FrameSelect.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.stream.MantaScalar">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">MantaScalar</code><span class="sig-paren">(</span><em class="sig-param">stream</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.MantaScalar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DerivedStream" title="phi.data.stream.DerivedStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DerivedStream</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.stream.MantaScalar.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.MantaScalar.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.MantaScalar.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.MantaScalar.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.MantaScalar.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.MantaScalar.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.MantaScalar.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.MantaScalar.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.data.stream.SourceStream">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">SourceStream</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.SourceStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DataStream" title="phi.data.stream.DataStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DataStream</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.stream.SourceStream.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.SourceStream.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.SourceStream.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.SourceStream.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.SourceStream.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.SourceStream.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.stream.SourceStream.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.SourceStream.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.data.stream.consecutive_frames">
+<code class="sig-prename descclassname">phi.data.stream.</code><code class="sig-name descname">consecutive_frames</code><span class="sig-paren">(</span><em class="sig-param">channel</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.stream.consecutive_frames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs n DataChannels to load a consequtive sequence of frames.
+For each sequence, the i-th DataChannel loads the i-th frame in that sequence.
+The number of sequences depends on the number of frames contained in each source.</p>
+<p>The frames of each source are assumed to be ordered and without frame gaps.
+Every DataSource accessed through these channels must contain at least n frames.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param channel</dt>
+<dd class="field-odd"><p>Source channel holding the data</p>
+</dd>
+<dt class="field-even">param n</dt>
+<dd class="field-even"><p>Number of frames to load</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>tuple containing n DataChannels</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.data.transform">
+<span id="phi-data-transform-module"></span><h2>phi.data.transform module<a class="headerlink" href="#module-phi.data.transform" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.data.transform.Downsample">
+<em class="property">class </em><code class="sig-prename descclassname">phi.data.transform.</code><code class="sig-name descname">Downsample</code><span class="sig-paren">(</span><em class="sig-param">field</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.transform.Downsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phi.data.stream.DerivedStream" title="phi.data.stream.DerivedStream"><code class="xref py py-class docutils literal notranslate"><span class="pre">phi.data.stream.DerivedStream</span></code></a></p>
+<dl class="method">
+<dt id="phi.data.transform.Downsample.frames">
+<code class="sig-name descname">frames</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.transform.Downsample.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.transform.Downsample.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">indices</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.transform.Downsample.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.transform.Downsample.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><em class="sig-param">datasource</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.transform.Downsample.shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.data.transform.Downsample.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">datasource</em>, <em class="sig-param">lookup=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.data.transform.Downsample.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.data">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.data" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.data.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

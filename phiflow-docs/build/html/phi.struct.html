@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phi.struct package &#8212; PhiFlow 1.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="phi-struct-package">
+<h1>phi.struct package<a class="headerlink" href="#phi-struct-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phi.struct.context">
+<span id="phi-struct-context-module"></span><h2>phi.struct.context module<a class="headerlink" href="#module-phi.struct.context" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.struct.context.skip_validate">
+<code class="sig-prename descclassname">phi.struct.context.</code><code class="sig-name descname">skip_validate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.context.skip_validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.context.unsafe">
+<code class="sig-prename descclassname">phi.struct.context.</code><code class="sig-name descname">unsafe</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.context.unsafe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.functions">
+<span id="phi-struct-functions-module"></span><h2>phi.struct.functions module<a class="headerlink" href="#module-phi.struct.functions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="phi.struct.functions.IncompatibleStructs">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">IncompatibleStructs</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.IncompatibleStructs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Thrown when two or more structs are required to have the same structure but do not.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.struct.functions.LeafZip">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">LeafZip</code><span class="sig-paren">(</span><em class="sig-param">values</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.LeafZip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Created by struct.zip to replace data.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.struct.functions.Trace">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">Trace</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">key</em>, <em class="sig-param">parent_trace</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.Trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Used in struct.map if trace=True.
+Trace objects can be used to reference a specific item of a struct or sub-struct as well as gather information about it.</p>
+<dl class="method">
+<dt id="phi.struct.functions.Trace.find_in">
+<code class="sig-name descname">find_in</code><span class="sig-paren">(</span><em class="sig-param">base_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.Trace.find_in" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.functions.Trace.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#phi.struct.functions.Trace.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.functions.Trace.path">
+<code class="sig-name descname">path</code><span class="sig-paren">(</span><em class="sig-param">separator='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.Trace.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.compare">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">compare</code><span class="sig-paren">(</span><em class="sig-param">structs</em>, <em class="sig-param">leaf_condition=None</em>, <em class="sig-param">recursive=True</em>, <em class="sig-param">item_condition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.compare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.flatten">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">leaf_condition=None</em>, <em class="sig-param">trace=False</em>, <em class="sig-param">item_condition=&lt;function DATA&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.flatten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.map">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">map</code><span class="sig-paren">(</span><em class="sig-param">function</em>, <em class="sig-param">struct</em>, <em class="sig-param">leaf_condition=None</em>, <em class="sig-param">recursive=True</em>, <em class="sig-param">trace=False</em>, <em class="sig-param">item_condition=&lt;function DATA&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.mappable">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">mappable</code><span class="sig-paren">(</span><em class="sig-param">leaf_condition=None</em>, <em class="sig-param">recursive=True</em>, <em class="sig-param">item_condition=&lt;function DATA&gt;</em>, <em class="sig-param">unsafe_context=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.mappable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.names">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">names</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">leaf_condition=None</em>, <em class="sig-param">full_path=True</em>, <em class="sig-param">basename=None</em>, <em class="sig-param">separator='.'</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.print_differences">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">print_differences</code><span class="sig-paren">(</span><em class="sig-param">struct1</em>, <em class="sig-param">struct2</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.print_differences" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.functions.zip">
+<code class="sig-prename descclassname">phi.struct.functions.</code><code class="sig-name descname">zip</code><span class="sig-paren">(</span><em class="sig-param">structs</em>, <em class="sig-param">leaf_condition=None</em>, <em class="sig-param">item_condition=&lt;function DATA&gt;</em>, <em class="sig-param">zip_parents_if_incompatible=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.functions.zip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.python_generator">
+<span id="phi-struct-python-generator-module"></span><h2>phi.struct.python_generator module<a class="headerlink" href="#module-phi.struct.python_generator" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.struct.python_generator.generate">
+<code class="sig-prename descclassname">phi.struct.python_generator.</code><code class="sig-name descname">generate</code><span class="sig-paren">(</span><em class="sig-param">struct_name</em>, <em class="sig-param">variables=()</em>, <em class="sig-param">constants=()</em>, <em class="sig-param">others=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.python_generator.generate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.struct">
+<span id="phi-struct-struct-module"></span><h2>phi.struct.struct module<a class="headerlink" href="#module-phi.struct.struct" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.struct.struct.Struct">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">Struct</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.Struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for all custom structs.
+To implement a custom struct, extend this class and add the decorator &#64;struct.definition().</p>
+<p>See the struct documentation at documentation/Structs.ipynb</p>
+<dl class="method">
+<dt id="phi.struct.struct.Struct.copied_with">
+<code class="sig-name descname">copied_with</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.Struct.copied_with" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.struct.Struct.validate">
+<code class="sig-name descname">validate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.Struct.validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.constants">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">constants</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.constants" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.copy_with">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">copy_with</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">new_values_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.copy_with" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.equal">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">equal</code><span class="sig-paren">(</span><em class="sig-param">obj1</em>, <em class="sig-param">obj2</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.isstruct">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">isstruct</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">leaf_condition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.isstruct" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.kwargs">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">kwargs</code><span class="sig-paren">(</span><em class="sig-param">locals</em>, <em class="sig-param">include_self=False</em>, <em class="sig-param">ignore=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.kwargs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.properties_dict">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">properties_dict</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.properties_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.to_dict">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">item_condition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.struct.variables">
+<code class="sig-prename descclassname">phi.struct.struct.</code><code class="sig-name descname">variables</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.struct.variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.structdef">
+<span id="phi-struct-structdef-module"></span><h2>phi.struct.structdef module<a class="headerlink" href="#module-phi.struct.structdef" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.struct.structdef.CONSTANTS">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">CONSTANTS</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.CONSTANTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.DATA">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">DATA</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.DATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="phi.struct.structdef.DependencyError">
+<em class="property">exception </em><code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">DependencyError</code><span class="sig-paren">(</span><em class="sig-param">*args</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.DependencyError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.struct.structdef.DerivedProperty">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">DerivedProperty</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">getter</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.DerivedProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="phi.struct.structdef.Item">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">Item</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">validation_function</em>, <em class="sig-param">is_variable</em>, <em class="sig-param">default_value</em>, <em class="sig-param">dependencies</em>, <em class="sig-param">holds_data</em>, <em class="sig-param">**trait_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.Item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents an item type of a struct, a variable or a constant.</p>
+<dl class="method">
+<dt id="phi.struct.structdef.Item.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.Item.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.structdef.Item.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.Item.set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.structdef.Item.validate">
+<code class="sig-name descname">validate</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.Item.validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.VARIABLES">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">VARIABLES</code><span class="sig-paren">(</span><em class="sig-param">item</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.VARIABLES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.constant">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">constant</code><span class="sig-paren">(</span><em class="sig-param">default=None</em>, <em class="sig-param">dependencies=()</em>, <em class="sig-param">holds_data=False</em>, <em class="sig-param">**trait_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.constant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required decorator for constants_dict of custom structs.
+The enclosing class must be decorated with struct.definition().</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param default</dt>
+<dd class="field-odd"><p>default value passed to validation if no other value is specified</p>
+</dd>
+<dt class="field-even">param dependencies</dt>
+<dd class="field-even"><p>other items (string or reference for inherited constants_dict)</p>
+</dd>
+<dt class="field-odd">param holds_data</dt>
+<dd class="field-odd"><p>determines whether the constant is considered by data-related functions</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>read-only property</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.definition">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">definition</code><span class="sig-paren">(</span><em class="sig-param">traits=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.definition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required decorator for custom struct classes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.derived">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">derived</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.derived" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Derived properties work similar to &#64;property but can be easily broadcast across many instances.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>read-only property</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.structdef.variable">
+<code class="sig-prename descclassname">phi.struct.structdef.</code><code class="sig-name descname">variable</code><span class="sig-paren">(</span><em class="sig-param">default=None</em>, <em class="sig-param">dependencies=()</em>, <em class="sig-param">holds_data=True</em>, <em class="sig-param">**trait_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.structdef.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required decorator for data_dict of custom structs.
+The enclosing class must be decorated with struct.definition().</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param default</dt>
+<dd class="field-odd"><p>default value passed to validation if no other value is specified</p>
+</dd>
+<dt class="field-even">param dependencies</dt>
+<dd class="field-even"><p>other items (string or reference for inherited constants_dict)</p>
+</dd>
+<dt class="field-odd">param holds_data</dt>
+<dd class="field-odd"><p>determines whether the variable is considered by data-related functions</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>read-only property</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.tensorop">
+<span id="phi-struct-tensorop-module"></span><h2>phi.struct.tensorop module<a class="headerlink" href="#module-phi.struct.tensorop" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phi.struct.tensorop.collapse">
+<code class="sig-prename descclassname">phi.struct.tensorop.</code><code class="sig-name descname">collapse</code><span class="sig-paren">(</span><em class="sig-param">tensor_like</em>, <em class="sig-param">leaf_condition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.tensorop.collapse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.tensorop.collapsed_gather_nd">
+<code class="sig-prename descclassname">phi.struct.tensorop.</code><code class="sig-name descname">collapsed_gather_nd</code><span class="sig-paren">(</span><em class="sig-param">collapsed</em>, <em class="sig-param">nd_index</em>, <em class="sig-param">leaf_condition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.tensorop.collapsed_gather_nd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phi.struct.tensorop.expand">
+<code class="sig-prename descclassname">phi.struct.tensorop.</code><code class="sig-name descname">expand</code><span class="sig-paren">(</span><em class="sig-param">collapsed</em>, <em class="sig-param">shape</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.tensorop.expand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct.trait">
+<span id="phi-struct-trait-module"></span><h2>phi.struct.trait module<a class="headerlink" href="#module-phi.struct.trait" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="phi.struct.trait.Trait">
+<em class="property">class </em><code class="sig-prename descclassname">phi.struct.trait.</code><code class="sig-name descname">Trait</code><span class="sig-paren">(</span><em class="sig-param">keywords=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Traits are always handled in the order in which they were declared.
+Inherited traits come before newly declared structs, unless explicitly re-declared.</p>
+<dl class="method">
+<dt id="phi.struct.trait.Trait.check_argument">
+<code class="sig-name descname">check_argument</code><span class="sig-paren">(</span><em class="sig-param">struct_class</em>, <em class="sig-param">item</em>, <em class="sig-param">keyword</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.check_argument" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Called when a keyword of the trait is used on an item.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param struct_class</dt>
+<dd class="field-odd"><p>struct class</p>
+</dd>
+<dt class="field-even">param item</dt>
+<dd class="field-even"><p>Item (usually created via &#64;variable or &#64;constant)</p>
+</dd>
+<dt class="field-odd">param keyword</dt>
+<dd class="field-odd"><p>keyword present on item and part of the trait (string)</p>
+</dd>
+<dt class="field-even">param value</dt>
+<dd class="field-even"><p>value associated with the keyword for the given item</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.trait.Trait.endow">
+<code class="sig-name descname">endow</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.endow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called on newly created Structs with this trait.
+This method is called before the first validation.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param struct</dt>
+<dd class="field-odd"><p>struct instance to be endowed with the trait</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.trait.Trait.post_validate_struct">
+<code class="sig-name descname">post_validate_struct</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.post_validate_struct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Called after a struct instance with the trait is validated.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param struct</dt>
+<dd class="field-odd"><p>validated struct</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.trait.Trait.post_validated">
+<code class="sig-name descname">post_validated</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">item</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.post_validated" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Processes the value of an item after the validation function is called.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param struct</dt>
+<dd class="field-odd"><p>struct undergoing validation</p>
+</dd>
+<dt class="field-even">param item</dt>
+<dd class="field-even"><p>item being validated</p>
+</dd>
+<dt class="field-odd">param value</dt>
+<dd class="field-odd"><p>item value after validation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>processed item value which will be stored in the struct</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.trait.Trait.pre_validate_struct">
+<code class="sig-name descname">pre_validate_struct</code><span class="sig-paren">(</span><em class="sig-param">struct</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.pre_validate_struct" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Called before a struct instance with the trait is validated.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param struct</dt>
+<dd class="field-odd"><p>struct about to be validated</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="phi.struct.trait.Trait.pre_validated">
+<code class="sig-name descname">pre_validated</code><span class="sig-paren">(</span><em class="sig-param">struct</em>, <em class="sig-param">item</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#phi.struct.trait.Trait.pre_validated" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Processes the value of an item before the validation function is called.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param struct</dt>
+<dd class="field-odd"><p>struct undergoing validation</p>
+</dd>
+<dt class="field-even">param item</dt>
+<dd class="field-even"><p>item being validated</p>
+</dd>
+<dt class="field-odd">param value</dt>
+<dd class="field-odd"><p>item value before validation</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p>processed item value which will be passed to the validation function</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-phi.struct">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phi.struct" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">PhiFlow</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Philipp Holl.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/phi.struct.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
