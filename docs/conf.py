@@ -37,7 +37,8 @@ master_doc = 'index'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-   'sphinxcontrib.apidoc',
+   'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
+   #'sphinxcontrib.apidoc',
 ]
 apidoc_module_dir = '../phi'
 apidoc_output_dir = ''
