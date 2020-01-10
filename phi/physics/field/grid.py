@@ -4,6 +4,7 @@ import six
 from phi import math, struct
 from phi.geom import AABox
 from phi.geom.geometry import assert_same_rank
+from phi.math.nd import map_for_axes
 from phi.struct.functions import mappable
 from phi.struct.tensorop import collapse, collapsed_gather_nd
 
@@ -85,9 +86,7 @@ class CenteredGrid(Field):
 
     def unstack(self):
         flags = propagate_flags_children(self.flags, self.rank, 1)
-        return [
-            CenteredGrid(component, self.box, '%s[...,%d]' % (self.name, i), flags=flags, batch_size=self._batch_size)
-            for i, component in enumerate(math.unstack(self.data, -1))]
+        return [CenteredGrid(math.expand_dims(component), box=self.box, name='%s[...,%d]' % (self.name, i), flags=flags, batch_size=self._batch_size) for i, component in enumerate(math.unstack(self.data, -1))]
 
     @property
     def points(self):
@@ -123,7 +122,7 @@ class CenteredGrid(Field):
         data = math.pad(self.data, [[0, 0]]+widths+[[0, 0]], _pad_mode(extrapolation))
         w_lower, w_upper = np.transpose(widths)
         box = AABox(self.box.lower - w_lower * self.dx, self.box.upper + w_upper * self.dx)
-        return CenteredGrid(data, box, extrapolation=self.extrapolation, name=self.name, batch_size=self._batch_size)
+        return self.copied_with(data=data, box=box)
 
     def axis_padded(self, axis, lower, upper):
         widths = [[lower, upper] if ax == axis else [0,0] for ax in range(self.rank)]
@@ -136,14 +135,26 @@ class CenteredGrid(Field):
         points = box.local_to_global(local_coords)
         return CenteredGrid(points, box, name='grid_centers(%s, %s)' % (box, resolution), flags=[SAMPLE_POINTS])
 
-    def laplace(self, physical_units=True):
+    def laplace(self, physical_units=True, axes=None):
         if not physical_units:
-            return math.laplace(self.data, padding=_pad_mode(self.extrapolation))
+            data = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
         else:
-            if not np.allclose(self.dx, np.mean(self.dx)):
-                raise NotImplementedError('Only cubic cells supported.')
-            laplace = math.laplace(self.data, padding=_pad_mode(self.extrapolation))
-            return laplace / self.dx[0] ** 2
+            if not self.has_cubic_cells: raise NotImplementedError('Only cubic cells supported.')
+            laplace = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
+            data = laplace / self.dx[0] ** 2
+        extrapolation = map_for_axes(_gradient_extrapolation, self.extrapolation, axes, self.rank)
+        return self.copied_with(data=data, extrapolation=extrapolation, flags=())
+
+    def gradient(self, physical_units=True):
+        if not physical_units or self.has_cubic_cells:
+            data = math.gradient(self.data, dx=np.mean(self.dx), padding=_pad_mode(self.extrapolation))
+            return self.copied_with(data=data, extrapolation=_gradient_extrapolation(self.extrapolation), flags=())
+        else:
+            raise NotImplementedError('Only cubic cells supported.')
+
+    @property
+    def has_cubic_cells(self):
+        return np.allclose(self.dx, np.mean(self.dx))
 
     def normalized(self, total, epsilon=1e-5):
         if isinstance(total, CenteredGrid):
@@ -171,5 +182,12 @@ def _pad_mode(extrapolation):
         return 'wrap'
     elif extrapolation == 'boundary':
         return 'replicate'
+    else:
+        return extrapolation
+
+@mappable()
+def _gradient_extrapolation(extrapolation):
+    if extrapolation == 'boundary':
+        return 'constant'
     else:
         return extrapolation
