@@ -5,6 +5,9 @@ Welcome to PhiFlow's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   readme
+   license
+
 
 
 Indices and tables
