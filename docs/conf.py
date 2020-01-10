@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('../phi/'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir,"..","phi")
 from sphinx.ext import apidoc
-main(['-e', '-o', cur_dir, module, '--force'])
+apidoc.main(['-e', '-o', cur_dir, module, '--force'])
 
 
 # -- Project information -----------------------------------------------------
