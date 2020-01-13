@@ -14,9 +14,18 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
-module = os.path.join(cur_dir,"..","phi")
+module = os.path.join(cur_dir, "..", "phi")
 from sphinx.ext import apidoc
-apidoc.main(['-e', '-o', cur_dir, module, '--force'])
+print('running apidoc...')
+apidoc.main([
+    '--force', 
+    '--follow-links', 
+    '--separate', 
+    '--module-first', 
+    '--implicit-namespaces',
+    '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
+    '-o', cur_dir, 
+    module])
 
 
 # -- Project information -----------------------------------------------------
