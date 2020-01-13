@@ -25,7 +25,7 @@ apidoc.main([
     '--separate',
     '--module-first',
     '--implicit-namespaces',
-    '--full',
+    #'--full',
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
     '-o', cur_dir,
     module])
