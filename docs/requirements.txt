@@ -1,5 +1,5 @@
-numpy >= 1.16
-tensorflow == 1.0
+numpy
+tensorflow
 dash
 dash_core_components
 plotly
