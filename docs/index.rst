@@ -68,6 +68,6 @@ Welcome to PhiFlow's documentation!
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
+* :ref:`index`
+* :ref:`modules`
 * :ref:`search`
