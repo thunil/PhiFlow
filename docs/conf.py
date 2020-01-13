@@ -13,18 +13,21 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
+sys.path.insert(0, os.path.abspath('../phi/physics/'))
+sys.path.insert(0, os.path.abspath('../../phi/'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir, "..", "phi")
-from sphinx.ext import apidoc
 print('running apidoc...')
+from sphinx.ext import apidoc
 apidoc.main([
-    '--force', 
-    '--follow-links', 
-    '--separate', 
-    '--module-first', 
+    '--force',
+    '--follow-links',
+    '--separate',
+    '--module-first',
     '--implicit-namespaces',
+    '--full',
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
-    '-o', cur_dir, 
+    '-o', cur_dir,
     module])
 
 
@@ -46,7 +49,7 @@ master_doc = 'index'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-   'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
 ]
 apidoc_module_dir = '../phi'
 apidoc_output_dir = ''
