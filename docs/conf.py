@@ -13,9 +13,9 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
-sys.path.insert(0, os.path.abspath('../phi/physics/'))
+sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../../phi/'))
-sys.path.insert(0, os.path.abspath('../../phi/physics/'))
+sys.path.insert(0, os.path.abspath('../../'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir, "..", "phi")
 print('running apidoc...')
