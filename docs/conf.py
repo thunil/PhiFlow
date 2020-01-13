@@ -30,7 +30,7 @@ apidoc.main([
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
     '-o', cur_dir,
     module])
-run('pip install ../')
+exec('pip install ../')
 
 # -- Project information -----------------------------------------------------
 
