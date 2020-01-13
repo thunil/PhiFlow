@@ -30,7 +30,6 @@ apidoc.main([
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
     '-o', cur_dir,
     module])
-print(sys.path.values)
 print(sys.path)
 print(os.listdir())
 print(os.listdir('..'))
