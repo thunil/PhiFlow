@@ -56,6 +56,6 @@ phi
     :special-members:
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 6
 
    phi

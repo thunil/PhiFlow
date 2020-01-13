@@ -38,7 +38,6 @@ master_doc = 'index'
 # ones.
 extensions = [
    'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
-   #'sphinxcontrib.apidoc',
 ]
 apidoc_module_dir = '../phi'
 apidoc_output_dir = ''
