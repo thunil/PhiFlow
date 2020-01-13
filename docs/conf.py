@@ -33,7 +33,7 @@ apidoc.main([
 print(sys.path.values)
 print(sys.path)
 print(os.listdir())
-print(os.listdir(..))
+print(os.listdir('..'))
 
 # -- Project information -----------------------------------------------------
 
