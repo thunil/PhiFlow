@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
 sys.path.insert(0, os.path.abspath('../phi/physics/'))
 sys.path.insert(0, os.path.abspath('../../phi/'))
+sys.path.insert(0, os.path.abspath('../../phi/physics/'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir, "..", "phi")
 print('running apidoc...')
@@ -29,7 +30,7 @@ apidoc.main([
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
     '-o', cur_dir,
     module])
-
+run('pip install ../')
 
 # -- Project information -----------------------------------------------------
 
@@ -50,8 +51,9 @@ master_doc = 'index'
 # ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
+    'recommonmark'
 ]
-apidoc_module_dir = '../phi'
+apidoc_module_dir = '../phi/'
 apidoc_output_dir = ''
 apidoc_excluded_paths = ['tests']
 apidoc_separate_modules = True

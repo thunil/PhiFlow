@@ -50,7 +50,7 @@ Welcome to PhiFlow's documentation!
     :special-members:
     :show-inheritance:
 
-.. automodule:: phi.torch
+.. automodule:: phi::torch
     :members:
     :undoc-members:
     :private-members:
