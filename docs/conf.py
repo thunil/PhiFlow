@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from sphinx.ext import apidoc
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
@@ -18,15 +19,14 @@ sys.path.insert(0, os.path.abspath('../../phi/'))
 sys.path.insert(0, os.path.abspath('../../'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir, "..", "phi")
-print('running apidoc...')
-from sphinx.ext import apidoc
+print('running apidoc... {}'.format(module))
 apidoc.main([
     '--force',
     '--follow-links',
     '--separate',
     '--module-first',
     '--implicit-namespaces',
-    #'--full',
+    # '--full',
     '-d 8',  # -d <MAXDEPTH>  Maximum depth for the generated table of contents file.
     '-o', cur_dir,
     module])
@@ -52,7 +52,9 @@ master_doc = 'index'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
+    'sphinx.ext.napoleon',
     'recommonmark'
 ]
 apidoc_module_dir = '../phi/'
