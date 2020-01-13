@@ -13,7 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../phi/'))
-sys.path.insert(0, os.path.abspath('../phi/physics/'))
+#sys.path.insert(0, os.path.abspath('../phi/physics/'))
 #sys.path.insert(0, os.path.abspath('../../phi/'))
 cur_dir = os.path.abspath(os.path.dirname(__file__))
 module = os.path.join(cur_dir, "..", "phi")
