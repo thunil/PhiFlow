@@ -6,62 +6,72 @@ Welcome to PhiFlow's documentation!
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.data
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.geom
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.math
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.physics
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.struct
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.tf
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.torch
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 .. automodule:: phi.viz
     :members:
     :undoc-members:
     :private-members:
     :special-members:
+    :show-inheritance:
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
    readme
    license
+   genindex
 
 
 
