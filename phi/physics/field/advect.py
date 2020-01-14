@@ -1,7 +1,7 @@
 from .field import StaggeredSamplePoints
 
 """
-Advection functions: u∇
+Advection functions
 """
 
 
