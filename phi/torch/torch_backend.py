@@ -66,6 +66,8 @@ class TorchBackend(Backend):
 
     def sum(self, value, axis=None, keepdims=False):
         value = self.as_tensor(value)
+        if axis is None:
+            axis = range(len(value.shape))
         return torch.sum(value, dim=axis, keepdim=keepdims)
 
     def prod(self, value, axis=None):
@@ -78,8 +80,8 @@ class TorchBackend(Backend):
     def where(self, condition, x=None, y=None):
         return torch.where(condition, x, y)
 
-    def mean(self, value, axis=None):
-        raise NotImplementedError()
+    def mean(self, value, axis=None, keepdims=False):
+        return torch.mean(value, dim=axis, keepdim=keepdims)
 
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         raise NotImplementedError()

@@ -69,7 +69,7 @@ class Backend:
     def where(self, condition, x=None, y=None):
         raise NotImplementedError(self)
 
-    def mean(self, value, axis=None):
+    def mean(self, value, axis=None, keepdims=False):
         raise NotImplementedError(self)
 
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
@@ -271,6 +271,12 @@ class Backend:
     def mul(self, a, b):
         return self.as_tensor(a) * self.as_tensor(b)
 
+    def div(self, numerator, denominator):
+        return self.as_tensor(numerator) / self.as_tensor(denominator)
+
+    def pow(self, base, exp):
+        return self.as_tensor(base) ** self.as_tensor(exp)
+
 
 class DynamicBackend(Backend):
 
@@ -344,8 +350,8 @@ class DynamicBackend(Backend):
         # For Tensorflow x,y the condition can be a Numpy array, but not the other way around. If possible, choose backend based on first input, otherwise based on condition.
         return self.choose_backend((condition, x, y)).where(condition, x, y)
 
-    def mean(self, value, axis=None):
-        return self.choose_backend(value).mean(value, axis)
+    def mean(self, value, axis=None, keepdims=False):
+        return self.choose_backend(value).mean(value, axis, keepdims=keepdims)
 
     def py_func(self, func, inputs, Tout, shape_out, stateful=True, name=None, grad=None):
         return self.choose_backend(inputs).py_func(func, inputs, Tout, shape_out, stateful, name, grad)
@@ -490,6 +496,12 @@ class DynamicBackend(Backend):
 
     def mul(self, a, b):
         return self.choose_backend([a, b]).mul(a, b)
+
+    def div(self, numerator, denominator):
+        return self.choose_backend([numerator, denominator]).div(numerator, denominator)
+
+    def pow(self, base, exp):
+        return self.choose_backend([base, exp]).pow(base, exp)
 
 
 class NoBackendFound(Exception):
