@@ -1,5 +1,9 @@
 from .field import StaggeredSamplePoints
 
+"""
+Advection functions: u∇
+"""
+
 
 def semi_lagrangian(field, velocity_field, dt):
     """
