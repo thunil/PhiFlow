@@ -29,23 +29,23 @@ class Fluid(DomainState):
     @struct.variable(default=0, dependencies=DomainState.domain)
     def density(self, density):
         """
-The marker density is stored in a CenteredGrid with dimensions matching the domain.
-It describes the number of particles per physical volume.
+        The marker density is stored in a CenteredGrid with dimensions matching the domain.
+        It describes the number of particles per physical volume.
         """
         return self.centered_grid('density', density)
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def velocity(self, velocity):
         """
-The velocity is stored in a StaggeredGrid with dimensions matching the domain.
+        The velocity is stored in a StaggeredGrid with dimensions matching the domain.
         """
         return self.staggered_grid('velocity', velocity)
 
     @struct.constant(default=0.0)
     def buoyancy_factor(self, fac):
         """
-The default fluid physics can apply Boussinesq buoyancy as an upward force, proportional to the density.
-This force is scaled with the buoyancy_factor (float).
+        The default fluid physics can apply Boussinesq buoyancy as an upward force, proportional to the density.
+        This force is scaled with the buoyancy_factor (float).
         """
         return fac
 
@@ -55,9 +55,9 @@ This force is scaled with the buoyancy_factor (float).
 
 class IncompressibleFlow(Physics):
     """
-Physics modelling the incompressible Navier-Stokes equations.
-Supports buoyancy proportional to the marker density.
-Supports obstacles, density effects, velocity effects, global gravity.
+    Physics modelling the incompressible Navier-Stokes equations.
+    Supports buoyancy proportional to the marker density.
+    Supports obstacles, density effects, velocity effects, global gravity.
     """
 
     def __init__(self, pressure_solver=None, make_input_divfree=False, make_output_divfree=True, conserve_density=True):

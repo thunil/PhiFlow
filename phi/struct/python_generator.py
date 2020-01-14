@@ -1,5 +1,3 @@
-
-
 def generate(struct_name, variables=(), constants=(), others=()):
     items = ''
     parameters = ''

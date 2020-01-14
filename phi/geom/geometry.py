@@ -22,6 +22,7 @@ Samples the geometry at the given locations and returns a binary mask, labelling
 
 @struct.definition()
 class AABox(Geometry):
+    """ Axis Aligned Box """
 
     def __init__(self, lower, upper, **kwargs):
         Geometry.__init__(self, **struct.kwargs(locals()))

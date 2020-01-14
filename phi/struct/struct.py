@@ -38,11 +38,15 @@ See the struct documentation at documentation/Structs.ipynb
     __traits__ = None
 
     def __init__(self, **kwargs):
+        """ create Struct, add given values to instance namespace, and call traits in order """
         assert isinstance(self, Struct), 'Struct.__init__() called on %s. Maybe you forgot **' % type(self)
+        # add instance namespace items to kwargs if not present
         for item in self.__items__:
             if item.name not in kwargs:
                 kwargs[item.name] = item.default_value
+        # update instance namespace item values
         self._set_items(**kwargs)
+        # call traits in order
         for trait in self.__traits__:
             trait.endow(self)
         self.validate()
@@ -54,6 +58,7 @@ See the struct documentation at documentation/Structs.ipynb
         return duplicate
 
     def _set_items(self, **kwargs):
+        """ update instance namespace items from kwargs dictionary """
         for name, value in kwargs.items():
             try:
                 item = getattr(self.__class__, name)

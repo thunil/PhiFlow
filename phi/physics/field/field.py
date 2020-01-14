@@ -161,7 +161,7 @@ class Field(State):
     def __dataop__(self, other, linear_if_scalar, data_operator):
         if isinstance(other, Field):
             assert self.compatible(other), 'Fields are not compatible: %s and %s' % (self, other)
-            flags = propagate_flags_operation(self.flags+other.flags, False, self.rank, self.component_count)
+            flags = propagate_flags_operation(self.flags + other.flags, False, self.rank, self.component_count)
             self_data = self.data if self.has_points else self.at(other).data
             other_data = other.data if other.has_points else other.at(self).data
             backend = math.choose_backend([self_data, other_data])
@@ -185,6 +185,7 @@ class StaggeredSamplePoints(Exception):
 
 
 class IncompatibleFieldTypes(Exception):
+
     def __init__(self, *args):
         Exception.__init__(self, *args)
 
