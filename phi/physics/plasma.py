@@ -98,6 +98,7 @@ class HasegawaWakatani(Physics):
         phi3d = plasma.phi
         omega3d = plasma.omega
         density3d = plasma.density
+        shape3d = omega3d.data.shape
 
         # Cast to 2D: Move Z-axis to Batch-axis (order: z, y, x)
         domain2d = Domain(domain3d.resolution[1:], box=domain3d.box.without_axis(0))
@@ -118,27 +119,28 @@ class HasegawaWakatani(Physics):
         phi_grad2_z = phi3d.laplace(axes=[0])
         density_grad2_z = density3d.laplace(axes=[0])
 
+        # Compute in numpy arrays through .data
         # Step 2.1: New Omega.
         # $\partial_t \Omega = \frac{1}{\nu} (\partial_{z}^2 n - \partial^2_{z}\phi)
         #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
         nu = 1  # nu_e/(1.96*w_ce)
         omega = 1 / nu * (density_grad2_z - phi_grad2_z).data[..., 0] \
-            - phi_grad_x * omega_grad_y + phi_grad_y * omega_grad_x
+            - phi_grad_x.data * omega_grad_y.data + phi_grad_y.data * omega_grad_x.data
         # Step 2.2: New Density.
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
         #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
         #                 - \frac{1}{n} \partial_x n \partial_y\phi$
-        kappa = density_grad_x  # * (1/density)
+        kappa = density_grad_x.data  # * (1/density)
         density = 1 / nu * (density_grad2_z - phi_grad2_z).data[..., 0] \
-            - phi_grad_x * density_grad_y + phi_grad_y * density_grad_x \
-            - kappa * phi_grad_y
+            - phi_grad_x.data * density_grad_y.data + phi_grad_y.data * density_grad_x.data \
+            - kappa * phi_grad_y.data
 
         # Recast to 3D: return Z from Batch-axis
-        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, omega3d.data.shape), box=domain3d.box)
-        omega3d = omega3d.copied_with(data=math.reshape(omega, omega3d.data.shape), box=domain3d.box)
-        density3d = density3d.copied_with(data=math.reshape(density, omega3d.data.shape), box=domain3d.box)
+        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
+        omega3d = omega3d.copied_with(data=math.reshape(omega, shape3d), box=domain3d.box)
+        density3d = density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box)
 
-        return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=plasma.age + dt)
+        return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=(plasma.age+dt))
 
 
 HASEGAWAWAKATANI = HasegawaWakatani()

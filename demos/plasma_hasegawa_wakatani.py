@@ -18,7 +18,8 @@ class PlasmaSim(App):
                     resolution,
                     box=box[0:32, 0:32, 0:32],
                     boundaries=CLOSED
-                )
+                ),
+                density=np.reshape(np.random.uniform(low=0, high=1, size=(32,32,32)), newshape=(1,32,32,32,1))
             ),
             physics=HasegawaWakatani()
         )
