@@ -130,7 +130,7 @@ class HasegawaWakatani(Physics):
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
         #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
         #                 - \frac{1}{n} \partial_x n \partial_y\phi$
-        kappa = density_grad_x.data  # * (1/density)
+        kappa = density_grad_x.data * (1/np.sum(density2d.data))
         density = 1 / nu * (density_grad2_z - phi_grad2_z).data[..., 0] \
             - phi_grad_x.data * density_grad_y.data + phi_grad_y.data * density_grad_x.data \
             - kappa * phi_grad_y.data

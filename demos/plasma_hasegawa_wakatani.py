@@ -30,7 +30,7 @@ class PlasmaSim(App):
 
     def action_reset(self):
         self.steps = 0
-        self.plasma.density = 1.0
+        self.plasma.density = np.reshape(np.random.uniform(low=0, high=1, size=(32,32,32)), newshape=(1,32,32,32,1))
 
     def step(self):
         world.step()
