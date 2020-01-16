@@ -27,6 +27,12 @@ class PlasmaHW(DomainState):
 
     def __init__(self, domain, tags=('plasma'), name='plasmaHW', **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
+        self.nu = 1.  # nu_e/(1.96*w_ce)
+        density2d = self.density.copied_with(
+            data=math.reshape(self.density.data, [-1] + list(self.density.data.shape[2:])),
+            box=domain.box.without_axis(0))
+        _, density_grad_x = density2d.gradient().unstack()
+        self.kappa = 1 / np.sum(density2d.data) * density_grad_x.data  # density_grad_x.data * (1/np.sum(density2d.data))
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def density(self, density):
@@ -93,7 +99,6 @@ class HasegawaWakatani(Physics):
         :rtype: PlasmaHW
         """
         # pylint: disable-msg = arguments-differ
-        # Simpler naming
         domain3d = plasma.domain
         phi3d = plasma.phi
         omega3d = plasma.omega
@@ -103,44 +108,55 @@ class HasegawaWakatani(Physics):
         # Cast to 2D: Move Z-axis to Batch-axis (order: z, y, x)
         domain2d = Domain(domain3d.resolution[1:], box=domain3d.box.without_axis(0))
         omega2d = omega3d.copied_with(data=math.reshape(omega3d.data, [-1] + list(omega3d.data.shape[2:])), box=domain2d.box)
-        density2d = density3d.copied_with(data=math.reshape(density3d.data, [-1] + list(density3d.data.shape[2:])), box=domain2d.box)  # type: CenteredGrid
+        density2d = density3d.copied_with(data=math.reshape(density3d.data, [-1] + list(density3d.data.shape[2:])), box=domain2d.box)
 
         # Step 1: New Phy (Poisson equation). phi_0 = ∇^-2_bot Omega_0
         # mask = plasma.domain.centered_grid(1, extrapolation='replicate')  # Tell solver: no obstacles, etc.
         # Calculate Phi from Omega
-        phi2d, _ = solve_pressure(omega2d, FluidDomain(domain2d))  # , (), domain2d.centered_grid(1), domain2d.centered_grid(1)))
-        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, omega3d.data.shape), box=domain3d.box)  # type: CenteredGrid
+        phi2d, _ = solve_pressure(omega2d, FluidDomain(domain2d))
+        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
 
         # Calculate Poisson Bracket components. Gradient on all axes (x, y)
-        omega_grad_y, omega_grad_x = omega2d.gradient().unstack()
-        phi_grad_y, phi_grad_x = phi2d.gradient().unstack()
-        density_grad_y, density_grad_x = density2d.gradient().unstack()
+        dy_omega, dx_omega = omega2d.gradient().unstack()
+        dy_phi, dx_phi = phi2d.gradient().unstack()
+        dy_density, dx_density = density2d.gradient().unstack()
         # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
-        phi_grad2_z = phi3d.laplace(axes=[0])
-        density_grad2_z = density3d.laplace(axes=[0])
+        dzdz = (density3d - phi3d).laplace(axes=[0])
 
         # Compute in numpy arrays through .data
         # Step 2.1: New Omega.
         # $\partial_t \Omega = \frac{1}{\nu} (\partial_{z}^2 n - \partial^2_{z}\phi)
         #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
-        nu = 1  # nu_e/(1.96*w_ce)
-        omega = 1 / nu * (density_grad2_z - phi_grad2_z).data[..., 0] \
-            - phi_grad_x.data * omega_grad_y.data + phi_grad_y.data * omega_grad_x.data
+        omega = 1 / plasma.nu * dzdz.data[..., 0] \
+            - dx_phi.data * dy_omega.data + dy_phi.data * dx_omega.data
+        print("omega = 1/{} * {} - {} + {}".format(
+            plasma.nu,
+            np.max(dzdz.data[..., 0]),
+            np.max(dx_phi.data * dy_omega.data),
+            np.max(dy_phi.data * dx_omega.data)
+        ))
         # Step 2.2: New Density.
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
         #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
         #                 - \frac{1}{n} \partial_x n \partial_y\phi$
-        kappa = density_grad_x.data * (1/np.sum(density2d.data))
-        density = 1 / nu * (density_grad2_z - phi_grad2_z).data[..., 0] \
-            - phi_grad_x.data * density_grad_y.data + phi_grad_y.data * density_grad_x.data \
-            - kappa * phi_grad_y.data
+        kappa = dx_density.data * (1 / np.sum(density2d.data))
+        density = 1 / plasma.nu * dzdz.data[..., 0] \
+            - dx_phi.data * dy_density.data + dy_phi.data * dx_density.data \
+            - kappa * dy_phi.data
+        print("density = 1/{} * {} - {} + {} - {}".format(
+            plasma.nu,
+            np.max(dzdz.data[..., 0]),
+            np.max(dx_phi.data * dy_density.data),
+            np.max(dy_phi.data * dx_density.data),
+            np.max(kappa * dy_phi.data)
+        ))
 
         # Recast to 3D: return Z from Batch-axis
         phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
         omega3d = omega3d.copied_with(data=math.reshape(omega, shape3d), box=domain3d.box)
         density3d = density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box)
 
-        return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=(plasma.age+dt))
+        return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=(plasma.age + dt))
 
 
 HASEGAWAWAKATANI = HasegawaWakatani()
@@ -162,3 +178,17 @@ def solve_pressure(omega2d, fluiddomain, pressure_solver=None):
     if isinstance(omega2d, CenteredGrid):
         phi2d = CenteredGrid(phi2d, omega2d.box, name='phi')
     return phi2d, iteration
+
+
+def get_sigma(Te0, me, ve):
+    """
+    $\bar{sigma} = T_{e0}/(m_e \nu_e)$
+    """
+    return Te0 / (me * ve)
+
+
+def get_mu(me, mi, Ti, Te, sigma):
+    """
+    $\mu = (m_e/m_i)^{1/2} (T_i/T_e)^{5/2} \bar{\sigma}
+    """
+    return np.sqrt(me / mi) * np.sqrt((Ti / Te)**(5)) * sigma
