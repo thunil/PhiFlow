@@ -21,7 +21,8 @@ class Fluid(DomainState):
     A Fluid state consists of a density field (centered grid) and a velocity field (staggered grid).
     """
 
-    def __init__(self, domain, density=0.0, velocity=0.0, buoyancy_factor=0.0, tags=('fluid', 'velocityfield'), name='fluid', **kwargs):
+    def __init__(self, domain, density=0.0, velocity=0.0, buoyancy_factor=0.0,
+                 tags=('fluid', 'velocityfield'), name='fluid', **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
 
     def default_physics(self): return INCOMPRESSIBLE_FLOW

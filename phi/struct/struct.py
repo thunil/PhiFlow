@@ -28,10 +28,10 @@ def kwargs(locals, include_self=False, ignore=()):
 
 class Struct(object):
     """
-Base class for all custom structs.
-To implement a custom struct, extend this class and add the decorator @struct.definition().
+    Base class for all custom structs.
+    To implement a custom struct, extend this class and add the decorator @struct.definition().
 
-See the struct documentation at documentation/Structs.ipynb
+    See the struct documentation at documentation/Structs.ipynb
     """
 
     __items__ = None

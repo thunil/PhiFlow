@@ -86,7 +86,7 @@ class HasegawaWakatani(Physics):
         self.pressure_solver = pressure_solver  # TODO: Adjust
         self.conserve_density = conserve_density  # TODO: Adjust
 
-    def step(self, plasma, dt=1.0):
+    def step(self, plasma, dt=0.1):
         """
         Computes the next state of a physical system, given the current state.
         Solves the simulation for a time increment self.dt.
@@ -117,44 +117,54 @@ class HasegawaWakatani(Physics):
         phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
 
         # Calculate Poisson Bracket components. Gradient on all axes (x, y)
-        dy_omega, dx_omega = omega2d.gradient().unstack()
-        dy_phi, dx_phi = phi2d.gradient().unstack()
-        dy_density, dx_density = density2d.gradient().unstack()
+        dy_omega, dx_omega = omega2d.gradient(difference='forward').unstack()
+        dy_phi, dx_phi = phi2d.gradient(difference='forward').unstack()
+        dy_density, dx_density = density2d.gradient(difference='forward').unstack()
         # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
-        dzdz = (density3d - phi3d).laplace(axes=[0])
+        dzdz = (density3d - phi3d).laplace().data[0, ..., 0]#axes=[0])
 
         # Compute in numpy arrays through .data
         # Step 2.1: New Omega.
         # $\partial_t \Omega = \frac{1}{\nu} (\partial_{z}^2 n - \partial^2_{z}\phi)
         #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
-        omega = 1 / plasma.nu * dzdz.data[..., 0] \
+        omega = 1 / plasma.nu * dzdz \
             - dx_phi.data * dy_omega.data + dy_phi.data * dx_omega.data
-        print("omega = 1/{} * {} - {} + {}".format(
+        print("delta omega = 1/{} * {} - {} + {}".format(
             plasma.nu,
-            np.max(dzdz.data[..., 0]),
+            np.max(dzdz),
             np.max(dx_phi.data * dy_omega.data),
             np.max(dy_phi.data * dx_omega.data)
         ))
+
         # Step 2.2: New Density.
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
         #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
         #                 - \frac{1}{n} \partial_x n \partial_y\phi$
         kappa = dx_density.data * (1 / np.sum(density2d.data))
-        density = 1 / plasma.nu * dzdz.data[..., 0] \
+        density = 1 / plasma.nu * dzdz \
             - dx_phi.data * dy_density.data + dy_phi.data * dx_density.data \
             - kappa * dy_phi.data
-        print("density = 1/{} * {} - {} + {} - {}".format(
+        print("delta density = 1/{} * {} - {} + {} - {}".format(
             plasma.nu,
-            np.max(dzdz.data[..., 0]),
+            np.max(dzdz),
             np.max(dx_phi.data * dy_density.data),
             np.max(dy_phi.data * dx_density.data),
             np.max(kappa * dy_phi.data)
         ))
 
         # Recast to 3D: return Z from Batch-axis
-        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
-        omega3d = omega3d.copied_with(data=math.reshape(omega, shape3d), box=domain3d.box)
-        density3d = density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box)
+        phi3d     = euler(phi3d,     phi2d.copied_with(data=math.reshape(phi2d.data, shape3d),  box=domain3d.box), dt)
+        omega3d   = euler(omega3d,   omega3d.copied_with(data=math.reshape(omega, shape3d),     box=domain3d.box), dt)
+        density3d = euler(density3d, density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box), dt)
+
+        # phi3d     = advect.semi_lagrangian(
+        #     phi3d, phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box), dt=dt)
+        # omega3d   = advect.semi_lagrangian(
+        #     omega3d, omega3d.copied_with(data=math.reshape(omega, shape3d), box=domain3d.box), dt=dt)
+        # density3d = advect.semi_lagrangian(
+        #     density3d, density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box), dt=dt)
+        # density3d = density3d.normalized(density3d)
+        #print("density = {}".format(density))
 
         return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=(plasma.age + dt))
 
@@ -178,6 +188,10 @@ def solve_pressure(omega2d, fluiddomain, pressure_solver=None):
     if isinstance(omega2d, CenteredGrid):
         phi2d = CenteredGrid(phi2d, omega2d.box, name='phi')
     return phi2d, iteration
+
+
+def euler(x, dx, dt):
+    return x + dx * dt
 
 
 def get_sigma(Te0, me, ve):
