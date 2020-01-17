@@ -298,7 +298,7 @@ def laplace(tensor, padding='replicate', axes=None):
 def _conv_laplace_2d(tensor):
     kernel = np.zeros((3, 3, 1, 1), np.float32)
     kernel[1, 1, 0, 0] = -4
-    kernel[(0,1,1,2), (1,0,2,1), 0, 0] = 1
+    kernel[(0, 1, 1, 2), (1, 0, 2, 1), 0, 0] = 1
     if tensor.shape[-1] == 1:
         return math.conv(tensor, kernel, padding='VALID')
     else:
@@ -306,6 +306,21 @@ def _conv_laplace_2d(tensor):
 
 
 def _conv_laplace_3d(tensor):
+    """
+    3D/Cube laplace stencil in 3D+2D [3,3,3,1,1]
+    array([[[[[ 0.]], [[ 0.]], [[ 0.]]],
+            [[[ 0.]], [[ 1.]], [[ 0.]]],
+            [[[ 0.]], [[ 0.]], [[ 0.]]]],
+
+           [[[[ 0.]], [[ 1.]], [[ 0.]]],
+            [[[ 1.]], [[-6.]], [[ 1.]]],
+            [[[ 0.]], [[ 1.]], [[ 0.]]]],
+
+           [[[[ 0.]], [[ 0.]], [[ 0.]]],
+            [[[ 0.]], [[ 1.]], [[ 0.]]],
+            [[[ 0.]], [[ 0.]], [[ 0.]]]]]
+    returns ...
+    """
     kernel = np.zeros((3, 3, 3, 1, 1), np.float32)
     kernel[1, 1, 1, 0, 0] = -6
     kernel[(0, 1, 1, 1, 1, 2),
@@ -319,32 +334,47 @@ def _conv_laplace_3d(tensor):
 
 
 def _sliced_laplace_nd(tensor, axes=None):
-    # Laplace code for n dimensions
+    """
+    Laplace Stencil for N-Dimensions
+    aggregated from (c)enter, (u)pper, and (l)ower parts
+    """
     rank = spatial_rank(tensor)
     dims = range(rank)
     components = []
     for ax in dims:
         if _contains_axis(axes, ax, rank):
-            center_slices = tuple([(slice(1, -1) if i == ax else (slice(1, -1)) if _contains_axis(axes, i, rank) else slice(None)) for i in dims])
-            upper_slices = tuple([(slice(2, None) if i == ax else (slice(1, -1)) if _contains_axis(axes, i, rank) else slice(None)) for i in dims])
-            lower_slices = tuple([(slice(-2) if i == ax else (slice(1, -1)) if _contains_axis(axes, i, rank) else slice(None)) for i in dims])
-            diff = tensor[(slice(None),) + upper_slices + (slice(None),)] \
-                + tensor[(slice(None),) + lower_slices + (slice(None),)] \
-                - 2 * tensor[(slice(None),) + center_slices + (slice(None),)]
+            c_slices = tuple([(slice(1, -1) if i == ax
+                               else slice(1, -1) if _contains_axis(axes, i, rank)
+                               else slice(None))
+                              for i in dims])
+            u_slices = tuple([(slice(2, None) if i == ax
+                               else slice(1, -1)
+                               if _contains_axis(axes, i, rank)
+                               else slice(None))
+                              for i in dims])
+            l_slices = tuple([(slice(-2) if i == ax
+                               else slice(1, -1) if _contains_axis(axes, i, rank)
+                               else slice(None))
+                              for i in dims])
+            diff = tensor[(slice(None),) + u_slices + (slice(None),)] \
+                + tensor[(slice(None),) + l_slices + (slice(None),)] \
+                - 2 * tensor[(slice(None),) + c_slices + (slice(None),)]
             components.append(diff)
     return math.sum(components, 0)
 
 
 def _contains_axis(axes, axis, sp_rank):
     assert -sp_rank <= axis < sp_rank
-    return axes is None or axis in axes or axis + sp_rank in axes
+    return (axes is None) or (axis in axes) or (axis + sp_rank in axes)
 
 
 def map_for_axes(function, obj, axes, rank):
     if axes is None:
         return function(obj)
     else:
-        return [(function(collapsed_gather_nd(obj, i)) if _contains_axis(axes, i, rank) else collapsed_gather_nd(obj, i)) for i in range(rank)]
+        return [(function(collapsed_gather_nd(obj, i)) if _contains_axis(axes, i, rank)
+                 else collapsed_gather_nd(obj, i))
+                for i in range(rank)]
 
 
 def fourier_laplace(tensor):
@@ -372,7 +402,8 @@ def fftfreq(resolution, mode='vector', dtype=np.float32):
 
 def downsample2x(tensor, interpolation='linear'):
     if struct.isstruct(tensor):
-        return struct.map(lambda s: downsample2x(s, interpolation), tensor, recursive=False)
+        return struct.map(lambda s: downsample2x(s, interpolation), 
+                          tensor, recursive=False)
 
     if interpolation.lower() != 'linear':
         raise ValueError('Only linear interpolation supported')
@@ -380,12 +411,12 @@ def downsample2x(tensor, interpolation='linear'):
     tensor = math.pad(tensor,
                       [[0, 0]]
                       + [([0, 1] if (dim % 2) != 0 else [0, 0]) for dim in tensor.shape[1:-1]]
-                      + [[0,0]], 'replicate')
+                      + [[0, 0]], 'replicate')
     for dimension in dims:
         upper_slices = tuple([(slice(1, None, 2) if i == dimension else slice(None)) for i in dims])
         lower_slices = tuple([(slice(0, None, 2) if i == dimension else slice(None)) for i in dims])
-        sum = tensor[(slice(None),) + upper_slices + (slice(None),)] + tensor[(slice(None),) + lower_slices + (slice(None),)]
-        tensor = sum / 2
+        tensor_sum = tensor[(slice(None),) + upper_slices + (slice(None),)] + tensor[(slice(None),) + lower_slices + (slice(None),)]
+        tensor = tensor_sum / 2
     return tensor
 
 
