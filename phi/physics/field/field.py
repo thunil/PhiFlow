@@ -136,6 +136,10 @@ class Field(State):
         """
         raise NotImplementedError(self)
 
+    def __getitem__(self, x):
+        """ allow iterating over data """
+        return self.data[x]
+
     def __mul__(self, other):
         return self.__dataop__(other, True, lambda d1, d2: d1 * d2)
 
@@ -231,4 +235,5 @@ def broadcast_at(field1, field2):
         new_components = [field1.at(f2) for f2 in field2.unstack()]
     else:
         new_components = [f1.at(f2) for f1, f2 in zip(field1.unstack(), field2.unstack())]
-    return field2.copied_with(data=tuple(new_components), flags=propagate_flags_resample(field1, field2.flags, field2.rank))
+    return field2.copied_with(data=tuple(new_components),
+                              flags=propagate_flags_resample(field1, field2.flags, field2.rank))
