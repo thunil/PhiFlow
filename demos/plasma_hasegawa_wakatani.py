@@ -20,8 +20,8 @@ class PlasmaSim(App):
                     boundaries=CLOSED
                 ),
                 density=np.ones(shape=(1,32,32,32,1)), # np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
-                omega=np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
-                phi=np.zeros((1,32,32,32,1))
+                omega=np.ones(shape=(1,32,32,32,1)),#np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
+                phi=np.ones(shape=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
             ),
             physics=HasegawaWakatani()
         )
@@ -32,9 +32,9 @@ class PlasmaSim(App):
 
     def action_reset(self):
         self.steps = 0
-        self.plasma.density = np.ones(shape=(1,32,32,32,1))  # np.random.uniform(low=0, high=1, size=(1,32,32,32,1))
+        self.plasma.density = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))  #np.ones(shape=(1,32,32,32,1))
         self.plasma.omega = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))
-        self.plasma.phi = np.zeros((1,32,32,32,1))
+        self.plasma.phi = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
 
     def step(self):
         world.step()

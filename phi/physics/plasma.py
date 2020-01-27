@@ -40,7 +40,7 @@ class PlasmaHW(DomainState):
         The marker density is stored in a CenteredGrid with dimensions matching the domain.
         It describes the number of particles per physical volume.
         """
-        return self.centered_grid('density', density)
+        return self.centered_grid('density', density)#, extrapolation='periodic')
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def phi(self, phi):
@@ -48,7 +48,7 @@ class PlasmaHW(DomainState):
         The marker phi is stored in a CenteredGrid with dimensions matching the domain.
         It describes ..... # TODO
         """
-        return self.centered_grid('phi', phi)
+        return self.centered_grid('phi', phi)#, extrapolation='periodic')
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def omega(self, omega):
@@ -56,7 +56,7 @@ class PlasmaHW(DomainState):
         The marker omega is stored in a CenteredGrid with dimensions matching the domain.
         It describes ..... # TODO
         """
-        return self.centered_grid('omega', omega)
+        return self.centered_grid('omega', omega)#, extrapolation='periodic')
 
     def __repr__(self):
         return "plasma[density: %s, phi: %s, omega %s]" % (self.density, self.phi, self.omega)
@@ -100,62 +100,73 @@ class HasegawaWakatani(Physics):
         """
         # pylint: disable-msg = arguments-differ
         domain3d = plasma.domain
-        phi3d = plasma.phi
-        omega3d = plasma.omega
-        density3d = plasma.density
-        shape3d = omega3d.data.shape
+        p3d = plasma.phi
+        o3d = plasma.omega
+        n3d = plasma.density
+        shape3d = o3d.data.shape
 
         # Cast to 2D: Move Z-axis to Batch-axis (order: z, y, x)
         domain2d = Domain(domain3d.resolution[1:], box=domain3d.box.without_axis(0))
-        omega2d = omega3d.copied_with(data=math.reshape(omega3d.data, [-1] + list(omega3d.data.shape[2:])), box=domain2d.box)
-        density2d = density3d.copied_with(data=math.reshape(density3d.data, [-1] + list(density3d.data.shape[2:])), box=domain2d.box)
+        o2d = o3d.copied_with(data=math.reshape(o3d.data, [-1] + list(o3d.data.shape[2:])), box=domain2d.box)
+        n2d = n3d.copied_with(data=math.reshape(n3d.data, [-1] + list(n3d.data.shape[2:])), box=domain2d.box)
 
         # Step 1: New Phy (Poisson equation). phi_0 = ∇^-2_bot Omega_0
         # mask = plasma.domain.centered_grid(1, extrapolation='replicate')  # Tell solver: no obstacles, etc.
         # Calculate Phi from Omega
-        phi2d, _ = solve_pressure(omega2d, FluidDomain(domain2d))
-        phi3d = phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box)
+        p2d, _ = solve_pressure(o2d, FluidDomain(domain2d))
+        p3d = p2d.copied_with(data=math.reshape(p2d.data, shape3d), box=domain3d.box)
 
         # Calculate Poisson Bracket components. Gradient on all axes (x, y)
-        dy_omega, dx_omega = omega2d.gradient(difference='forward').unstack()
-        dy_phi, dx_phi = phi2d.gradient(difference='forward').unstack()
-        dy_density, dx_density = density2d.gradient(difference='forward').unstack()
+        dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
+        dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
+        dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
+        # Second Order for Diffusion
+        #dzdz_p = p3d.laplace(axes=[0]).data[..., 0]
+        nabla2_o = o3d.laplace(axes=[1,2]).data[0, ..., 0]
+        nabla2_n = n3d.laplace(axes=[1,2]).data[0, ..., 0]
+        #dzdz_o, dydy_o, dxdx_o = o3d.laplace().unstack()
+        #dzdz_n, dydy_n, dxdx_n = n3d.laplace().unstack()
+
         # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
-        dzdz = (density3d - phi3d).laplace().data[0, ..., 0]#axes=[0])
+        dzdz = (n3d - p3d).laplace().data(axes=[0]).data[..., 0]
 
         # Compute in numpy arrays through .data
         # Step 2.1: New Omega.
         # $\partial_t \Omega = \frac{1}{\nu} (\partial_{z}^2 n - \partial^2_{z}\phi)
         #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
-        omega = 1 / plasma.nu * dzdz \
-            - dx_phi.data * dy_omega.data + dy_phi.data * dx_omega.data
-        print("delta omega = 1/{} * {} - {} + {}".format(
+        o = 1 / plasma.nu * dzdz \
+            - dx_p.data * dy_o.data + dy_p.data * dx_o.data \
+            + nabla2_o#dxdx_o + dydy_o  # Diffusion components
+        print("delta omega = 1/{} * {} - {} + {} + {}".format(
             plasma.nu,
             np.max(dzdz),
-            np.max(dx_phi.data * dy_omega.data),
-            np.max(dy_phi.data * dx_omega.data)
+            np.max(dx_p.data * dy_o.data),
+            np.max(dy_p.data * dx_o.data),
+            np.max(nabla2_o)
         ))
 
         # Step 2.2: New Density.
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
         #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
         #                 - \frac{1}{n} \partial_x n \partial_y\phi$
-        kappa = dx_density.data * (1 / np.sum(density2d.data))
-        density = 1 / plasma.nu * dzdz \
-            - dx_phi.data * dy_density.data + dy_phi.data * dx_density.data \
-            - kappa * dy_phi.data
-        print("delta density = 1/{} * {} - {} + {} - {}".format(
+        kappa = dx_n.data * (1 / np.sum(n2d.data))
+        n = 1 / plasma.nu * dzdz \
+            - dx_p.data * dy_n.data + dy_p.data * dx_n.data \
+            - kappa * dy_p.data \
+            + nabla2_n#dxdx_n + dydy_n  # Diffusion components
+        print("delta density = 1/{} * {} - {} + {} - {} + {}".format(
             plasma.nu,
             np.max(dzdz),
-            np.max(dx_phi.data * dy_density.data),
-            np.max(dy_phi.data * dx_density.data),
-            np.max(kappa * dy_phi.data)
+            np.max(dx_p.data * dy_n.data),
+            np.max(dy_p.data * dx_n.data),
+            np.max(kappa * dy_p.data),
+            np.max(nabla2_n)
         ))
 
         # Recast to 3D: return Z from Batch-axis
-        phi3d     = euler(phi3d,     phi2d.copied_with(data=math.reshape(phi2d.data, shape3d),  box=domain3d.box), dt)
-        omega3d   = euler(omega3d,   omega3d.copied_with(data=math.reshape(omega, shape3d),     box=domain3d.box), dt)
-        density3d = euler(density3d, density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box), dt)
+        p3d = euler(p3d, p3d.copied_with(data=math.reshape(p2d.data, shape3d), box=domain3d.box), dt)
+        o3d = euler(o3d, o3d.copied_with(data=math.reshape(o, shape3d), box=domain3d.box), dt)
+        n3d = euler(n3d, n3d.copied_with(data=math.reshape(n, shape3d), box=domain3d.box), dt)
 
         # phi3d     = advect.semi_lagrangian(
         #     phi3d, phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box), dt=dt)
@@ -166,7 +177,7 @@ class HasegawaWakatani(Physics):
         # density3d = density3d.normalized(density3d)
         #print("density = {}".format(density))
 
-        return plasma.copied_with(density=density3d, omega=omega3d, phi=phi3d, age=(plasma.age + dt))
+        return plasma.copied_with(density=n3d, omega=o3d, phi=p3d, age=(plasma.age + dt))
 
 
 HASEGAWAWAKATANI = HasegawaWakatani()
