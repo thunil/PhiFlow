@@ -151,7 +151,7 @@ class CenteredGrid(Field):
         return self.copied_with(data=data, box=box)
 
     def axis_padded(self, axis, lower, upper):
-        widths = [[lower, upper] if ax == axis else [0,0] for ax in range(self.rank)]
+        widths = [[lower, upper] if ax == axis else [0, 0] for ax in range(self.rank)]
         return self.padded(widths)
 
     @staticmethod
@@ -171,11 +171,19 @@ class CenteredGrid(Field):
         extrapolation = map_for_axes(_gradient_extrapolation, self.extrapolation, axes, self.rank)
         return self.copied_with(data=data, extrapolation=extrapolation, flags=())
 
-    def gradient(self, physical_units=True, difference='forward'):
+    def gradient(self, physical_units=True, difference='forward', padding='inherit', extrapolation='inherit'):
+        if padding == 'inherit':
+            pad = _pad_mode(self.extrapolation)
+        else:
+            pad = padding
+        if extrapolation == 'inherit':
+            ext = _gradient_extrapolation(self.extrapolation)
+        else:
+            ext = extrapolation
         if not physical_units or self.has_cubic_cells:
-            data = math.gradient(self.data, dx=np.mean(self.dx), padding=_pad_mode(self.extrapolation),
+            data = math.gradient(self.data, dx=np.mean(self.dx), padding=pad,
                                  difference=difference)
-            return self.copied_with(data=data, extrapolation=_gradient_extrapolation(self.extrapolation), flags=())
+            return self.copied_with(data=data, extrapolation=ext, flags=())
         else:
             raise NotImplementedError('Only cubic cells supported.')
 
