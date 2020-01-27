@@ -45,7 +45,7 @@ class State(struct.Struct):
         Names uniquely identify the system represented by this state.
         All states that represent a configuration of the same system must have the same name.
 
-        Names can also be used as a shortcut to reference states (e.g. in CollectiveState or World).
+        Names can also be used as a shortcut to reference states (e.g. in StateCollection or World).
         """
         if name is None:
             return '%s_%d' % (self.__class__.__name__.lower(), id(self))
