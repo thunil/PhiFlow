@@ -136,6 +136,12 @@ class Field(State):
         """
         raise NotImplementedError(self)
 
+    def default_physics(self):
+        from .effect import FieldPhysics
+        return FieldPhysics(self.name)
+
+    # Operator Implementations
+
     def __getitem__(self, x):
         """ allow iterating over data """
         return self.data[x]
@@ -176,10 +182,6 @@ class Field(State):
             flags = propagate_flags_operation(self.flags, linear_if_scalar, self.rank, self.component_count)
             data = data_operator(self.data, other)
         return self.copied_with(data=data, flags=flags)
-
-    def default_physics(self):
-        from .effect import FieldPhysics
-        return FieldPhysics(self.name)
 
 
 class StaggeredSamplePoints(Exception):

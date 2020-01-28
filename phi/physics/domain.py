@@ -77,8 +77,6 @@ class Domain(struct.Struct):
         from .field import CenteredGrid
         warnings.warn("Domain.center_points is deprecated. Use CenteredGrid.getpoints().data instead.", DeprecationWarning)
         return CenteredGrid.getpoints(self.box, self.resolution).data
-        # idx_zyx = np.meshgrid(*[np.arange(0.5, dim + 0.5, 1) for dim in self.resolution], indexing="ij")
-        # return math.expand_dims(math.stack(idx_zyx, axis=-1), 0)
 
     def staggered_points(self, dimension):
         idx_zyx = np.meshgrid(*[np.arange(0.5, dim + 1.5, 1) if dim != dimension else np.arange(0, dim + 1, 1) for dim in self.resolution], indexing="ij")
@@ -221,6 +219,11 @@ def _extend1(shape, axis):
 
 @struct.definition()
 class DomainState(State):
+
+    """
+    Utility class for State:
+    - uses domain.boundaries property for the extrapolation property at each grid invocation
+    """
 
     @struct.constant()
     def domain(self, domain):
