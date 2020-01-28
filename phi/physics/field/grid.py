@@ -145,7 +145,7 @@ class CenteredGrid(Field):
 
     def padded(self, widths):
         extrapolation = self.extrapolation if isinstance(self.extrapolation, six.string_types) else ['constant'] + list(self.extrapolation) + ['constant']
-        data = math.pad(self.data, [[0, 0]]+widths+[[0, 0]], _pad_mode(extrapolation))
+        data = math.pad(self.data, [[0, 0]] + widths + [[0, 0]], _pad_mode(extrapolation))
         w_lower, w_upper = np.transpose(widths)
         box = AABox(self.box.lower - w_lower * self.dx, self.box.upper + w_upper * self.dx)
         return self.copied_with(data=data, box=box)
@@ -165,7 +165,8 @@ class CenteredGrid(Field):
         if not physical_units:
             data = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
         else:
-            if not self.has_cubic_cells: raise NotImplementedError('Only cubic cells supported.')
+            if not self.has_cubic_cells:
+                raise NotImplementedError('Only cubic cells supported.')
             laplace = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
             data = laplace / self.dx[0] ** 2
         extrapolation = map_for_axes(_gradient_extrapolation, self.extrapolation, axes, self.rank)
@@ -198,7 +199,7 @@ class CenteredGrid(Field):
         return self.with_data(normalize_data)
 
     def _padded_resample(self, points):
-        data = self.padded([[1,1]] * self.rank).data
+        data = self.padded([[1, 1]] * self.rank).data
         local_points = self.box.global_to_local(points)
         local_points = local_points * math.to_float(self.resolution) + 0.5  # depends on amount of padding
         resampled = math.resample(data, local_points, boundary='replicate', interpolation=self.interpolation)

@@ -151,7 +151,7 @@ A cell i is flagged 1 if liquid_mask[i] = 1 and it has a non-liquid neighbour.
     :return: tensor
     """
     # When we create inner contour, we don't want the fluid-wall boundaries to show up as surface, so we should pad with symmetric edge values.
-    mask = math.pad(liquid_mask, [[0, 0]] + [[1, 1]] * math.spatial_rank(liquid_mask) + [[0, 0]], "constant")
+    mask = math.pad(liquid_mask, math.nd._get_pad_width(math.spatial_rank(liquid_mask)), "constant")
     dims = range(math.spatial_rank(mask))
     bcs = math.zeros_like(liquid_mask)
 

@@ -20,7 +20,7 @@ class PlasmaHW(DomainState):
     """
     Following Hasegawa-Wakatani Model of incompressible Plasma
     A PlasmaHW state consists of:
-    - Density field (centered grid) 
+    - Density field (centered grid)
     - Phi field (centered grid)
     - Omega field (centered grid)
     """
@@ -40,7 +40,7 @@ class PlasmaHW(DomainState):
         The marker density is stored in a CenteredGrid with dimensions matching the domain.
         It describes the number of particles per physical volume.
         """
-        return self.centered_grid('density', density)#, extrapolation='periodic')
+        return self.centered_grid('density', density)
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def phi(self, phi):
@@ -48,7 +48,7 @@ class PlasmaHW(DomainState):
         The marker phi is stored in a CenteredGrid with dimensions matching the domain.
         It describes ..... # TODO
         """
-        return self.centered_grid('phi', phi)#, extrapolation='periodic')
+        return self.centered_grid('phi', phi)
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def omega(self, omega):
@@ -56,7 +56,7 @@ class PlasmaHW(DomainState):
         The marker omega is stored in a CenteredGrid with dimensions matching the domain.
         It describes ..... # TODO
         """
-        return self.centered_grid('omega', omega)#, extrapolation='periodic')
+        return self.centered_grid('omega', omega)
 
     def __repr__(self):
         return "plasma[density: %s, phi: %s, omega %s]" % (self.density, self.phi, self.omega)
@@ -122,13 +122,15 @@ class HasegawaWakatani(Physics):
         dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
         # Second Order for Diffusion
         #dzdz_p = p3d.laplace(axes=[0]).data[..., 0]
-        nabla2_o = o3d.laplace(axes=[1,2]).data[0, ..., 0]
-        nabla2_n = n3d.laplace(axes=[1,2]).data[0, ..., 0]
+        nabla2_o = o3d.laplace(axes=[1, 2]).data[0, ..., 0]
+        nabla2_n = n3d.laplace(axes=[1, 2]).data[0, ..., 0]
         #dzdz_o, dydy_o, dxdx_o = o3d.laplace().unstack()
         #dzdz_n, dydy_n, dxdx_n = n3d.laplace().unstack()
 
         # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
-        dzdz = (n3d - p3d).laplace().data(axes=[0]).data[..., 0]
+        dzdz = (n3d - p3d).laplace(axes=[0]).data[..., 0]
+
+        print(f"dzdz.shape: {dzdz.shape}")
 
         # Compute in numpy arrays through .data
         # Step 2.1: New Omega.

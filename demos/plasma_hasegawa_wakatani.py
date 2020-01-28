@@ -17,11 +17,11 @@ class PlasmaSim(App):
                 Domain(
                     resolution,
                     box=box[0:32, 0:32, 0:32],
-                    boundaries=CLOSED
+                    boundaries=PERIODIC#OPEN#CLOSED#PERIODIC
                 ),
                 density=np.ones(shape=(1,32,32,32,1)), # np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
                 omega=np.ones(shape=(1,32,32,32,1)),#np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
-                phi=np.ones(shape=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
+                phi=np.random.uniform(low=0, high=1, size=(1,32,32,32,1))#,np.ones(shape=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
             ),
             physics=HasegawaWakatani()
         )

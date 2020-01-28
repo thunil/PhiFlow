@@ -181,7 +181,7 @@ def _central_divergence_nd(tensor):
     rank = spatial_rank(tensor)
     dims = range(rank)
     components = []
-    tensor = math.pad(tensor, [[0, 0]] + [[1, 1]] * rank + [[0, 0]])
+    tensor = math.pad(tensor, _get_pad_width(rank))
     for dimension in dims:
         upper_slices = [(slice(2, None) if i == dimension else slice(1, -1)) for i in dims]
         lower_slices = [(slice(-2) if i == dimension else slice(1, -1)) for i in dims]
@@ -244,7 +244,7 @@ def _forward_diff_nd(field, dims, padding):
 
 
 def _central_diff_nd(field, dims, padding):
-    field = math.pad(field, [[0, 0]] + [[1, 1]] * spatial_rank(field) + [[0, 0]], mode=padding)
+    field = math.pad(field, math.nd._get_pad_width(spatial_rank(field)), mode=padding)
     df_dq = []
     for dimension in dims:
         upper_slices = tuple([(slice(2, None) if i == dimension else slice(1, -1)) for i in dims])
@@ -282,7 +282,7 @@ def laplace(tensor, padding='replicate', axes=None):
     if padding.lower() in ('constant', 'reflect', 'replicate'):
         tensor = math.pad(
             tensor,
-            [[0, 0]] + [([1, 1] if _contains_axis(axes, i, rank) else [0, 0]) for i in range(rank)] + [[0, 0]],
+            _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]),
             padding)
     # --- convolutional laplace ---
     if axes is not None:
@@ -295,6 +295,22 @@ def laplace(tensor, padding='replicate', axes=None):
         return _sliced_laplace_nd(tensor)
 
 
+def _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]):
+    beg_shape = [[0, 0]]
+    end_shape = [[0, 0]]
+    mid_shape = []
+    for i in range(rank):
+        if _contains_axis(axes, i, rank):
+            mid_shape.append(val_true)
+        else:
+            mid_shape.append(val_false)
+    return beg_shape + mid_shape + end_shape
+
+
+def _get_pad_width(rank):
+    return [[0, 0]] + [[1, 1]] * rank + [[0, 0]]
+
+
 def _conv_laplace_2d(tensor):
     kernel = np.zeros((3, 3, 1, 1), np.float32)
     kernel[1, 1, 0, 0] = -4
@@ -302,7 +318,8 @@ def _conv_laplace_2d(tensor):
     if tensor.shape[-1] == 1:
         return math.conv(tensor, kernel, padding='VALID')
     else:
-        return math.concat([math.conv(tensor[..., i:i + 1], kernel, padding='VALID') for i in range(tensor.shape[-1])], -1)
+        return math.concat([math.conv(tensor[..., i:i + 1], kernel, padding='VALID')
+                           for i in range(tensor.shape[-1])], -1)
 
 
 def _conv_laplace_3d(tensor):
@@ -311,26 +328,24 @@ def _conv_laplace_3d(tensor):
     array([[[[[ 0.]], [[ 0.]], [[ 0.]]],
             [[[ 0.]], [[ 1.]], [[ 0.]]],
             [[[ 0.]], [[ 0.]], [[ 0.]]]],
-
            [[[[ 0.]], [[ 1.]], [[ 0.]]],
             [[[ 1.]], [[-6.]], [[ 1.]]],
             [[[ 0.]], [[ 1.]], [[ 0.]]]],
-
            [[[[ 0.]], [[ 0.]], [[ 0.]]],
             [[[ 0.]], [[ 1.]], [[ 0.]]],
             [[[ 0.]], [[ 0.]], [[ 0.]]]]]
     returns ...
     """
-    kernel = np.zeros((3, 3, 3, 1, 1), np.float32)
-    kernel[1, 1, 1, 0, 0] = -6
-    kernel[(0, 1, 1, 1, 1, 2),
-           (1, 0, 2, 1, 1, 1),
-           (1, 1, 1, 0, 2, 1),
-           0, 0] = 1
+    kernel = np.array([[[0., 0., 0.], [0., 1., 0.], [0., 0., 0.]],
+                       [[0., 1., 0.], [1., -6., 1.], [0., 1., 0.]],
+                       [[0., 0., 0.], [0., 1., 0.], [0., 0., 0.]]],
+                      dtype=np.float32)
+    kernel = kernel.reshape((3, 3, 3, 1, 1))
     if tensor.shape[-1] == 1:
         return math.conv(tensor, kernel, padding='VALID')
     else:
-        return math.concat([math.conv(tensor[..., i:i + 1], kernel, padding='VALID') for i in range(tensor.shape[-1])], -1)
+        return math.concat([math.conv(tensor[..., i:i + 1], kernel, padding='VALID')
+                            for i in range(tensor.shape[-1])], -1)
 
 
 def _sliced_laplace_nd(tensor, axes=None):
@@ -344,17 +359,19 @@ def _sliced_laplace_nd(tensor, axes=None):
     for ax in dims:
         if _contains_axis(axes, ax, rank):
             c_slices = tuple([(slice(1, -1) if i == ax
-                               else slice(1, -1) if _contains_axis(axes, i, rank)
-                               else slice(None))
+                               else 
+                                    slice(1, -1) if _contains_axis(axes, i, rank)
+                                    else slice(None))
                               for i in dims])
             u_slices = tuple([(slice(2, None) if i == ax
-                               else slice(1, -1)
-                               if _contains_axis(axes, i, rank)
-                               else slice(None))
+                               else 
+                                    slice(1, -1) if _contains_axis(axes, i, rank)
+                                    else slice(None))
                               for i in dims])
             l_slices = tuple([(slice(-2) if i == ax
-                               else slice(1, -1) if _contains_axis(axes, i, rank)
-                               else slice(None))
+                               else 
+                                    slice(1, -1) if _contains_axis(axes, i, rank)
+                                    else slice(None))
                               for i in dims])
             diff = tensor[(slice(None),) + u_slices + (slice(None),)] \
                 + tensor[(slice(None),) + l_slices + (slice(None),)] \
@@ -429,7 +446,8 @@ def upsample2x(tensor, interpolation='linear'):
     dims = range(spatial_rank(tensor))
     vlen = tensor.shape[-1]
     spatial_dims = tensor.shape[1:-1]
-    tensor = math.pad(tensor, [[0, 0]] + [[1, 1]] * spatial_rank(tensor) + [[0, 0]], 'replicate')
+    rank = spatial_rank(tensor)
+    tensor = math.pad(tensor, _get_pad_width(rank), 'replicate')
     for dim in dims:
         left_slices_1 = tuple([(slice(2, None) if i == dim else slice(None)) for i in dims])
         left_slices_2 = tuple([(slice(1,-1) if i == dim else slice(None)) for i in dims])

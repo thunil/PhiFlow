@@ -61,7 +61,7 @@ class SampledField(Field):
 
         active_mask = math.scatter(self.sample_points, valid_indices, 1, math.concat([[valid_indices.shape[0]], resolution, [1]], axis=-1), duplicates_handling='any')
 
-        mask = math.pad(active_mask, [[0, 0]] + [[1, 1]] * self.rank + [[0, 0]], "constant")
+        mask = math.pad(active_mask, math.nd._get_pad_width(self.rank), "constant")
 
         if isinstance(self.data, (int, float, np.ndarray)):
             values = math.zeros_like(self.sample_points) + self.data
