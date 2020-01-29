@@ -244,7 +244,7 @@ def _forward_diff_nd(field, dims, padding):
 
 
 def _central_diff_nd(field, dims, padding):
-    field = math.pad(field, math.nd._get_pad_width(spatial_rank(field)), mode=padding)
+    field = math.pad(field, _get_pad_width(spatial_rank(field)), mode=padding)
     df_dq = []
     for dimension in dims:
         upper_slices = tuple([(slice(2, None) if i == dimension else slice(1, -1)) for i in dims])
@@ -279,7 +279,7 @@ def laplace(tensor, padding='replicate', axes=None):
     rank = spatial_rank(tensor)
     if padding is None or padding.lower() == 'valid':
         pass  # do not pad tensor
-    elif padding.lower() == 'cyclic' or padding.lower() == 'wrap':
+    elif padding.lower() in ['cyclic', 'wrap']:
         return fourier_laplace(tensor)
     else:
         tensor = math.pad(tensor, _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]), padding)
@@ -311,9 +311,8 @@ def _get_pad_width(rank):
 
 
 def _conv_laplace_2d(tensor):
-    kernel = np.zeros((3, 3, 1, 1), np.float32)
-    kernel[1, 1, 0, 0] = -4
-    kernel[(0, 1, 1, 2), (1, 0, 2, 1), 0, 0] = 1
+    kernel = np.array([[ 0., 1., 0.], [ 1., -4., 1.], [ 0., 1., 0.]], dtype=np.float32)
+    kernel.reshape((3, 3, 1, 1))
     if tensor.shape[-1] == 1:
         return math.conv(tensor, kernel, padding='VALID')
     else:
@@ -334,6 +333,8 @@ def _conv_laplace_3d(tensor):
             [[[ 0.]], [[ 1.]], [[ 0.]]],
             [[[ 0.]], [[ 0.]], [[ 0.]]]]]
     returns ...
+
+    padding explicitly done in laplace(), hence here not needed
     """
     kernel = np.array([[[0., 0., 0.], [0., 1., 0.], [0., 0., 0.]],
                        [[0., 1., 0.], [1., -6., 1.], [0., 1., 0.]],
