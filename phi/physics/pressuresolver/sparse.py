@@ -7,6 +7,8 @@ import scipy.sparse.linalg
 
 from phi import math
 from phi.math.blas import conjugate_gradient
+from phi.physics.material import Material
+from phi.struct.tensorop import collapsed_gather_nd
 from .solver_api import PressureSolver, FluidDomain
 
 
@@ -24,7 +26,7 @@ class SparseSciPy(PressureSolver):
     def solve(self, divergence, domain, pressure_guess):
         assert isinstance(domain, FluidDomain)
         dimensions = list(divergence.shape[1:-1])
-        A = sparse_pressure_matrix(dimensions, domain.active_tensor(extend=1), domain.accessible_tensor(extend=1))
+        A = sparse_pressure_matrix(dimensions, domain.active_tensor(extend=1), domain.accessible_tensor(extend=1), Material.periodic(domain.domain.boundaries))
 
         def np_solve_p(div):
             div_vec = div.reshape([-1, A.shape[0]])
@@ -36,60 +38,6 @@ class SparseSciPy(PressureSolver):
 
         pressure = math.py_func(np_solve_p, [divergence], np.float32, divergence.shape, grad=np_solve_p_gradient)
         return pressure, None
-
-
-def sparse_pressure_matrix(dimensions, extended_active_mask, extended_fluid_mask):
-    """
-    Builds a sparse matrix such that when applied to a flattened pressure channel, it calculates the laplace
-    of that channel, taking into account obstacles and empty cells.
-
-    :param dimensions: valid simulation dimensions. Pressure channel should be of shape (batch size, dimensions..., 1)
-    :param extended_active_mask: Binary tensor with 2 more entries in every dimension than 'dimensions'.
-    :param extended_fluid_mask: Binary tensor with 2 more entries in every dimension than 'dimensions'.
-    :return: SciPy sparse matrix that acts as a laplace on a flattened pressure channel given obstacles and empty cells
-    """
-    N = int(np.prod(dimensions))
-    d = len(dimensions)
-    A = scipy.sparse.lil_matrix((N, N), dtype=np.float32)
-    dims = range(d)
-
-    center_values = None # diagonal matrix entries
-
-    gridpoints_linear = np.arange(N)
-    gridpoints = np.stack(np.unravel_index(gridpoints_linear, dimensions))  # d * (N^2) array mapping from linear to spatial frames
-
-    for dim in dims:
-        upper_indices = tuple([slice(None)] + [slice(2, None) if i == dim else slice(1, -1) for i in dims] + [slice(None)])
-        center_indices = tuple([slice(None)] + [slice(1, -1) if i == dim else slice(1, -1) for i in dims] + [slice(None)])
-        lower_indices = tuple([slice(None)] + [slice(0, -2) if i == dim else slice(1, -1) for i in dims] + [slice(None)])
-
-        self_active = extended_active_mask[center_indices]
-        stencil_upper = extended_active_mask[upper_indices] * self_active
-        stencil_lower = extended_active_mask[lower_indices] * self_active
-        stencil_center = - extended_fluid_mask[upper_indices] - extended_fluid_mask[lower_indices]
-
-        if center_values is None:
-            center_values = math.flatten(stencil_center)
-        else:
-            center_values = center_values + math.flatten(stencil_center)
-
-        # Find entries in matrix
-        dim_direction = np.zeros_like(gridpoints)
-        dim_direction[dim] = 1
-        # Upper frames
-        upper_indices = gridpoints + dim_direction
-        upper_in_range_inx = np.nonzero(upper_indices[dim] < dimensions[dim])
-        upper_indices_linear = np.ravel_multi_index(upper_indices[:, upper_in_range_inx], dimensions)
-        A[gridpoints_linear[upper_in_range_inx], upper_indices_linear] = stencil_upper.flatten()[upper_in_range_inx]
-        # Lower frames
-        lower_indices = gridpoints - dim_direction
-        lower_in_range_inx = np.nonzero(lower_indices[dim] >= 0)
-        lower_indices_linear = np.ravel_multi_index(lower_indices[:, lower_in_range_inx], dimensions)
-        A[gridpoints_linear[lower_in_range_inx], lower_indices_linear] = stencil_lower.flatten()[lower_in_range_inx]
-
-    A[gridpoints_linear, gridpoints_linear] = math.minimum(center_values, -1)
-
-    return scipy.sparse.csc_matrix(A)
 
 
 class SparseCG(PressureSolver):
@@ -133,15 +81,13 @@ class SparseCG(PressureSolver):
         assert isinstance(domain, FluidDomain)
         active_mask = domain.active_tensor(extend=1)
         fluid_mask = domain.accessible_tensor(extend=1)
-        dimensions = list(divergence.shape[1:-1])
+        dimensions = math.staticshape(divergence)[1:-1]
         N = int(np.prod(dimensions))
 
-        if math.choose_backend(divergence).matches_name('SciPy'):
-            A = sparse_pressure_matrix(dimensions, active_mask, fluid_mask)
-        else:
-            sidx, sorting = sparse_indices(dimensions)
-            sval_data = sparse_values(dimensions, active_mask, fluid_mask, sorting)
-            A = math.choose_backend(divergence).sparse_tensor(indices=sidx, values=sval_data, shape=[N, N])
+        A = sparse_pressure_matrix(dimensions, active_mask, fluid_mask, Material.periodic(domain.domain.boundaries))
+        if not math.choose_backend(divergence).matches_name('SciPy'):
+            A = A.tocoo()
+            A = math.choose_backend(divergence).sparse_tensor(indices=math.stack([A.col, A.row], axis=-1), values=A.data, shape=[N, N])
 
         if self.autodiff:
             return sparse_cg(divergence, A, self.max_iterations, pressure_guess, self.accuracy, back_prop=True)
@@ -167,43 +113,10 @@ def sparse_cg(divergence, A, max_iterations, guess, accuracy, back_prop=False):
     return math.reshape(result_vec, math.shape(divergence)), iterations
 
 
-def sparse_indices(dimensions):
-    N = int(np.prod(dimensions))
-    d = len(dimensions)
-    dims = range(d)
-
-    gridpoints_linear = np.arange(N)
-    gridpoints = np.stack(np.unravel_index(gridpoints_linear, dimensions)) # d * (N^2) array mapping from linear to spatial frames
-
-    indices_list = [np.stack([gridpoints_linear] * 2, axis=-1)]
-
-    for dim in dims:
-        dim_direction = np.zeros_like(gridpoints)
-        dim_direction[dim] = 1
-        # Upper frames
-        upper_indices = gridpoints + dim_direction
-        upper_in_range_inx = np.nonzero(upper_indices[dim] < dimensions[dim])
-        upper_indices_linear = np.ravel_multi_index(upper_indices[:, upper_in_range_inx], dimensions)[0, :]
-        indices_list.append(np.stack([gridpoints_linear[upper_in_range_inx], upper_indices_linear], axis=-1))
-        # Lower frames
-        lower_indices = gridpoints - dim_direction
-        lower_in_range_inx = np.nonzero(lower_indices[dim] >= 0)
-        lower_indices_linear = np.ravel_multi_index(lower_indices[:, lower_in_range_inx], dimensions)[0, :]
-        indices_list.append(np.stack([gridpoints_linear[lower_in_range_inx], lower_indices_linear], axis=-1))
-
-    indices = np.concatenate(indices_list, axis=0)
-
-    sorting = np.lexsort(np.transpose(indices)[:, ::-1])
-
-    sorted_indices = indices[sorting]
-
-    return sorted_indices, sorting
-
-
-def sparse_values(dimensions, extended_active_mask, extended_fluid_mask, sorting=None):
+def sparse_pressure_matrix(dimensions, extended_active_mask, extended_fluid_mask, periodic=False):
     """
-    Builds a sparse matrix such that when applied to a flattened pressure channel, it calculates the laplace
-    of that channel, taking into account obstacles and empty cells.
+Builds a sparse matrix such that when applied to a flattened pressure channel, it calculates the laplace
+of that channel, taking into account obstacles and empty cells.
 
     :param dimensions: valid simulation dimensions. Pressure channel should be of shape (batch size, dimensions..., 1)
     :param extended_active_mask: Binary tensor with 2 more entries in every dimension than 'dimensions'.
@@ -212,13 +125,13 @@ def sparse_values(dimensions, extended_active_mask, extended_fluid_mask, sorting
     """
     N = int(np.prod(dimensions))
     d = len(dimensions)
+    A = scipy.sparse.lil_matrix((N, N), dtype=np.float32)
     dims = range(d)
 
-    values_list = []
-    center_values = None # diagonal matrix entries
+    diagonal_entries = np.zeros(N, extended_active_mask.dtype)  # diagonal matrix entries
 
     gridpoints_linear = np.arange(N)
-    gridpoints = np.stack(np.unravel_index(gridpoints_linear, dimensions)) # d * (N^2) array mapping from linear to spatial frames
+    gridpoints = np.stack(np.unravel_index(gridpoints_linear, dimensions))  # d * (N^2) array mapping from linear to spatial frames
 
     for dim in dims:
         upper_indices = tuple([slice(None)] + [slice(2, None) if i == dim else slice(1, -1) for i in dims] + [slice(None)])
@@ -230,26 +143,37 @@ def sparse_values(dimensions, extended_active_mask, extended_fluid_mask, sorting
         stencil_lower = extended_active_mask[lower_indices] * self_active
         stencil_center = - extended_fluid_mask[upper_indices] - extended_fluid_mask[lower_indices]
 
-        if center_values is None:
-            center_values = math.flatten(stencil_center)
-        else:
-            center_values = center_values + math.flatten(stencil_center)
+        diagonal_entries += math.flatten(stencil_center)
 
-        dim_direction = np.zeros_like(gridpoints)
-        dim_direction[dim] = 1
+        # Find entries in matrix
+        dim_direction = math.expand_dims([1 if i == dim else 0 for i in range(d)], axis=-1)
         # Upper frames
-        upper_indices = gridpoints + dim_direction
-        upper_in_range_inx = np.nonzero(upper_indices[dim] < dimensions[dim])[0]
-        values_list.append(math.gather(math.flatten(stencil_upper), upper_in_range_inx))
+        upper_points, upper_idx = wrap_or_discard(gridpoints + dim_direction, dim, dimensions, periodic=collapsed_gather_nd(periodic, [dim, 1]))
+        A[gridpoints_linear[upper_idx], upper_points] = stencil_upper.flatten()[upper_idx]
         # Lower frames
-        lower_indices = gridpoints - dim_direction
-        lower_in_range_inx = np.nonzero(lower_indices[dim] >= 0)[0]
-        values_list.append(math.gather(math.flatten(stencil_lower), lower_in_range_inx))
+        lower_points, lower_idx = wrap_or_discard(gridpoints - dim_direction, dim, dimensions, periodic=collapsed_gather_nd(periodic, [dim, 0]))
+        A[gridpoints_linear[lower_idx], lower_points] = stencil_lower.flatten()[lower_idx]
 
-    center_values = math.minimum(center_values, -1.)
-    values_list.insert(0, center_values)
+    A[gridpoints_linear, gridpoints_linear] = math.minimum(diagonal_entries, -1)  # avoid 0, could lead to NaN
 
-    values = math.concat(values_list, axis=0)
-    if sorting is not None:
-        values = math.gather(values, sorting)
-    return values
+    return scipy.sparse.csc_matrix(A)
+
+
+def wrap_or_discard(points, check_bounds_dim, dimensions, periodic=False):
+    """
+Handles points that lie outside the domain by either discarding them or wrapping them, depending on periodic.
+    :param points: grid indices, typically of shape (dimensions, cell_count)
+    :param check_bounds_dim: int
+    :param dimensions: domain resolution
+    :param periodic: if False: discard indices outside domain, if True: wrap indices outside domain
+    :return:
+    """
+    if not periodic:
+        upper_in_range_inx = np.nonzero((points[check_bounds_dim] < dimensions[check_bounds_dim]) & (points[check_bounds_dim] >= 0))
+        new_points = points[:, upper_in_range_inx]  # discard points outside domain
+    else:
+        upper_in_range_inx = slice(None)
+        new_points = points % math.expand_dims(dimensions, -1)  # wrap points
+
+    linear_points = np.ravel_multi_index(new_points, dimensions)
+    return linear_points, upper_in_range_inx

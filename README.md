@@ -84,7 +84,7 @@ Resampling / Advection: NumPy interpolation handles the boundaries slightly diff
 
 ## Contributions
 
-Contributions are welcome! Check out [this document](documentation/Contributing.md) for guidelines.
+Contributions are welcome! Check out [this document](CONTRIBUTING.md) for guidelines.
 
 ## Acknowledgements
 
