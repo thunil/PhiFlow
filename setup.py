@@ -24,6 +24,14 @@ class CudaCommand(distutils.cmd.Command):
             print('Adjusting for tensorflow 2.0')
             tf = tf.compat.v1
             tf.disable_eager_execution()
+            # Check for tfa for resampler to work
+            try:
+                import tensorflow_addons as tfa
+            except:
+                import subprocesss
+                import sys
+                subprocess.check_Call([sys.executable, "-m", "pip", "install", "tensorflow-addons"])
+
         tf_cflags = tf.sysconfig.get_compile_flags()
         tf_lflags = tf.sysconfig.get_link_flags()
 

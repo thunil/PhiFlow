@@ -14,7 +14,9 @@ if tf.__version__[0] == '2':
     logging.info('Adjusting for tensorflow 2.0')
     tf = tf.compat.v1
     tf.disable_eager_execution()
-
+    from tensorflow_addons.image.resampler_ops import resampler
+else:
+    resampler = tf.contrib.resampler.resampler
 
 class TFBackend(Backend):
 
@@ -401,7 +403,7 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
 
     if in_spatial_rank == 2 and boundary.upper() == 'ZERO':
         inputs = tf.transpose(inputs, [0, 2, 1, 3])
-        return tf.contrib.resampler.resampler(inputs, sample_coords)
+        return resampler(inputs, sample_coords)
 
     xy = tf.unstack(sample_coords, axis=-1)
     base_coords = [tf.floor(coords) for coords in xy]
