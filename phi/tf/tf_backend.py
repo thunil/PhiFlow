@@ -172,8 +172,9 @@ class TFBackend(Backend):
 
     def while_loop(self, cond, body, loop_vars, shape_invariants=None, parallel_iterations=10, back_prop=True,
                    swap_memory=False, name=None, maximum_iterations=None):
+        # TF2.0 Error: "ValueError: Input tensor 'transpose_1:0' enters the loop with shape (2, 1280), but has shape (2, None) after one iteration. To allow the shape to vary across iterations, use the `shape_invariants` argument of tf.while_loop to specify a less-specific shape."
         return tf.while_loop(cond, body, loop_vars,
-                             shape_invariants=shape_invariants,
+                             shape_invariants=shape_invariants,  # TODO: Shape changes in TF2.0 causing an error
                              parallel_iterations=parallel_iterations,
                              back_prop=back_prop,
                              swap_memory=swap_memory,
