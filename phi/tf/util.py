@@ -31,7 +31,8 @@ def placeholder(shape, dtype=np.float32, basename=None, item_condition=struct.VA
         zipped = struct.zip([shape, dtype], leaf_condition=is_static_shape, item_condition=item_condition)
         return struct.map(placeholder_map, zipped, leaf_condition=is_static_shape, trace=True, item_condition=item_condition)
     else:
-        def f(trace): return tf.placeholder(dtype, trace.value, _tf_name(trace, basename))
+        def f(trace):
+            return tf.placeholder(dtype, trace.value, _tf_name(trace, basename))
         return struct.map(f, shape, leaf_condition=is_static_shape, trace=True, item_condition=item_condition)
 
 
@@ -39,7 +40,11 @@ def placeholder_like(obj, basename=None):
     warnings.warn("placeholder_like may not respect the batch dimension. "
                   "For State objects, use placeholder(state.shape) instead.", DeprecationWarning, stacklevel=2)
 
-    def f(attr): return tf.placeholder(attr.value.dtype, attr.value.shape, _tf_name(attr, basename))
+    def f(attr):
+        return tf.placeholder(
+            attr.value.dtype,
+            shape=list(map(int, attr.value.shape)),  # TODO: Still causes value 0.0 in test for Tensorflow 2.0
+            name=_tf_name(attr, basename))
     return struct.map(f, obj, leaf_condition=is_static_shape, trace=True)
 
 
