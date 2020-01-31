@@ -67,18 +67,18 @@ class SampledField(Field):
             values = math.zeros_like(self.sample_points) + self.data
         else:
             values = self.data
-        
+
         result = []
         ones_1d = math.unstack(math.ones_like(values), axis=-1)[0]
         staggered_shape = [i + 1 for i in resolution]
         dx = box.size / resolution
 
         dims = range(len(resolution))
-        for d in dims: 
+        for d in dims:
             staggered_offset = math.stack([(0.5 * dx[i] * ones_1d if i == d else 0.0 * ones_1d) for i in dims], axis=-1)
 
             indices = math.to_int(math.floor(self.sample_points + staggered_offset))
-            
+
             valid_indices = math.maximum(0, math.minimum(indices, resolution))
             valid_indices = batch_indices(valid_indices)
 

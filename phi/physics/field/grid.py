@@ -216,6 +216,7 @@ def _pad_mode(extrapolation):
     """
 Converts an extrapolation string (or struct of strings) to a string that can be passed to math functions like math.pad or math.resample.
     :param extrapolation: field extrapolation
+    :type extrapolation: string (or iterable of strings with @mappable)
     :return: padding mode, same type as extrapolation
     """
     return {'periodic': 'circular',
@@ -228,6 +229,7 @@ def _gradient_extrapolation(extrapolation):
     """
 Given the extrapolation of a field, returns the extrapolation mode of the corresponding gradient field.
     :param extrapolation: string or struct of strings
+    :type extrapolation: string (or iterable of strings with @mappable)
     :return: same type as extrapolation
     """
     return {'periodic': 'periodic',
