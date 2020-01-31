@@ -1,6 +1,7 @@
 """
 Definition of plasma, HasegawaWakatani Model, as well as plasma-related functions.
 """
+from numba import jit, stencil
 from numbers import Number
 
 import numpy as np
@@ -58,6 +59,16 @@ class PlasmaHW(DomainState):
         """
         return self.centered_grid('omega', omega)
 
+    # Fields for checking things are working
+
+    @struct.variable(default=0, dependencies=DomainState.domain)
+    def laplace_phi(self, laplace_phi):
+        return self.centered_grid('laplace_phi', laplace_phi)
+
+    @struct.variable(default=0, dependencies=DomainState.domain)
+    def laplace_n(self, laplace_n):
+        return self.centered_grid('laplace_n', laplace_n)
+
     def __repr__(self):
         return "plasma[density: %s, phi: %s, omega %s]" % (self.density, self.phi, self.omega)
 
@@ -71,7 +82,7 @@ class HasegawaWakatani(Physics):
     Hasegawa-Wakatani Equations:
     $$
         \partial_t \Omega = \frac{1}{\nu} \nabla_{||}^2(n-\phi) - \{\phi,\Omega\} \\
-        \partial_t n = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - \{\phi,n\} - \kappa_n\partial_y\phi 
+        \partial_t n = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - \{\phi,n\} - \kappa_n\partial_y\phi
     $$
 
     """
@@ -85,6 +96,17 @@ class HasegawaWakatani(Physics):
         ])
         self.pressure_solver = pressure_solver  # TODO: Adjust
         self.conserve_density = conserve_density  # TODO: Adjust
+        print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7}".format(
+            "o", "n", "nu",
+            "dzdz",
+            "dxp*dyo",
+            "dyp*dxo",
+            "nab2o",
+            "dxp*dyn",
+            "dyp*dxn",
+            "k*dyp",
+            "nab2n")
+        )
 
     def step(self, plasma, dt=0.1):
         """
@@ -98,6 +120,8 @@ class HasegawaWakatani(Physics):
         :returns: dict from String to List<State>
         :rtype: PlasmaHW
         """
+        print(dt)
+
         # pylint: disable-msg = arguments-differ
         domain3d = plasma.domain
         p3d = plasma.phi
@@ -129,8 +153,15 @@ class HasegawaWakatani(Physics):
 
         # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
         dzdz = (n3d - p3d).laplace(axes=[0]).data[..., 0]
+        #print(f"dzdz.shape: {dzdz.shape}")
 
-        print(f"dzdz.shape: {dzdz.shape}")
+        # Testing laplace
+        laplace_phi_3d = plasma.laplace_phi
+        laplace_phi = p3d.laplace(axes=[0]).data[..., 0]
+        laplace_phi = laplace_phi_3d.copied_with(data=math.reshape(laplace_phi, shape3d), box=domain3d.box)
+        laplace_n_3d = plasma.laplace_n
+        laplace_n = n3d.laplace(axes=[0]).data[..., 0]
+        laplace_n = laplace_n_3d.copied_with(data=math.reshape(laplace_n, shape3d), box=domain3d.box)
 
         # Compute in numpy arrays through .data
         # Step 2.1: New Omega.
@@ -138,14 +169,15 @@ class HasegawaWakatani(Physics):
         #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
         o = 1 / plasma.nu * dzdz \
             - dx_p.data * dy_o.data + dy_p.data * dx_o.data \
-            + nabla2_o#dxdx_o + dydy_o  # Diffusion components
-        print("delta omega = 1/{} * {} - {} + {} + {}".format(
-            plasma.nu,
-            np.max(dzdz),
-            np.max(dx_p.data * dy_o.data),
-            np.max(dy_p.data * dx_o.data),
-            np.max(nabla2_o)
-        ))
+            + nabla2_o  # dxdx_o + dydy_o  # Diffusion components
+        # print("delta omega {} = 1/{} * {} - {} + {} + {}".format(
+        #     np.max(o),
+        #     plasma.nu,
+        #     np.max(dzdz),
+        #     np.max(dx_p.data * dy_o.data),
+        #     np.max(dy_p.data * dx_o.data),
+        #     np.max(nabla2_o)
+        # ))
 
         # Step 2.2: New Density.
         # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
@@ -155,10 +187,23 @@ class HasegawaWakatani(Physics):
         n = 1 / plasma.nu * dzdz \
             - dx_p.data * dy_n.data + dy_p.data * dx_n.data \
             - kappa * dy_p.data \
-            + nabla2_n#dxdx_n + dydy_n  # Diffusion components
-        print("delta density = 1/{} * {} - {} + {} - {} + {}".format(
-            plasma.nu,
+            + nabla2_n  # dxdx_n + dydy_n  # Diffusion components
+        # print("delta density {} = 1/{} * {} - {} + {} - {} + {}".format(
+        #     np.max(n),
+        #     plasma.nu,
+        #     np.max(dzdz),
+        #     np.max(dx_p.data * dy_n.data),
+        #     np.max(dy_p.data * dx_n.data),
+        #     np.max(kappa * dy_p.data),
+        #     np.max(nabla2_n)
+        # ))
+
+        print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g}".format(
+            np.max(o), np.max(n), plasma.nu,
             np.max(dzdz),
+            np.max(dx_p.data * dy_o.data),
+            np.max(dy_p.data * dx_o.data),
+            np.max(nabla2_o),
             np.max(dx_p.data * dy_n.data),
             np.max(dy_p.data * dx_n.data),
             np.max(kappa * dy_p.data),
@@ -170,22 +215,21 @@ class HasegawaWakatani(Physics):
         o3d = euler(o3d, o3d.copied_with(data=math.reshape(o, shape3d), box=domain3d.box), dt)
         n3d = euler(n3d, n3d.copied_with(data=math.reshape(n, shape3d), box=domain3d.box), dt)
 
-        # phi3d     = advect.semi_lagrangian(
-        #     phi3d, phi2d.copied_with(data=math.reshape(phi2d.data, shape3d), box=domain3d.box), dt=dt)
-        # omega3d   = advect.semi_lagrangian(
-        #     omega3d, omega3d.copied_with(data=math.reshape(omega, shape3d), box=domain3d.box), dt=dt)
-        # density3d = advect.semi_lagrangian(
-        #     density3d, density3d.copied_with(data=math.reshape(density, shape3d), box=domain3d.box), dt=dt)
-        # density3d = density3d.normalized(density3d)
-        #print("density = {}".format(density))
+        # p3d = advect.semi_lagrangian(p3d, p2d.copied_with(data=math.reshape(p2d.data, shape3d), box=domain3d.box), dt=dt)
+        # o3d = advect.semi_lagrangian(o3d, o3d.copied_with(data=math.reshape(o2d.data, shape3d), box=domain3d.box), dt=dt)
+        # n3d = advect.semi_lagrangian(n3d, n3d.copied_with(data=math.reshape(n2d.data, shape3d), box=domain3d.box), dt=dt)
+        # n3d = n3d.normalized(n3d)
+        # print("density = {}".format(density))
 
-        return plasma.copied_with(density=n3d, omega=o3d, phi=p3d, age=(plasma.age + dt))
+        return plasma.copied_with(density=n3d, omega=o3d, phi=p3d,
+                                  laplace_phi=laplace_phi, laplace_n=laplace_n,
+                                  age=(plasma.age + dt))
 
 
 HASEGAWAWAKATANI = HasegawaWakatani()
 
 
-def solve_pressure(omega2d, fluiddomain, pressure_solver=None):
+def solve_pressure(omega2d, fluiddomain, pressure_solver=SparseCG()):
     """
     Computes the pressure from the given Omega field with z in batch-axis using the specified solver.
     :param omega2d: CenteredGrid
@@ -195,8 +239,6 @@ def solve_pressure(omega2d, fluiddomain, pressure_solver=None):
     :return: scalar tensor or CenteredGrid, depending on the type of divergence
     """
     assert isinstance(omega2d, CenteredGrid)
-    if pressure_solver is None:
-        pressure_solver = SparseCG()
     phi2d, iteration = pressure_solver.solve(omega2d.data, fluiddomain, pressure_guess=None)
     if isinstance(omega2d, CenteredGrid):
         phi2d = CenteredGrid(phi2d, omega2d.box, name='phi')
@@ -205,6 +247,31 @@ def solve_pressure(omega2d, fluiddomain, pressure_solver=None):
 
 def euler(x, dx, dt):
     return x + dx * dt
+
+
+def leapfrog():
+    return
+
+
+def rk4():
+    return
+
+
+@stencil
+def arakawa_stencil(zeta, psi):
+    return (zeta[1, 0] * (psi[0, 1] - psi[0, -1] + psi[1, 1] - psi[1, -1])
+            - zeta[-1, 0] * (psi[0, 1] - psi[0, -1] + psi[-1, 1] - psi[-1, -1])
+            - zeta[0, 1] * (psi[1, 0] - psi[-1, 0] + psi[1, 1] - psi[-1, 1])
+            + zeta[0, -1] * (psi[1, 0] - psi[-1, 0] + psi[1, -1] - psi[-1, -1])
+            + zeta[1, -1] * (psi[1, 0] - psi[0, -1])
+            + zeta[1, 1] * (psi[0, 1] - psi[1, 0])
+            - zeta[-1, 1] * (psi[0, 1] - psi[-1, 0])
+            - zeta[-1, -1] * (psi[-1, 0] - psi[0, -1]))
+
+
+@jit
+def arakawa(zeta, psi, d=1.):
+    return arakawa_stencil(zeta, psi) / (12 * (d**2))
 
 
 def get_sigma(Te0, me, ve):

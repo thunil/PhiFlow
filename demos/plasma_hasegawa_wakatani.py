@@ -26,9 +26,12 @@ class PlasmaSim(App):
             physics=HasegawaWakatani()
         )
         # Add Fields
+        self.dt = EditableFloat('dt', 0.01)
         self.add_field('Density', lambda: plasma.density)
         self.add_field('Phi', lambda: plasma.phi)
         self.add_field('Omega', lambda: plasma.omega)
+        self.add_field('Laplace Phi', lambda: plasma.laplace_phi)
+        self.add_field('Laplace Density', lambda: plasma.laplace_n)
 
     def action_reset(self):
         self.steps = 0
@@ -37,7 +40,7 @@ class PlasmaSim(App):
         self.plasma.phi = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
 
     def step(self):
-        world.step()
+        world.step(dt=self.dt)
 
 
-show(PlasmaSim([32, 32, 32]), display=('Density', 'Phi', 'Omega'), framerate=1)
+show(PlasmaSim([32, 32, 32]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)
