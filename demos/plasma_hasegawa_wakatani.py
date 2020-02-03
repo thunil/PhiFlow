@@ -7,6 +7,7 @@ DESCRIPTION = """
 Hasegawa-Wakatani Plasma
 """
 
+N = 32
 
 class PlasmaSim(App):
 
@@ -16,12 +17,12 @@ class PlasmaSim(App):
             PlasmaHW(
                 Domain(
                     resolution,
-                    box=box[0:32, 0:32, 0:32],
+                    box=box[0:N, 0:N, 0:N],
                     boundaries=PERIODIC#OPEN#CLOSED#PERIODIC
                 ),
-                density=np.ones(shape=(1,32,32,32,1)), # np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
-                omega=np.ones(shape=(1,32,32,32,1)),#np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
-                phi=np.random.uniform(low=0, high=1, size=(1,32,32,32,1))#,np.ones(shape=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
+                density=np.ones(shape=(1,N,N,N,1)), # np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
+                omega=np.ones(shape=(1,N,N,N,1)),#np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
+                phi=np.random.uniform(low=0, high=1, size=(1,N,N,N,1))#,np.ones(shape=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
             ),
             physics=HasegawaWakatani()
         )
@@ -35,12 +36,12 @@ class PlasmaSim(App):
 
     def action_reset(self):
         self.steps = 0
-        self.plasma.density = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))  #np.ones(shape=(1,32,32,32,1))
-        self.plasma.omega = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))
-        self.plasma.phi = np.random.uniform(low=0, high=1, size=(1,32,32,32,1))#np.zeros((1,32,32,32,1))
+        self.plasma.density = np.random.uniform(low=0, high=1, size=(1,N,N,N,1))  #np.ones(shape=(1,32,32,32,1))
+        self.plasma.omega = np.random.uniform(low=0, high=1, size=(1,N,N,N,1))
+        self.plasma.phi = np.random.uniform(low=0, high=1, size=(1,N,N,N,1))#np.zeros((1,32,32,32,1))
 
     def step(self):
         world.step(dt=self.dt)
 
 
-show(PlasmaSim([32, 32, 32]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)
+show(PlasmaSim([N,N,N]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)

@@ -32,8 +32,8 @@ class PlasmaHW(DomainState):
         density2d = self.density.copied_with(
             data=math.reshape(self.density.data, [-1] + list(self.density.data.shape[2:])),
             box=domain.box.without_axis(0))
-        _, density_grad_x = density2d.gradient().unstack()
-        self.kappa = 1 / np.sum(density2d.data) * density_grad_x.data  # density_grad_x.data * (1/np.sum(density2d.data))
+        #_, density_grad_x = density2d.gradient(difference='central', padding='wrap').unstack()
+        #self.kappa = 1 / np.sum(density2d.data) * density_grad_x.data  # density_grad_x.data * (1/np.sum(density2d.data))
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def density(self, density):
