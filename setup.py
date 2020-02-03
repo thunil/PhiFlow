@@ -124,6 +124,7 @@ setup(
     download_url='https://github.com/tum-pbs/PhiFlow/archive/1.0.2.tar.gz',
     packages=['phi',
               'phi.app',
+              'phi.backend',
               'phi.data',
               'phi.geom',
               'phi.local',
