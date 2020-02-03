@@ -96,14 +96,12 @@ class HasegawaWakatani(Physics):
         ])
         self.pressure_solver = pressure_solver  # TODO: Adjust
         self.conserve_density = conserve_density  # TODO: Adjust
-        print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7}".format(
+        print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} ".format(
             "o", "n", "nu",
             "dzdz",
-            "dxp*dyo",
-            "dyp*dxo",
+            "[p,o]",
             "nab2o",
-            "dxp*dyn",
-            "dyp*dxn",
+            "[p,n]",
             "k*dyp",
             "nab2n")
         )
@@ -120,40 +118,22 @@ class HasegawaWakatani(Physics):
         :returns: dict from String to List<State>
         :rtype: PlasmaHW
         """
-        print(dt)
-
         # pylint: disable-msg = arguments-differ
         domain3d = plasma.domain
         p3d = plasma.phi
         o3d = plasma.omega
         n3d = plasma.density
         shape3d = o3d.data.shape
-
         # Cast to 2D: Move Z-axis to Batch-axis (order: z, y, x)
         domain2d = Domain(domain3d.resolution[1:], box=domain3d.box.without_axis(0))
         o2d = o3d.copied_with(data=math.reshape(o3d.data, [-1] + list(o3d.data.shape[2:])), box=domain2d.box)
-        n2d = n3d.copied_with(data=math.reshape(n3d.data, [-1] + list(n3d.data.shape[2:])), box=domain2d.box)
-
+        n2d = n3d.copied_with(data=math.reshape(n3d.data, [-1] + list(n3d.data.shape[2:])), box=domain2d.box)#
         # Step 1: New Phy (Poisson equation). phi_0 = ∇^-2_bot Omega_0
-        # mask = plasma.domain.centered_grid(1, extrapolation='replicate')  # Tell solver: no obstacles, etc.
-        # Calculate Phi from Omega
+        # Calculate: Omega -> Phi
         p2d, _ = solve_pressure(o2d, FluidDomain(domain2d))
         p3d = p2d.copied_with(data=math.reshape(p2d.data, shape3d), box=domain3d.box)
-
-        # Calculate Poisson Bracket components. Gradient on all axes (x, y)
-        dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
-        dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
-        dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
-        # Second Order for Diffusion
-        #dzdz_p = p3d.laplace(axes=[0]).data[..., 0]
-        nabla2_o = o3d.laplace(axes=[1, 2]).data[0, ..., 0]
-        nabla2_n = n3d.laplace(axes=[1, 2]).data[0, ..., 0]
-        #dzdz_o, dydy_o, dxdx_o = o3d.laplace().unstack()
-        #dzdz_n, dydy_n, dxdx_n = n3d.laplace().unstack()
-
-        # Calculate Z grad. Laplace Operator (Gradient) on 1 Dimension
+        # Calculate: grad_z. Laplace Operator (Gradient) on 1 Dimension
         dzdz = (n3d - p3d).laplace(axes=[0]).data[..., 0]
-        #print(f"dzdz.shape: {dzdz.shape}")
 
         # Testing laplace
         laplace_phi_3d = plasma.laplace_phi
@@ -163,49 +143,34 @@ class HasegawaWakatani(Physics):
         laplace_n = n3d.laplace(axes=[0]).data[..., 0]
         laplace_n = laplace_n_3d.copied_with(data=math.reshape(laplace_n, shape3d), box=domain3d.box)
 
+        # Second Order for Diffusion
+        nabla2_o = o3d.laplace(axes=[1, 2]).data[0, ..., 0]
+        nabla2_n = n3d.laplace(axes=[1, 2]).data[0, ..., 0]
+
         # Compute in numpy arrays through .data
+        dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
+        dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
+        dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
         # Step 2.1: New Omega.
-        # $\partial_t \Omega = \frac{1}{\nu} (\partial_{z}^2 n - \partial^2_{z}\phi)
-        #                      - \partial_x\phi\partial_y\Omega + \partial_y\phi_0\partial_x\Omega$
-        o = 1 / plasma.nu * dzdz \
-            - dx_p.data * dy_o.data + dy_p.data * dx_o.data \
-            + nabla2_o  # dxdx_o + dydy_o  # Diffusion components
-        # print("delta omega {} = 1/{} * {} - {} + {} + {}".format(
-        #     np.max(o),
-        #     plasma.nu,
-        #     np.max(dzdz),
-        #     np.max(dx_p.data * dy_o.data),
-        #     np.max(dy_p.data * dx_o.data),
-        #     np.max(nabla2_o)
-        # ))
-
+        o = (1 / plasma.nu * dzdz 
+            - arakawa(p2d.data, o2d.data)
+            + nabla2_o
+        )
         # Step 2.2: New Density.
-        # $\partial_t n = \frac{1}{\nu} (\partial^2_{z} n - \partial^2_{z}\phi)
-        #                 - \partial_x\phi\partial_y n     + \partial_y\phi\partial_x n
-        #                 - \frac{1}{n} \partial_x n \partial_y\phi$
         kappa = dx_n.data * (1 / np.sum(n2d.data))
-        n = 1 / plasma.nu * dzdz \
-            - dx_p.data * dy_n.data + dy_p.data * dx_n.data \
-            - kappa * dy_p.data \
-            + nabla2_n  # dxdx_n + dydy_n  # Diffusion components
-        # print("delta density {} = 1/{} * {} - {} + {} - {} + {}".format(
-        #     np.max(n),
-        #     plasma.nu,
-        #     np.max(dzdz),
-        #     np.max(dx_p.data * dy_n.data),
-        #     np.max(dy_p.data * dx_n.data),
-        #     np.max(kappa * dy_p.data),
-        #     np.max(nabla2_n)
-        # ))
+        n = (1 / plasma.nu * dzdz 
+            - arakawa(p2d.data, n2d.data)
+            - kappa * dy_p.data 
+            + nabla2_n)
 
-        print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g}".format(
+
+        # Debug print
+        print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
             np.max(o), np.max(n), plasma.nu,
             np.max(dzdz),
-            np.max(dx_p.data * dy_o.data),
-            np.max(dy_p.data * dx_o.data),
+            arakawa(p2d.data, o2d.data),
             np.max(nabla2_o),
-            np.max(dx_p.data * dy_n.data),
-            np.max(dy_p.data * dx_n.data),
+            arakawa(p2d.data, n2d.data),
             np.max(kappa * dy_p.data),
             np.max(nabla2_n)
         ))
