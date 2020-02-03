@@ -5,8 +5,10 @@ from copy import copy
 import numpy as np
 import six
 
+from ..backend.dynamic_backend import DYNAMIC_BACKEND as math
 from .context import skip_validate
-from .structdef import CONSTANTS, VARIABLES, Item
+from .item_condition import context_item_condition, VARIABLES, CONSTANTS
+from .structdef import Item, derived
 
 
 def kwargs(locals, include_self=False, ignore=()):
@@ -53,7 +55,52 @@ class Struct(object):
             trait.endow(self)
         self.validate()
 
+    @derived()
+    def shape(self):
+        """
+Maps all DATA values to their respective dynamic shapes.
+Shapes of sub-structs are obtained using struct.shape while shapes of non-structs are obtained using math.shape().
+Struct subclasses can override this method e.g. to specify unknown dimensions (although the current data has a known dimension).
+        :return: Invalid struct holding shapes instead of data
+        """
+        duplicate = copy(self)
+        for item in duplicate.__items__:
+            if context_item_condition(item):
+                obj = item.get(duplicate)
+                if item.has_override(Struct.shape):
+                    shape = item.get_override(Struct.shape)(duplicate, obj)
+                else:
+                    shape = Struct.shape(obj) if isstruct(obj) else math.shape(obj)
+                item.set(duplicate, shape)
+        return duplicate
+
+    @derived()
+    def staticshape(self):
+        """
+Maps all DATA values to their respective static shapes.
+Shapes of sub-structs are obtained using struct.staticshape while shapes of non-structs are obtained using math.staticshape().
+Struct subclasses can override this method e.g. to specify unknown dimensions (although the current data has a known dimension).
+        :return: Invalid struct holding shapes instead of data
+        """
+        duplicate = copy(self)
+        for item in duplicate.__items__:
+            if context_item_condition(item):
+                obj = item.get(duplicate)
+                if item.has_override(Struct.staticshape):
+                    shape = item.get_override(Struct.staticshape)(duplicate, obj)
+                else:
+                    shape = Struct.staticshape(obj) if isstruct(obj) else math.staticshape(obj)
+                item.set(duplicate, shape)
+        return duplicate
+
     def copied_with(self, **kwargs):
+        """
+Returns a copy of this Struct with some items values changed.
+The Struct, this method is invoked on, remains unaltered.
+Unless otherwise specified, the returned object will be validated, i.e. the new item values may be altered before the new object is returned.
+        :param kwargs: Items to change, in the form item_name=new_value.
+        :return: Altered copy of this object
+        """
         duplicate = copy(self)
         duplicate._set_items(**kwargs)  # pylint: disable-msg = protected-access
         duplicate.validate()
@@ -70,6 +117,11 @@ class Struct(object):
         return self
 
     def validate(self):
+        """
+Performs validation on this struct.
+Structs are always valid unless otherwise specified.
+A user need only invoke this method when explicitly dealing with invalid structs.
+        """
         if not skip_validate():
             self.__validate__()
 

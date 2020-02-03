@@ -6,9 +6,9 @@ import numpy as np
 import scipy.signal
 import scipy.sparse
 import six
-from phi.struct.tensorop import collapsed_gather_nd, expand
 
-from .base_backend import Backend
+from .backend import Backend
+from .tensorop import collapsed_gather_nd, expand
 
 
 class SciPyBackend(Backend):
@@ -134,7 +134,7 @@ class SciPyBackend(Backend):
 
     def resample(self, inputs, sample_coords, interpolation='linear', boundary='constant'):
         """ resample input array at certain coordinates """
-        if boundary.lower() in ()'zero', 'constant'):
+        if boundary.lower() in ('zero', 'constant'):
             pass  # default
         elif boundary.lower() == 'replicate':
             sample_coords = clamp(sample_coords, inputs.shape[1:-1])
@@ -220,6 +220,7 @@ class SciPyBackend(Backend):
         return np.exp(x)
 
     def conv(self, tensor, kernel, padding="SAME"):
+        """ apply convolution of kernel on tensor """
         assert tensor.shape[-1] == kernel.shape[-2]
         # kernel = kernel[[slice(None)] + [slice(None, None, -1)] + [slice(None)]*(len(kernel.shape)-3) + [slice(None)]]
         if padding.lower() == "same":
