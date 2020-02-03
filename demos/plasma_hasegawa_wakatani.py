@@ -18,7 +18,7 @@ class PlasmaSim(App):
                 Domain(
                     resolution,
                     box=box[0:N, 0:N, 0:N],
-                    boundaries=PERIODIC#OPEN#CLOSED#PERIODIC
+                    boundaries=(PERIODIC,PERIODIC,PERIODIC)#OPEN#CLOSED#PERIODIC
                 ),
                 density=np.ones(shape=(1,N,N,N,1)), # np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),
                 omega=np.ones(shape=(1,N,N,N,1)),#np.random.uniform(low=0, high=1, size=(1,32,32,32,1)),

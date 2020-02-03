@@ -1,7 +1,7 @@
 """
 Definition of plasma, HasegawaWakatani Model, as well as plasma-related functions.
 """
-from numba import jit, stencil
+from numba import jit, stencil, prange
 from numbers import Number
 
 import numpy as np
@@ -137,29 +137,32 @@ class HasegawaWakatani(Physics):
 
         # Testing laplace
         laplace_phi_3d = plasma.laplace_phi
-        laplace_phi = p3d.laplace(axes=[0]).data[..., 0]
+        laplace_phi = math.nd.laplace(p3d.data[..., 0], axes=[0], padding='wrap')
         laplace_phi = laplace_phi_3d.copied_with(data=math.reshape(laplace_phi, shape3d), box=domain3d.box)
         laplace_n_3d = plasma.laplace_n
-        laplace_n = n3d.laplace(axes=[0]).data[..., 0]
+        laplace_n = math.nd.laplace(n3d.data[..., 0], axes=[0], padding='wrap')
         laplace_n = laplace_n_3d.copied_with(data=math.reshape(laplace_n, shape3d), box=domain3d.box)
 
         # Second Order for Diffusion
-        nabla2_o = o3d.laplace(axes=[1, 2]).data[0, ..., 0]
-        nabla2_n = n3d.laplace(axes=[1, 2]).data[0, ..., 0]
+        nabla2_o = math.nd.laplace(o3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
+        nabla2_n = math.nd.laplace(n3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
 
         # Compute in numpy arrays through .data
         dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
         dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
         dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
         # Step 2.1: New Omega.
+        print(dzdz.shape)
+        print(nabla2_0.shape)
+        print(arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(o2d.data[..., 0])).shape)
         o = (1 / plasma.nu * dzdz 
-            - arakawa(p2d.data, o2d.data)
+            - arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(o2d.data[..., 0]))
             + nabla2_o
         )
         # Step 2.2: New Density.
         kappa = dx_n.data * (1 / np.sum(n2d.data))
         n = (1 / plasma.nu * dzdz 
-            - arakawa(p2d.data, n2d.data)
+            - arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(n2d.data[..., 0]))
             - kappa * dy_p.data 
             + nabla2_n)
 
@@ -233,10 +236,12 @@ def arakawa_stencil(zeta, psi):
             - zeta[-1, 1] * (psi[0, 1] - psi[-1, 0])
             - zeta[-1, -1] * (psi[-1, 0] - psi[0, -1]))
 
-
 @jit
 def arakawa(zeta, psi, d=1.):
-    return arakawa_stencil(zeta, psi) / (12 * (d**2))
+    res = zeta.copy()
+    for i in prange(zeta.shape[0]):
+        res[i] = arakawa_stencil(zeta[i], psi[i])[1:-1, 1:-1] / (12 * (d**2))
+    return res
 
 
 def periodic_padding(A):
