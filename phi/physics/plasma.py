@@ -274,6 +274,10 @@ def arakawa(zeta, psi, d=1.):
     return arakawa_stencil(zeta, psi) / (12 * (d**2))
 
 
+def periodic_padding(A):
+    return np.pad(A, 1, mode='wrap')
+
+
 def get_sigma(Te0, me, ve):
     """
     $\bar{sigma} = T_{e0}/(m_e \nu_e)$
