@@ -179,6 +179,39 @@ def gradient(tensor, dx=1, difference='forward', padding='replicate'):
         raise ValueError('Invalid difference type: {}. Can be CENTRAL or FORWARD'.format(difference))
 
 
+def _gradient_nd(tensor, padding, relative_shifts):
+    rank = spatial_rank(tensor)
+    tensor = math.pad(tensor, _get_pad_width(rank, (-relative_shifts[0], relative_shifts[1])), mode=padding)
+    components = []
+    for dimension in range(rank):
+        lower, upper = _dim_shifted(tensor, dimension, relative_shifts, diminish_others=(-relative_shifts[0], relative_shifts[1]), components=rank - dimension - 1)
+        components.append(upper - lower)
+    return math.concat(components, axis=-1)
+
+
+def axis_gradient(tensor, spatial_axis):
+    dims = range(spatial_rank(tensor))
+    upper_slices = tuple([(slice(1, None) if i == spatial_axis else slice(None)) for i in dims])
+    lower_slices = tuple([(slice(-1) if i == spatial_axis else slice(None)) for i in dims])
+    diff = tensor[(slice(None),) + upper_slices + (slice(None),)] \
+        - tensor[(slice(None),) + lower_slices + (slice(None),)]
+    return diff
+
+
+# Laplace
+
+def laplace(tensor, padding='replicate', axes=None):
+    """
+    Spatial Laplace operator as defined for scalar fields.
+    If a vector field is passed, the laplace is computed component-wise.
+
+    :param tensor: n-dimensional field of shape (batch, spacial dimensions..., components)
+    :param padding: 'valid', 'constant', 'reflect', 'replicate', 'cyclic'
+    :param axes: The second derivative along these axes is summed over
+    :type axes: list
+    :return: tensor of same shape
+    """
+    rank = spatial_rank(tensor)
     if padding is None or padding.lower() == 'valid':
         pass  # do not pad tensor
     elif padding.lower() in ['cyclic', 'wrap']:
@@ -187,28 +220,13 @@ def gradient(tensor, dx=1, difference='forward', padding='replicate'):
         tensor = math.pad(tensor, _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]), padding)
     # --- convolutional laplace ---
     if axes is not None:
+        return _sliced_laplace_nd(tensor, axes)
     if rank == 2:
         return _conv_laplace_2d(tensor)
     elif rank == 3:
         return _conv_laplace_3d(tensor)
     else:
         return _sliced_laplace_nd(tensor)
-
-
-def _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]):
-    beg_shape = [[0, 0]]
-    end_shape = [[0, 0]]
-    mid_shape = []
-    for i in range(rank):
-        if _contains_axis(axes, i, rank):
-            mid_shape.append(val_true)
-        else:
-            mid_shape.append(val_false)
-    return beg_shape + mid_shape + end_shape
-
-
-def _get_pad_width(rank):
-    return [[0, 0]] + [[1, 1]] * rank + [[0, 0]]
 
 
 def _conv_laplace_2d(tensor):
