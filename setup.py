@@ -149,7 +149,7 @@ setup(
     author_email='philipp.holl@tum.de',
     url='https://github.com/tum-pbs/PhiFlow',
     include_package_data=True,
-    install_requires=['six', 'packaging', 'scipy'],
+    install_requires=['six', 'packaging', 'scipy', 'numba'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
