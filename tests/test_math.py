@@ -23,7 +23,7 @@ class TestMath(TestCase):
     def test_fft(self):
         tf.InteractiveSession()
         for dims in range(1, 4):
-            shape = [2] + [4]*dims + [3]
+            shape = [2] + [4] * dims + [3]
             x_np = np.random.randn(*shape) + 1j * np.random.randn(*shape)
             x_np = x_np.astype(np.complex64)
             x_tf = tf.constant(x_np, tf.complex64)
@@ -41,7 +41,7 @@ class TestMath(TestCase):
     def test_laplace_padding(self):
         tf.InteractiveSession()
         for dims in range(1, 4):
-            shape = [2] + [4]*dims + [3]
+            shape = [2] + [4] * dims + [3]
             a = zeros(shape)
             l = laplace(a, padding='replicate')
             np.testing.assert_equal(l, 0)
@@ -54,7 +54,7 @@ class TestMath(TestCase):
             np.testing.assert_equal(l.shape, a.shape)
             l = laplace(a, padding='valid')
             np.testing.assert_equal(l, 0)
-            np.testing.assert_equal(l.shape, [2] + [2]*dims + [3])
+            np.testing.assert_equal(l.shape, [2] + [2] * dims + [3])
 
     def test_struct_broadcast(self):
         s = {'a': 0, 'b': 1}
@@ -66,40 +66,40 @@ class TestMath(TestCase):
     def test_pad_wrap(self):
         tf.InteractiveSession()
         # --- 1D ---
-        a = np.array([1,2,3,4,5])
-        a_ = pad(a, [[2,3]], mode='wrap')
-        np.testing.assert_equal(a_, [4,5,1,2,3,4,5,1,2,3])
+        a = np.array([1, 2, 3, 4, 5])
+        a_ = pad(a, [[2, 3]], mode='wrap')
+        np.testing.assert_equal(a_, [4, 5, 1, 2, 3, 4, 5, 1, 2, 3])
         a = tf.constant(a)
-        a_ = pad(a, [[2,3]], mode='wrap').eval()
-        np.testing.assert_equal(a_, [4,5,1,2,3,4,5,1,2,3])
+        a_ = pad(a, [[2, 3]], mode='wrap').eval()
+        np.testing.assert_equal(a_, [4, 5, 1, 2, 3, 4, 5, 1, 2, 3])
         # --- 2D + batch ---
-        t = [[3,1,2,3,1], [6,4,5,6,4], [3,1,2,3,1]]
-        a = np.array([[1,2,3],[4,5,6]]).reshape([1,2,3,1])
-        a_ = pad(a, [[0,0], [0,1], [1,1], [0,0]], mode='wrap')
-        np.testing.assert_equal(a_.shape, [1,3,5,1])
-        np.testing.assert_equal(a_.reshape([3,5]), t)
+        t = [[3, 1, 2, 3, 1], [6, 4, 5, 6, 4], [3, 1, 2, 3, 1]]
+        a = np.array([[1, 2, 3], [4, 5, 6]]).reshape([1, 2, 3, 1])
+        a_ = pad(a, [[0, 0], [0, 1], [1, 1], [0, 0]], mode='wrap')
+        np.testing.assert_equal(a_.shape, [1, 3, 5, 1])
+        np.testing.assert_equal(a_.reshape([3, 5]), t)
         a = tf.constant(a)
-        a_ = pad(a, [[0,0], [0,1], [1,1], [0,0]], mode='wrap').eval()
-        np.testing.assert_equal(a_.shape, [1,3,5,1])
-        np.testing.assert_equal(a_.reshape([3,5]), t)
+        a_ = pad(a, [[0, 0], [0, 1], [1, 1], [0, 0]], mode='wrap').eval()
+        np.testing.assert_equal(a_.shape, [1, 3, 5, 1])
+        np.testing.assert_equal(a_.reshape([3, 5]), t)
 
     def test_multimode_pad(self):
-        a = np.array([[1,2], [3,4]])
+        a = np.array([[1, 2], [3, 4]])
         print(a)
-        p = pad(a, [[1,1], [1,1]], mode=['replicate', ['wrap', 'constant']], constant_values=[0, [0, 10]])
-        np.testing.assert_equal(p[0,1:-1], [1,2])
-        np.testing.assert_equal(p[3,1:-1], [3,4])
-        np.testing.assert_equal(p[1:-1,0], [2,4])
-        np.testing.assert_equal(p[1:-1,3], [10, 10])
+        p = pad(a, [[1, 1], [1, 1]], mode=['replicate', ['wrap', 'constant']], constant_values=[0, [0, 10]])
+        np.testing.assert_equal(p[0, 1:-1], [1, 2])
+        np.testing.assert_equal(p[3, 1:-1], [3, 4])
+        np.testing.assert_equal(p[1:-1, 0], [2, 4])
+        np.testing.assert_equal(p[1:-1, 3], [10, 10])
         print(p)
         tf.InteractiveSession()
-        a_tf = tf.constant(a, tf.float32, shape=(2,2))
-        p_tf = pad(a_tf, [[1,1], [1,1]], mode=['replicate', ['wrap', 'constant']], constant_values=[0, [0, 10]])
+        a_tf = tf.constant(a, tf.float32, shape=(2, 2))
+        p_tf = pad(a_tf, [[1, 1], [1, 1]], mode=['replicate', ['wrap', 'constant']], constant_values=[0, [0, 10]])
         np.testing.assert_equal(p, p_tf.eval())
 
     def test_div_no_nan(self):
         x = np.array([1, -1, 0, 1, -1], np.float32)
-        y = np.array([1,  2, 0, 0, 0], np.float32)
+        y = np.array([1, 2, 0, 0, 0], np.float32)
         result = divide_no_nan(x, y)
         np.testing.assert_equal(result, [1, -0.5, 0, 0, 0])
         sess = tf.InteractiveSession()
@@ -112,9 +112,9 @@ class TestMath(TestCase):
         # --- 1D ---
         tensor = np.expand_dims(np.expand_dims(np.arange(10), axis=-1), axis=0)
         lower, center, upper = _dim_shifted(tensor, 0, (-1, 0, 1), components=0)
-        np.testing.assert_equal(lower[0,:,0], np.arange(8))
-        np.testing.assert_equal(center[0,:,0], np.arange(1,9))
-        np.testing.assert_equal(upper[0,:,0], np.arange(2,10))
+        np.testing.assert_equal(lower[0, :, 0], np.arange(8))
+        np.testing.assert_equal(center[0, :, 0], np.arange(1, 9))
+        np.testing.assert_equal(upper[0, :, 0], np.arange(2, 10))
         # --- 2D ---
         tensor = np.ones([1, 4, 4, 2])
         lower, upper = _dim_shifted(tensor, 0, (0, 1), diminish_others=(0, 1), components=0)
@@ -125,11 +125,11 @@ class TestMath(TestCase):
         # --- 1D ---
         tensor = np.expand_dims(np.expand_dims(np.arange(5), axis=-1), axis=0)
         grad = gradient(tensor, padding='replicate')
-        np.testing.assert_equal(grad[0,:,0], [1, 1, 1, 1, 0])
+        np.testing.assert_equal(grad[0, :, 0], [1, 1, 1, 1, 0])
         grad = gradient(tensor, padding='circular')
-        np.testing.assert_equal(grad[0,:,0], [1, 1, 1, 1, -4])
+        np.testing.assert_equal(grad[0, :, 0], [1, 1, 1, 1, -4])
         grad = gradient(tensor, dx=0.1, padding='replicate')
-        np.testing.assert_equal(grad[0,:,0], [10, 10, 10, 10, 0])
+        np.testing.assert_equal(grad[0, :, 0], [10, 10, 10, 10, 0])
 
     def test_upsample_downsample(self):
         # --- 1D ---
