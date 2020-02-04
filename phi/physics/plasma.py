@@ -142,7 +142,6 @@ class HasegawaWakatani(Physics):
         laplace_n_3d = plasma.laplace_n
         laplace_n = math.nd.laplace(n3d.data[..., 0], axes=[0], padding='wrap')
         laplace_n = laplace_n_3d.copied_with(data=math.reshape(laplace_n, shape3d), box=domain3d.box)
-
         # Second Order for Diffusion
         nabla2_o = math.nd.laplace(o3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
         nabla2_n = math.nd.laplace(n3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
@@ -152,28 +151,24 @@ class HasegawaWakatani(Physics):
         dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
         dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
         # Step 2.1: New Omega.
-        print(dzdz.shape)
-        print(nabla2_0.shape)
-        print(arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(o2d.data[..., 0])).shape)
         o = (1 / plasma.nu * dzdz 
-            - arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(o2d.data[..., 0]))
+            - periodic_arakawa_3d(p2d.data[..., 0], o2d.data[..., 0])
             + nabla2_o
         )
         # Step 2.2: New Density.
         kappa = dx_n.data * (1 / np.sum(n2d.data))
         n = (1 / plasma.nu * dzdz 
-            - arakawa(periodic_padding(p2d.data[..., 0]), periodic_padding(n2d.data[..., 0]))
-            - kappa * dy_p.data 
+            - periodic_arakawa_3d(p2d.data[..., 0], n2d.data[..., 0])
+            - kappa * dy_p.data
             + nabla2_n)
-
 
         # Debug print
         print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
             np.max(o), np.max(n), plasma.nu,
             np.max(dzdz),
-            arakawa(p2d.data, o2d.data),
+            np.max(periodic_arakawa_3d(p2d.data[..., 0], o2d.data[..., 0])),
             np.max(nabla2_o),
-            arakawa(p2d.data, n2d.data),
+            np.max(periodic_arakawa_3d(p2d.data[..., 0], n2d.data[..., 0])),
             np.max(kappa * dy_p.data),
             np.max(nabla2_n)
         ))
@@ -236,12 +231,33 @@ def arakawa_stencil(zeta, psi):
             - zeta[-1, 1] * (psi[0, 1] - psi[-1, 0])
             - zeta[-1, -1] * (psi[-1, 0] - psi[0, -1]))
 
+
 @jit
-def arakawa(zeta, psi, d=1.):
-    res = zeta.copy()
-    for i in prange(zeta.shape[0]):
-        res[i] = arakawa_stencil(zeta[i], psi[i])[1:-1, 1:-1] / (12 * (d**2))
-    return res
+def arakawa(z, p, d=1.):
+    return arakawa_stencil(z, p) / (12 * (d**2))
+
+
+def periodic_arakawa(zeta, psi, d=1.):
+    ''' 2D periodic padding and apply arakawa stencil to padded matrix '''
+    z = periodic_padding(zeta)
+    p = periodic_padding(psi)
+    return arakawa(z, p)[1:-1, 1:-1]
+
+
+@jit
+def arakawa_3d(z, p, d=1.):
+    res = z.copy()
+    for i in prange(z.shape[0]):
+        res[i] = arakawa_stencil(z[i], p[i])
+    return res / (12 * (d**2))
+
+
+def periodic_arakawa_3d(zeta, psi, d=1.):
+    ''' periodic padding and apply arakawa stencil to padded matrix '''
+    z = periodic_padding(zeta)
+    p = periodic_padding(psi)
+    ret =  arakawa_3d(z[1:-1, ...], p[1:-1, ...])[:, 1:-1, 1:-1]
+    return ret
 
 
 def periodic_padding(A):
