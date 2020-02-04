@@ -255,7 +255,7 @@ def arakawa_3d(z, p, d=1.):
 def periodic_arakawa_3d(zeta, psi, d=1.):
     ''' periodic padding and apply arakawa stencil to padded matrix '''
     z = periodic_padding(zeta)
-    p = periodic_padding(psi)<
+    p = periodic_padding(psi)
     ret =  arakawa_3d(z[1:-1, ...], p[1:-1, ...])[:, 1:-1, 1:-1]
     return ret
 
