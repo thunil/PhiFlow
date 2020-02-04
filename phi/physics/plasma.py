@@ -128,7 +128,7 @@ class HasegawaWakatani(Physics):
         domain2d = Domain(domain3d.resolution[1:], box=domain3d.box.without_axis(0))
         o2d = o3d.copied_with(data=math.reshape(o3d.data, [-1] + list(o3d.data.shape[2:])), box=domain2d.box)
         n2d = n3d.copied_with(data=math.reshape(n3d.data, [-1] + list(n3d.data.shape[2:])), box=domain2d.box)#
-        # Step 1: New Phy (Poisson equation). phi_0 = ∇^-2_bot Omega_0
+        # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
         # Calculate: Omega -> Phi
         p2d, _ = solve_pressure(o2d, FluidDomain(domain2d))
         p3d = p2d.copied_with(data=math.reshape(p2d.data, shape3d), box=domain3d.box)
@@ -255,7 +255,7 @@ def arakawa_3d(z, p, d=1.):
 def periodic_arakawa_3d(zeta, psi, d=1.):
     ''' periodic padding and apply arakawa stencil to padded matrix '''
     z = periodic_padding(zeta)
-    p = periodic_padding(psi)
+    p = periodic_padding(psi)<
     ret =  arakawa_3d(z[1:-1, ...], p[1:-1, ...])[:, 1:-1, 1:-1]
     return ret
 
