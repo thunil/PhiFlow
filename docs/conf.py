@@ -49,7 +49,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- APIDOC ----------------------------------------------
 import subprocess
-subprocess.call('rm -rf source; sphinx-apidoc -o source/ ../phi', shell=True)
+subprocess.call('rm -rf source; sphinx-apidoc -o source/ ../phi/', shell=True)
 
 # create _static directory
 subprocess.call('mkdir -p _static', shell=True)
