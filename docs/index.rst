@@ -43,7 +43,6 @@ Technical contents
 .. Indices and tables
 .. ==================
 .. 
-.. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`
 
@@ -52,7 +51,6 @@ Indices and tables
 
 .. only:: builder_html
 
-   * :ref:`genindex`
    * :ref:`modindex`
    * :ref:`search`
    * :ref:`glossary`
