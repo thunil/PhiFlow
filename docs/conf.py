@@ -70,6 +70,12 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# -- APIDOC ----------------------------------------------
+import subprocess
+subprocess.call('rm -rf source; sphinx-apidoc -o source/ ../phi', shell=True)
+
+# create _static directory
+subprocess.call('mkdir -p _static', shell=True)
 
 # -- Options for HTML output -------------------------------------------------
 
