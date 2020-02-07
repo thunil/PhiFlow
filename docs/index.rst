@@ -73,11 +73,44 @@ Welcome to PhiFlow's documentation!
    license
    genindex
 
+API
+===
 
+.. toctree::
+   :maxdepth: 1
+
+   source/modules
+
+Technical contents
+==================
+
+.. toctree::
+   :maxdepth: 1
+
+   faq
+   glossary
+   devguide
+   changes
+   authors
+
+.. Indices and tables
+.. ==================
+.. 
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
 
 Indices and tables
 ==================
 
-* :ref:`index`
-* :ref:`modules`
-* :ref:`search`
+.. only:: builder_html
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
+   * :ref:`glossary`
+
+.. only:: not builder_html
+
+   * :ref:`modindex`
+   * :ref:`glossary`
