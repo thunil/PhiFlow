@@ -1,6 +1,0 @@
-numpy
-tensorflow
-dash
-dash_core_components
-plotly
-imageio
