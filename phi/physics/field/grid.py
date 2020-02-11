@@ -51,7 +51,7 @@ class CenteredGrid(Field):
         while math.ndims(data) < 2:
             data = math.expand_dims(data)
         return data
-    data.override(struct.Struct.staticshape, lambda self, data: (self._batch_size,) + math.staticshape(data)[1:])
+    data.override(struct.staticshape, lambda self, data: (self._batch_size,) + math.staticshape(data)[1:])
 
     @property
     def resolution(self):
@@ -138,14 +138,13 @@ class CenteredGrid(Field):
             return False
 
     def __repr__(self):
-        try:
+        if self.is_valid:
             return 'Grid[%s(%d), size=%s]' % ('x'.join([str(r) for r in self.resolution]), self.component_count, self.box.size)
-        except:
-            return 'Grid[invalid]'
+        else:
+            return struct.Struct.__repr__(self)
 
     def padded(self, widths):
-        extrapolation = self.extrapolation if isinstance(self.extrapolation, six.string_types) else ['constant'] + list(self.extrapolation) + ['constant']
-        data = math.pad(self.data, [[0, 0]] + widths + [[0, 0]], _pad_mode(extrapolation))
+        data = math.pad(self.data, [[0, 0]] + widths + [[0, 0]], _pad_mode(self.extrapolation))
         w_lower, w_upper = np.transpose(widths)
         box = AABox(self.box.lower - w_lower * self.dx, self.box.upper + w_upper * self.dx)
         return self.copied_with(data=data, box=box)
@@ -212,8 +211,15 @@ def _required_paddings_transposed(box, dx, target):
     return [lower, upper]
 
 
-@mappable()
 def _pad_mode(extrapolation):
+    """ Inserts 'constant' padding for batch dimension and channel dimension. """
+    if isinstance(extrapolation, six.string_types):
+        return _pad_mode_str(extrapolation)
+    else:
+        return _pad_mode_str(['constant'] + list(extrapolation) + ['constant'])
+
+@mappable()
+def _pad_mode_str(extrapolation):
     """
 Converts an extrapolation string (or struct of strings) to a string that can be passed to math functions like math.pad or math.resample.
     :param extrapolation: field extrapolation
