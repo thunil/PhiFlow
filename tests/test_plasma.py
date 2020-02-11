@@ -73,3 +73,66 @@ class TestMath(TestCase):
         self.assertEqual(np.max(np.abs(laplace_axis_z-laplace_axis_z.mean())), 0, OUTPUT_NOT_UNIFORM)
         self.assertEqual(np.max(np.abs(laplace_axis_y-laplace_axis_y.mean())), 0, OUTPUT_NOT_UNIFORM)
         self.assertEqual(np.max(np.abs(laplace_axis_x-laplace_axis_x.mean())), 0, OUTPUT_NOT_UNIFORM)
+
+    def test_periodic_pressure_solver_SparseCG(self):
+        """ check that periodic pressure solve of uniform array is uniform """
+        N = 16
+        # Define Domain
+        from phi.physics.domain import Domain
+        from phi.physics.material import PERIODIC
+        domain = Domain((N, N), boundaries=(PERIODIC, PERIODIC))
+        from phi.physics.pressuresolver.solver_api import FluidDomain
+        fluid_domain = FluidDomain(domain)
+        # Define uniform array of ones
+        array_in_2d = np.zeros((1, N, N, 1))
+        # Compute SparseCG
+        from phi.physics.pressuresolver.sparse import SparseCG
+        pressure_solver = SparseCG()
+        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        array_out = array_out.reshape((N, N))
+        # Ensure Input has not been changed
+        self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
+        # Compare
+        self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
+
+    def test_periodic_pressure_solver_SparseSciPy(self):
+        """ check that periodic pressure solve of uniform array is uniform """
+        N = 16
+        # Define Domain
+        from phi.physics.domain import Domain
+        from phi.physics.material import PERIODIC
+        domain = Domain((N, N), boundaries=(PERIODIC, PERIODIC))
+        from phi.physics.pressuresolver.solver_api import FluidDomain
+        fluid_domain = FluidDomain(domain)
+        # Define uniform array of ones
+        array_in_2d = np.zeros((1, N, N, 1))
+        # Compute SparseSciPy
+        from phi.physics.pressuresolver.sparse import SparseSciPy
+        pressure_solver = SparseSciPy()
+        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        array_out = array_out.reshape((N, N))
+        # Ensure Input has not been changed
+        self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
+        # Compare
+        self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
+
+    def test_periodic_pressure_solver_GeometricCG(self):
+        """ check that periodic pressure solve of uniform array is uniform """
+        N = 16
+        # Define Domain
+        from phi.physics.domain import Domain
+        from phi.physics.material import PERIODIC
+        domain = Domain((N, N), boundaries=(PERIODIC, PERIODIC))
+        from phi.physics.pressuresolver.solver_api import FluidDomain
+        fluid_domain = FluidDomain(domain)
+        # Define uniform array of ones
+        array_in_2d = np.zeros((1, N, N, 1))
+        # Compute GeometricCG
+        from phi.physics.pressuresolver.geom import GeometricCG
+        pressure_solver = GeometricCG()
+        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        array_out = array_out.reshape((N, N))
+        # Ensure Input has not been changed
+        self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
+        # Compare
+        self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
