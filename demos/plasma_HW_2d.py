@@ -7,7 +7,7 @@ DESCRIPTION = """
 Hasegawa-Wakatani Plasma
 """
 N = 64
-shape = (1, N, N, N, 1)
+shape = (1, N, N, 1)
 
 class PlasmaSim(App):
 
@@ -17,22 +17,20 @@ class PlasmaSim(App):
             PlasmaHW(
                 Domain(
                     resolution,
-                    box=box[0:N, 0:N, 0:N],
-                    boundaries=(CLOSED, CLOSED, CLOSED)  # Each dim: OPEN / CLOSED / PERIODIC
+                    box=box[0:N, 0:N],
+                    boundaries=(CLOSED, CLOSED)  # Each dim: OPEN / CLOSED / PERIODIC
                 ),
                 density=np.ones(shape=shape),
                 omega=np.random.uniform(low=1, high=10, size=shape),
                 phi=np.random.uniform(low=1, high=10, size=shape)
             ),
-            physics=HasegawaWakatani()
+            physics=HasegawaWakatani(kap=0.1)
         )
         # Add Fields
         self.dt = EditableFloat('dt', 0.01)
         self.add_field('Density', lambda: plasma.density)
         self.add_field('Phi', lambda: plasma.phi)
         self.add_field('Omega', lambda: plasma.omega)
-        self.add_field('Laplace Phi', lambda: plasma.laplace_phi)
-        self.add_field('Laplace Density', lambda: plasma.laplace_n)
 
     def action_reset(self):
         self.steps = 0
@@ -44,4 +42,4 @@ class PlasmaSim(App):
         world.step(dt=self.dt)
 
 
-show(PlasmaSim([N, N, N]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)
+show(PlasmaSim([N, N]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)
