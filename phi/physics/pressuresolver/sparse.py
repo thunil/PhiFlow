@@ -79,16 +79,16 @@ class SparseCG(PoissonSolver):
         dimensions = math.staticshape(field)[1:-1]
         N = int(np.prod(dimensions))
         periodic = Material.periodic(domain.domain.boundaries)
-
+        # Setup from backend
         if math.choose_backend([field, active_mask, fluid_mask]).matches_name('SciPy'):
             A = sparse_pressure_matrix(dimensions, active_mask, fluid_mask, periodic)
         else:
             sidx, sorting = sparse_indices(dimensions, periodic)
             sval_data = sparse_values(dimensions, active_mask, fluid_mask, sorting, periodic)
             A = math.choose_backend(field).sparse_tensor(indices=sidx, values=sval_data, shape=[N, N])
-
+        # Solve
         if self.autodiff:
-            return sparse_cg(field, A, self.max_iterations, guess, self.accuracy, back_prop=True)
+            pressure, iteration = sparse_cg(field, A, self.max_iterations, guess, self.accuracy, back_prop=True) 
         else:
             def pressure_gradient(op, grad):
                 return sparse_cg(grad, A, max_gradient_iterations, None, self.gradient_accuracy)[0]
@@ -99,7 +99,9 @@ class SparseCG(PoissonSolver):
                                                             name_base='scg_pressure_solve')
 
             max_gradient_iterations = iteration if self.max_gradient_iterations == 'mirror' else self.max_gradient_iterations
-            return pressure, iteration
+        if iteration >= self.max_iterations:
+            logging.warning('ITERATIONS EXCEED MAXIMUM:  Solution no longer to be trusted.')
+        return pressure, iteration
 
 
 def sparse_cg(field, A, max_iterations, guess, accuracy, back_prop=False):

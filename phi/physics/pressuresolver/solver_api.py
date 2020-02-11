@@ -11,6 +11,7 @@ class PoissonSolver(object):
     """
     Base class for Poisson solvers
     """
+    # TODO: Add warning for divergence in solve
 
     def __init__(self, name, supported_devices, supports_guess, supports_loop_counter, supports_continuous_masks):
         """Assign details such as name, supported device (CPU/GPU), etc."""
