@@ -119,9 +119,9 @@ class HasegawaWakatani(Physics):
 
     def step(self, plasma, dt=0.1):
         if self.kap:
-            self.step2d(plasma, dt=dt)
+            return self.step2d(plasma, dt=dt)
         else:
-            self.step3d(plasma, dt=dt)
+            return self.step3d(plasma, dt=dt)
 
     def step2d(self, plasma, dt=0.1):
         """
@@ -131,6 +131,7 @@ class HasegawaWakatani(Physics):
         p2d = plasma.phi
         o2d = plasma.omega
         n2d = plasma.density
+        shape2d = p2d.data.shape
         # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
         # Calculate: Omega -> Phi
         # Pressure Solvers require exact mean of zero. Set mean to zero:
@@ -138,11 +139,17 @@ class HasegawaWakatani(Physics):
         p2d, _ = solve_poisson(o2d, FluidDomain(domain2d))
         # Use kap for 2D
         dzdz = self.kap/plasma.nu  #(n3d - p3d)
-        
+
         # Compute in numpy arrays through .data
         dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
         dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
         dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
+        dx_o = dx_o[0, 0, ...]
+        dy_o = dy_o[0, 0, ...]
+        dx_p = dx_p[0, 0, ...]
+        dy_p = dy_p[0, 0, ...]
+        dx_n = dx_n[0, 0, ...]
+        dy_n = dy_n[0, 0, ...]
 
         # Diffusion Components
         dif_o = diffuse(o2d, self.N)
@@ -150,19 +157,19 @@ class HasegawaWakatani(Physics):
 
         # Step 2.1: New Omega.
         o = (dzdz 
-            - periodic_arakawa(p2d.data[..., 0], o2d.data[..., 0])
+            - periodic_arakawa(p2d.data[0, ..., 0], o2d.data[0, ..., 0])
             + dif_o)
         # Step 2.2: New Density.
         kappa = dx_n.data * (1 / np.sum(n2d.data))
         n = (dzdz 
-            - periodic_arakawa(p2d.data[..., 0], n2d.data[..., 0])
+            - periodic_arakawa(p2d.data[0, ..., 0], n2d.data[0, ..., 0])
             - kappa * dy_p.data
             + dif_n)
 
         # Recast to 3D: return Z from Batch-axis
         p2d = euler(p2d, p2d, dt)
-        o2d = euler(o2d, o, dt)
-        n2d = euler(n2d, n, dt)
+        o2d = euler(o2d, o2d.copied_with(data=math.reshape(o, shape2d), box=domain2d.box), dt)
+        n2d = euler(n2d, n2d.copied_with(data=math.reshape(n, shape2d), box=domain2d.box), dt)
 
         # Debug print
         print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
@@ -219,7 +226,7 @@ class HasegawaWakatani(Physics):
         laplace_n = math.nd.laplace(n3d.data[..., 0], axes=[0], padding='wrap')
         laplace_n = laplace_n_3d.copied_with(data=math.reshape(laplace_n, shape3d), box=domain3d.box)
         print("Laplace Time:  {}".format(time.time()-t_0))
-        
+
         # Compute in numpy arrays through .data
         t_0 = time.time()
         dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
@@ -297,10 +304,13 @@ def diffuse(field, N=1, nu=1):
     	ret_field = 0
     else:
         # Apply laplace N times in perpendicular ([y, x])
-        ret_field = field.data[0, ..., 0]
+        ret_field = field.data[0, ..., 0]#
         for _ in range(N):
             #ret_field = ret_field.laplace(axes=[1, 2])  # DOES NOT WORK
-            ret_field = math.nd.laplace(ret_field, axes=[1, 2], padding='wrap')
+            if field.rank == 3:
+                ret_field = math.nd.laplace(ret_field, axes=axes, padding='wrap')
+            else:
+                ret_field = math.nd.laplace(ret_field)
     return nu * ret_field
 
 
@@ -356,7 +366,6 @@ def arakawa_vec(zeta, psi, d):
             - zeta[0:-2, 0:-2] * (psi[0:-2, 1:-1] - psi[1:-1, 0:-2])) / (4 * d**2)
 
 
-@jit
 def arakawa(z, p, d=1.):
     return arakawa_stencil(z, p) / (12 * (d**2))
 
@@ -365,7 +374,8 @@ def periodic_arakawa(zeta, psi, d=1.):
     ''' 2D periodic padding and apply arakawa stencil to padded matrix '''
     z = periodic_padding(zeta)
     p = periodic_padding(psi)
-    return arakawa(z, p)[1:-1, 1:-1]
+    #return arakawa_stencil(z, p, d=d)[1:-1, 1:-1]
+    return arakawa_vec(z, p, d=d)
 
 
 @jit
@@ -380,7 +390,7 @@ def periodic_arakawa_3d(zeta, psi, d=1.):
     ''' periodic padding and apply arakawa stencil to padded matrix '''
     z = periodic_padding(zeta)
     p = periodic_padding(psi)
-    ret =  arakawa_3d(z[1:-1, ...], p[1:-1, ...])[:, 1:-1, 1:-1]
+    ret = arakawa_3d(z[1:-1, ...], p[1:-1, ...])[:, 1:-1, 1:-1]
     return ret
 
 
