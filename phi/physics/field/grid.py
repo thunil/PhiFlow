@@ -173,12 +173,11 @@ class CenteredGrid(Field):
 
     def laplace(self, physical_units=True, axes=None):
         if not physical_units:
-            data = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
+            data = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes, dx=1)
         else:
             if not self.has_cubic_cells:
                 raise NotImplementedError('Only cubic cells supported.')
-            laplace = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes)
-            data = laplace / self.dx[0] ** 2
+            data = math.laplace(self.data, padding=_pad_mode(self.extrapolation), axes=axes, dx=self.dx[0])
         extrapolation = map_for_axes(_gradient_extrapolation, self.extrapolation, axes, self.rank)
         return self.copied_with(data=data, extrapolation=extrapolation, flags=())
 

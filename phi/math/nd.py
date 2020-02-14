@@ -162,10 +162,15 @@ def gradient(tensor, dx=1, difference='forward', padding='replicate'):
     The gradient vectors are in reverse order, lowest dimension first.
 
     :param tensor: channel with shape (batch_size, spatial_dimensions..., 1)
+    :type tensor: array-like
     :param dx: physical distance between grid points (default 1)
+    :type dx: Float/Integer
     :param difference: type of difference, one of ('forward', 'backward', 'central') (default 'forward')
+    :type difference: string
     :param padding: tensor padding mode
+    :type padding: string
     :return: tensor of shape (batch_size, spatial_dimensions..., spatial rank)
+    :rtype: array-like
     """
     assert tensor.shape[-1] == 1, "Gradient requires a scalar channel as input"
     assert 1 not in tensor.shape[1:-1], "All spatial dimensions must have size larger than 1, got %s" % tensor.shape
@@ -200,33 +205,41 @@ def axis_gradient(tensor, spatial_axis):
 
 # Laplace
 
-def laplace(tensor, padding='replicate', axes=None):
+def laplace(tensor, dx=1, padding='replicate', axes=None):
     """
     Spatial Laplace operator as defined for scalar fields.
     If a vector field is passed, the laplace is computed component-wise.
 
-    :param tensor: n-dimensional field of shape (batch, spacial dimensions..., components)
+    :param tensor: n-dimensional field of shape (batch, spacial dimensions..., components). Minimum (1, [N]*dims, 1)
+    :type tensor: array-like
+    :param dx: physical distance between grid points (default 1)
+    :type dx: Float/Integer
     :param padding: 'valid', 'constant', 'reflect', 'replicate', 'circular'
+    :type padding: string
     :param axes: The second derivative along these axes is summed over
     :type axes: list
     :return: tensor of same shape
+    :rtype: array-like
     """
     rank = spatial_rank(tensor)
-    if padding is None or padding == 'valid':
-        pass  # do not pad tensor
-    elif padding in ['circular', 'wrap']:
-        return fourier_laplace(tensor)
+    # Fourier Laplace if the space is repeating on itself
+    if padding in ['circular', 'wrap']:
+        laplace_arr = fourier_laplace(tensor)
     else:
-        tensor = math.pad(tensor, _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]), padding)
-    # --- convolutional laplace ---
-    if axes is not None:
-        return _sliced_laplace_nd(tensor, axes)
-    if rank == 2:
-        return _conv_laplace_2d(tensor)
-    elif rank == 3:
-        return _conv_laplace_3d(tensor)
-    else:
-        return _sliced_laplace_nd(tensor)
+        # Pad
+        if (padding is not None) and (padding != 'valid'):
+            tensor = math.pad(tensor, _get_pad_width_axes(rank, axes, val_true=[1, 1], val_false=[0, 0]), padding)
+        # --- convolutional laplace ---
+        if axes is not None:
+            laplace_arr = _sliced_laplace_nd(tensor, axes)
+        if rank == 2:
+            laplace_arr = _conv_laplace_2d(tensor)
+        elif rank == 3:
+            laplace_arr = _conv_laplace_3d(tensor)
+        else:
+            laplace_arr = _sliced_laplace_nd(tensor)
+    data = laplace_arr / (dx ** 2)
+    return data
 
 
 def _conv_laplace_2d(tensor):
