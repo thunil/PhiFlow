@@ -74,7 +74,7 @@ class TestMath(TestCase):
         self.assertEqual(np.max(np.abs(laplace_axis_y-laplace_axis_y.mean())), 0, OUTPUT_NOT_UNIFORM)
         self.assertEqual(np.max(np.abs(laplace_axis_x-laplace_axis_x.mean())), 0, OUTPUT_NOT_UNIFORM)
 
-    def test_periodic_pressure_solver_SparseCG(self):
+    def test_periodic_poisson_solver_SparseCG(self):
         """ check that periodic pressure solve of uniform array is uniform """
         N = 16
         # Define Domain
@@ -87,15 +87,15 @@ class TestMath(TestCase):
         array_in_2d = np.zeros((1, N, N, 1))
         # Compute SparseCG
         from phi.physics.pressuresolver.sparse import SparseCG
-        pressure_solver = SparseCG()
-        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        poisson_solver = SparseCG()
+        array_out, iteration = poisson_solver.solve(array_in_2d, fluid_domain, guess=None)
         array_out = array_out.reshape((N, N))
         # Ensure Input has not been changed
         self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
         # Compare
         self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
 
-    def test_periodic_pressure_solver_SparseSciPy(self):
+    def test_periodic_poisson_solver_SparseSciPy(self):
         """ check that periodic pressure solve of uniform array is uniform """
         N = 16
         # Define Domain
@@ -108,15 +108,15 @@ class TestMath(TestCase):
         array_in_2d = np.zeros((1, N, N, 1))
         # Compute SparseSciPy
         from phi.physics.pressuresolver.sparse import SparseSciPy
-        pressure_solver = SparseSciPy()
-        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        poisson_solver = SparseSciPy()
+        array_out, iteration = poisson_solver.solve(array_in_2d, fluid_domain, guess=None)
         array_out = array_out.reshape((N, N))
         # Ensure Input has not been changed
         self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
         # Compare
         self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
 
-    def test_periodic_pressure_solver_GeometricCG(self):
+    def test_periodic_poisson_solver_GeometricCG(self):
         """ check that periodic pressure solve of uniform array is uniform """
         N = 16
         # Define Domain
@@ -129,10 +129,35 @@ class TestMath(TestCase):
         array_in_2d = np.zeros((1, N, N, 1))
         # Compute GeometricCG
         from phi.physics.pressuresolver.geom import GeometricCG
-        pressure_solver = GeometricCG()
-        array_out, iteration = pressure_solver.solve(array_in_2d, fluid_domain, pressure_guess=None)
+        poisson_solver = GeometricCG()
+        array_out, iteration = poisson_solver.solve(array_in_2d, fluid_domain, guess=None)
         array_out = array_out.reshape((N, N))
         # Ensure Input has not been changed
         self.assertTrue(np.array_equal(np.zeros((1, N, N, 1)), array_in_2d), INPUT_CHANGED_MSG)
         # Compare
         self.assertEqual(np.max(np.abs(array_out - array_out.mean())), 0, OUTPUT_NOT_UNIFORM)
+
+    def higher_order_central_diff(self):
+        """test for higher order central difference working in 2D"""
+        from phi.math.nd import finite_diff
+        n = 3
+        tensor = np.arange(0, n**2).reshape(1, n, n, 1)
+        padding = 'wrap'
+        axes = [1, 0]
+        order = 2
+        accuracy = 2
+        results = finite_diff(tensor, order, axes, accuracy=accuracy, padding=padding, dx=1)
+        self.assertEqual(results[0, ..., 0], np.array([[9, 9, 9], [0, 0, 0], [-9, -9, -9]]))
+        self.assertEqual(results[0, ..., 1], np.array([[3, 0, -3], [3, 0, -3], [3, 0, -3]]))
+
+    def higher_order_central_diff_sum(self):
+        """test for higher order central difference working in 2D"""
+        from phi.math.nd import sum_finite_diff
+        n = 3
+        tensor = np.arange(0, n**2).reshape(1, n, n, 1)
+        padding = 'wrap'
+        axes = [1, 0]
+        order = 2
+        accuracy = 2
+        results = sum_finite_diff(tensor, order, axes, accuracy=accuracy, padding=padding, dx=1)
+        self.assertEqual(results[0, ..., 0], np.array([[12, 9, 6], [3, 0, -3], [-6, -9, -12]]))

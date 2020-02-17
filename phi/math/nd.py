@@ -185,8 +185,10 @@ def gradient(tensor, dx=1, difference='forward', padding='replicate'):
 
 
 def _gradient_nd(tensor, padding, relative_shifts):
+    """
+    """
     rank = spatial_rank(tensor)
-    tensor = math.pad(tensor, _get_pad_width(rank, (-relative_shifts[0], relative_shifts[1])), mode=padding)
+    tensor = math.pad(tensor, _get_pad_width(rank, np.abs(relative_shifts, dtype=int)), mode=padding)
     components = []
     for dimension in range(rank):
         lower, upper = _dim_shifted(tensor, dimension, relative_shifts, diminish_others=(-relative_shifts[0], relative_shifts[1]))
@@ -201,6 +203,120 @@ def axis_gradient(tensor, spatial_axis):
     diff = tensor[(slice(None),) + upper_slices + (slice(None),)] \
         - tensor[(slice(None),) + lower_slices + (slice(None),)]
     return diff
+
+
+# Arbitrary Order Central Finite Difference. [order][accuracy]
+FINITE_DIFF_COEFFS = {
+    1: {2: np.array([-0.5, 0, 0.5]),
+        4: np.array([1/12, -2/3, 0, 2/3, -1/12]),
+        6: np.array([-1/60, 3/20, -3/4, 0, 3/4, -3/20, 1/60]),
+        8: np.array([1/280, -4/105, 1/5, -4/5, 0, 4/5, -1/5, 4/105, -1/280])},
+    2: {2: np.array([1, -2, 1]),
+        4: np.array([-1/12, 4/3, -5/2, 4/3, -1/12]),
+        6: np.array([1/90, -3/20, 3/2, -49/18, 3/2, -3/20, 1/90]),
+        8: np.array([-1/560, 8/315, -1/5, 8/5, -205/72, 8/5, -1/5, 8/315, -1/516])},
+    3: {2: np.array([-0.5, 1, 0, -1, 0.5]),
+        4: np.array([1/8, -1, 13/8, 0, -13/8, 1, -1/8]),
+        6: np.array([-7/240, 3/10, -169/120, 61/30, 0, -61/30, 169/120, -3/10, 7/240])},
+    4: {2: np.array([1, -4, 6, -4, 1]),
+        4: np.array([-1/6, 2, -13/2, 28/3, -13/2, 2, -1/6]),
+        6: np.array([7/240, -2/5, 169/60, 122/15, 91/8, -122/15, 169/60, -2/5, 7/240])},
+    5: {2: np.array([-0.5, 2, -2.5, 0, 2.5, -2, 0.5]),
+        4: np.array([1/6, -3/2, 13/3, -29/6, 0, 29/6, -13/3, 3/2, -1/6]),
+        6: np.array([-13/288, 19/36, -87/32, 13/2, -323/48, 0, 323/48, -13/2, 87/32, -19/36, 13/288])},
+    6: {2: np.array([1, -6, 15, -20, 15, -6, 1]),
+        4: np.array([-1/4, 3, -13, 29, -75/2, 29, -13, 3, -1/4]),
+        6: np.array([13/240, -19/24, 87/16, -39/2, 323/8, -1023/20, 323/8, -39/2, 87/16, -19/24, 13/240])}
+}
+
+
+def finite_diff(tensor, order, axes, accuracy=2, padding='wrap', dx=1):
+    """returns the finite difference of order and accuracy with last simension len(axes)
+    
+    :param tensor: channel with shape (batch_size, spatial_dimensions..., 1)
+    :type tensor: array-like
+    :param order: order of difference to be taken
+    :type order: int
+    :param axes: list of axes ordered with 2=z, 1=y, 0=x
+    :type axes: list of int
+    :param accuracy: accuracy of the order of central difference
+    :type accuracy: int multiple of 2
+    :param padding: tensor padding mode (same options as numpy.pad)
+    :type padding: string
+    :param dx: physical distance between grid points (default 1)
+    :type dx: float/int
+    :return: central finite difference along the specified axes
+    :rtype: array-like, same as input
+    """
+    coefficients = FINITE_DIFF_COEFFS[order][accuracy]
+    dims = len(tensor.shape)
+    spatial_sizes = tensor.shape[1: -1]
+    rank = spatial_rank(tensor)
+    coeff_len = len(coefficients)
+    results = np.concatenate([np.zeros(tensor.shape) for i in axes], axis=-1)
+    # Padding
+    pad_size = int((len(coefficients)-1)/2)
+    tensor = math.pad(tensor, _get_pad_width(rank, [pad_size]*rank), mode=padding)
+    for j, ax in enumerate(axes):
+        # Slice entire array into sub array of proper shape
+        # pad the slices, immutable (tuple) needed for index slicing
+        slices = [tuple([slice(None)]  # Batch dimension unchanged
+                        + [slice(pad_size, pad_size+spatial_sizes[ax])]*(rank-ax-1)  # Return normal size for these
+                        + [slice(i, spatial_sizes[ax]+i)]  # Apply dimension
+                        + [slice(pad_size, pad_size+spatial_sizes[ax])]*(ax)  # Return normal size for these
+                        + [slice(None)])  # Last dimension unchanged
+                  for i in range(0, coeff_len)]
+        for i, s in enumerate(slices):
+            results[..., j] += (tensor[s]*coefficients[i])[..., 0]
+    # Adjust for step_size
+    results /= dx**order
+    return results
+
+def sum_finite_diff(tensor, order, axes, accuracy=2, padding='wrap', dx=1):
+    """returns the sum of the finite differences along the axes
+    
+    :param tensor: channel with shape (batch_size, spatial_dimensions..., 1)
+    :type tensor: array-like
+    :param order: order of difference to be taken
+    :type order: int
+    :param axes: list of axes ordered with 2=z, 1=y, 0=x
+    :type axes: list of int
+    :param accuracy: accuracy of the order of central difference
+    :type accuracy: int multiple of 2
+    :param padding: tensor padding mode (same options as numpy.pad)
+    :type padding: string
+    :param dx: physical distance between grid points (default 1)
+    :type dx: float/int
+    :return: sum of central finite difference along the specified axes
+    :rtype: array-like, same as input
+    """
+    try:
+        coefficients = FINITE_DIFF_COEFFS[order][accuracy]
+    except KeyError:
+        print("[{}, {}] coefficients not available".format(order, accuracy))
+        raise KeyError
+    dims = len(tensor.shape)
+    spatial_sizes = tensor.shape[1: -1]
+    rank = spatial_rank(tensor)
+    coeff_len = len(coefficients)
+    results = np.zeros(tensor.shape)
+    # Padding
+    pad_size = int((len(coefficients)-1)/2)
+    tensor = math.pad(tensor, _get_pad_width(rank, [pad_size]*rank), mode=padding)
+    for ax in axes:
+        # Slice entire array into sub array of proper shape
+        # pad the slices, immutable (tuple) needed for index slicing
+        slices = [tuple([slice(None)]  # Batch dimension unchanged
+                        + [slice(pad_size, pad_size+spatial_sizes[ax])]*(rank-ax-1)  # Return normal size for these
+                        + [slice(i, spatial_sizes[ax]+i)]  # Apply dimension
+                        + [slice(pad_size, pad_size+spatial_sizes[ax])]*(ax)  # Return normal size for these
+                        + [slice(None)])  # Last dimension unchanged
+                  for i in range(0, coeff_len)]
+        for i, s in enumerate(slices):
+            results += (tensor[s]*coefficients[i])
+    # Adjust for step_size
+    results /= dx**order
+    return results
 
 
 # Laplace
@@ -282,7 +398,7 @@ def _conv_laplace_3d(tensor):
 def _sliced_laplace_nd(tensor, axes=None):
     """
     Laplace Stencil for N-Dimensions
-    aggregated from (c)enter, (u)pper, and (l)ower parts
+    aggregated from center, upper, and lower slices
     """
     rank = spatial_rank(tensor)
     dims = range(rank)
