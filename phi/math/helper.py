@@ -26,6 +26,7 @@ def is_scalar(obj):
 
 
 def _get_pad_width_axes(rank, axes, val_true=(1, 1), val_false=(0, 0)):
+    """return padding shape, padding val_true for certain axes, val_false for all other"""
     mid_shape = []
     for i in range(rank):
         if _contains_axis(axes, i, rank):
@@ -36,6 +37,7 @@ def _get_pad_width_axes(rank, axes, val_true=(1, 1), val_false=(0, 0)):
 
 
 def _get_pad_width(rank, axis_widths=(1, 1)):
+    """return padding shape, padding axis_widths for all axes"""
     return [[0, 0]] + [axis_widths] * rank + [[0, 0]]
 
 
