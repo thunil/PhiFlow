@@ -4,6 +4,10 @@ import numpy as np
 import phi.app.app as base_app
 import six
 import tensorflow as tf
+if tf.__version__[0] == '2':
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
+
 from phi.app.app import EditableFloat, EditableInt, EditableValue
 from phi.data.reader import BatchReader
 
