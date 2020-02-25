@@ -15,6 +15,11 @@ from .session import Session
 from .util import istensor
 from .world import tf_bake_graph
 
+import tensorflow as tf
+if tf.__version__[0] == '2':
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
+
 
 class App(base_app.App):
 
@@ -68,7 +73,8 @@ class App(base_app.App):
         return feed_dict
 
 
-def EVERY_EPOCH(tfapp): return tfapp.steps % tfapp.epoch_size == 0
+def EVERY_EPOCH(tfapp):
+    return tfapp.steps % tfapp.epoch_size == 0
 
 
 class LearningApp(App):
