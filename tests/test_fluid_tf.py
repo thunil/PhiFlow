@@ -10,8 +10,12 @@ from phi.physics.material import CLOSED
 from phi.physics.obstacle import Obstacle
 from phi.physics.fluid import Fluid, IncompressibleFlow
 from phi.physics.world import World
-from phi.tf.flow import tf, Session, placeholder, variable, tf_bake_subgraph, tf_bake_graph
-
+from phi.tf.flow import Session, placeholder, variable, tf_bake_subgraph, tf_bake_graph
+import tensorflow as tf
+if tf.__version__[0] == '2':
+    logging.info('Adjusting for tensorflow 2.0')
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
 
 class TestFluidTF(TestCase):
 
