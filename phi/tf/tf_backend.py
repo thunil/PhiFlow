@@ -166,7 +166,9 @@ class TFBackend(Backend):
     def matmul(self, A, b):
         if isinstance(A, tf.SparseTensor):
             result = tf.sparse_tensor_dense_matmul(A, tf.transpose(b))
-            return tf.transpose(result)
+            result = tf.transpose(result)
+            result.set_shape(tf.TensorShape([b.shape[0], A.shape[0]]))
+            return result
         else:
             return tf.matmul(A, b)
 
