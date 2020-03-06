@@ -2,25 +2,25 @@ import logging
 import numpy as np
 
 from phi import math
-from .solver_api import PressureSolver, FluidDomain
+from .solver_api import PoissonSolver, FluidDomain
 
 
-class MultiscaleSolver(PressureSolver):
+class MultiscaleSolver(PoissonSolver):
 
     def __init__(self, solvers, autodiff=False):
         """
         A multigrid solver first solves the pressure on a lower-resolution grid and successively upsamples and refines it.
-        On each grid, i, the pressure is calculated using the i-th provided PressureSolver.
+        On each grid, i, the pressure is calculated using the i-th provided PoissonSolver.
         The resulting pressure is then upsampled and given as initial guess to the next level.
 
         This approach reduces the number of high-resolution iterations required, especially if the previous solver had a higher accuracy.
 
-        :param solvers: tuple or list of PressureSolvers with length equal to number of grids
+        :param solvers: tuple or list of PoissonSolvers with length equal to number of grids
         :param autodiff: if True, use autodiff, else use multigrid forward solver for backprop
         """
-        if isinstance(solvers, PressureSolver):
+        if isinstance(solvers, PoissonSolver):
             solvers = [solvers] * 2
-        PressureSolver.__init__(self, 'MultiscaleSolver',
+        PoissonSolver.__init__(self, 'MultiscaleSolver',
                                 supported_devices=solvers[0].supported_devices,
                                 supports_guess=solvers[0].supports_guess,
                                 supports_loop_counter=np.all([s.supports_loop_counter for s in solvers]),
