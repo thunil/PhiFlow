@@ -87,16 +87,21 @@ class HasegawaWakatani(Physics):
     Hasegawa-Wakatani Equations:
     $$
         \partial_t \Omega = \frac{1}{\nu} \nabla_{||}^2(n-\phi) - [\phi,\Omega] + nu_\bot \nabla^{2N} \Omega \\
-        \partial_t n = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n] - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
+        \partial_t n      = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n] - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
     $$
-
     """
 
-    def __init__(self, kap=0, N=2, poisson_solver=None):
+    def __init__(self, poisson_solver=None, dim=2, N=3, c1=1, K0=0.15, nu=10**-6):
         """
+        :param poisson_solver: Pressure solver to use for solving for phi
+        :param dim: Dimension of HW model
+        :type dim: int
         :param N: Apply laplace N times on field for diffusion (nabla^(2*N))
         :type N: int
-        :param poisson_solver: Pressure solver to use for solving for phi
+        :param c1: Adiabatic parameter (0.1: hydrodynamic - 5: adiabatic). T/(n_0 e^2 eta_||) * (k_||^2)/(c_s/L_n)
+        :type c1: float
+        :param nu: dissipation parameter (10^-10 - 10^-4)
+        :type nu: float
         """
         Physics.__init__(self, [  # No effects currently supported for the fields
             #StateDependency('obstacles', 'obstacle'),
@@ -106,7 +111,11 @@ class HasegawaWakatani(Physics):
         ])
         self.poisson_solver = poisson_solver
         self.N = N
-        self.kap = kap
+        self.dim = dim
+        self.c1 = c1
+        self.K0 = K0
+        self.L = 2*np.pi/K0
+
         print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} ".format(
             "o", "n", "nu",
             "dzdz",
@@ -118,13 +127,19 @@ class HasegawaWakatani(Physics):
         )
 
     def step(self, plasma, dt=0.1):
-        if self.kap:
+        if self.dim == 2:
             return self.step2d(plasma, dt=dt)
         else:
             return self.step3d(plasma, dt=dt)
 
     def step2d(self, plasma, dt=0.1):
         """
+
+        Hase2D gawa-Wakatani Equations:
+        $$
+        \partial_t \Omega = c_1 (n-\phi) - [\phi,\Omega] + nu \nabla^{2N} \Omega \\
+        \partial_t n      = c_1 (n-\phi) - [\phi,n]      + nu \nabla^{2N} n      - \kappa_n\partial_y\phi
+        $$
         """
         # pylint: disable-msg = arguments-differ
         domain2d = plasma.domain
@@ -136,38 +151,35 @@ class HasegawaWakatani(Physics):
         # Calculate: Omega -> Phi
         # Pressure Solvers require exact mean of zero. Set mean to zero:
         o2d -= math.mean(o2d.data)  # NOTE: Only in 2D
-        p2d, _ = solve_poisson(o2d, FluidDomain(domain2d))
-        # Use kap for 2D
-        dzdz = self.kap/plasma.nu  #(n3d - p3d)
+        p, _ = solve_poisson(o2d, FluidDomain(domain2d))
 
         # Compute in numpy arrays through .data
-        dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
-        dy_p, dx_p = p2d.gradient(difference='central', padding='wrap').unstack()
+        #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
+        dy_p, dx_p = p.gradient(difference='central', padding='wrap').unstack()
         dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
-        dx_o = dx_o[0, 0, ...]
-        dy_o = dy_o[0, 0, ...]
+        #dx_o = dx_o[0, 0, ...]; dy_o = dy_o[0, 0, ...]
         dx_p = dx_p[0, 0, ...]
         dy_p = dy_p[0, 0, ...]
         dx_n = dx_n[0, 0, ...]
         dy_n = dy_n[0, 0, ...]
 
         # Diffusion Components
-        dif_o = diffuse(o2d, self.N)
-        dif_n = diffuse(n2d, self.N)
+        dif_o = diffuse(o2d, self.N) * self.nu
+        dif_n = diffuse(n2d, self.N) * self.nu
 
         # Step 2.1: New Omega.
-        o = (dzdz 
+        o = (self.c1 * (n2d - p2d).data[0, ..., 0]
             - periodic_arakawa(p2d.data[0, ..., 0], o2d.data[0, ..., 0])
             + dif_o)
         # Step 2.2: New Density.
         kappa = dx_n.data * (1 / np.sum(n2d.data))
-        n = (dzdz 
+        n = (self.c1 * (n2d - p2d).data[0, ..., 0]
             - periodic_arakawa(p2d.data[0, ..., 0], n2d.data[0, ..., 0])
             - kappa * dy_p.data
             + dif_n)
 
         # Recast to 3D: return Z from Batch-axis
-        p2d = euler(p2d, p2d, dt)
+        p2d = euler(p2d, p, dt)
         o2d = euler(o2d, o2d.copied_with(data=math.reshape(o, shape2d), box=domain2d.box), dt)
         n2d = euler(n2d, n2d.copied_with(data=math.reshape(n, shape2d), box=domain2d.box), dt)
 
@@ -410,3 +422,12 @@ def get_mu(me, mi, Ti, Te, sigma):
     $\mu = (m_e/m_i)^{1/2} (T_i/T_e)^{5/2} \bar{\sigma}
     """
     return np.sqrt(me / mi) * np.sqrt((Ti / Te)**(5)) * sigma
+
+
+def get_speed_of_sound(T, M):
+    """sound speed c_s^2 = T/M"""
+    return np.sqrt(T/M)
+
+
+def get_driftwave_dispersion_scale(c, M, T, e, B):
+    return np.sqrt(c**2 * M * T / (e**2 * B**2))

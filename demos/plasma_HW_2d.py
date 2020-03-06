@@ -24,7 +24,7 @@ class PlasmaSim(App):
                 omega=np.random.uniform(low=1, high=10, size=shape),
                 phi=np.random.uniform(low=1, high=10, size=shape)
             ),
-            physics=HasegawaWakatani(kap=0.1)
+            physics=HasegawaWakatani(poisson_solver=None, dim=2, N=3, c1=1, K0=0.15, nu=10**-6)
         )
         # Add Fields
         self.dt = EditableFloat('dt', 0.01)
