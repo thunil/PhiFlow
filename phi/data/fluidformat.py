@@ -99,9 +99,23 @@ def first_frame(simpath, fieldname=None):
 
 
 def get_frames(simpath, fieldname=None, mode="intersect"):
+    """
+
+
+    :param simpath: path to the simulation
+    :type simpath: string
+    :param fieldname: name of the field to load
+    :type fieldname: string
+    :param mode: 
+    :type mode:
+    :returns: set of strings of saved frames
+    :rtype: set of strings"""
+    # Get only one field
     if fieldname is not None:
-        all_frames = {int(f[-10:-4]) for f in os.listdir(simpath) if f.startswith(fieldname) and f.endswith(".npz")}
+        all_frames = {int(f[-10:-4]) for f in os.listdir(simpath)
+                      if (f.startswith(fieldname) and f.endswith(".npz"))}
         return sorted(all_frames)
+    # Get all fields
     else:
         frames_lists = [get_frames(simpath, fieldname) for fieldname in get_fieldnames(simpath)]
         if mode.lower() == "intersect":
