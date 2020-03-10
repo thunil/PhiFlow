@@ -31,9 +31,9 @@ class PlasmaHW(DomainState):
     def __init__(self, domain, tags=('plasma'), name='plasmaHW', **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
         self.nu = 1.  # nu_e/(1.96*w_ce)
-        density2d = self.density.copied_with(
-            data=math.reshape(self.density.data, [-1] + list(self.density.data.shape[2:])),
-            box=domain.box.without_axis(0))
+        #density2d = self.density.copied_with(
+        #    data=math.reshape(self.density.data, [-1] + list(self.density.data.shape[2:])),
+        #    box=domain.box.without_axis(0))
         #_, density_grad_x = density2d.gradient(difference='central', padding='wrap').unstack()
         #self.kappa = 1 / np.sum(density2d.data) * density_grad_x.data  # density_grad_x.data * (1/np.sum(density2d.data))
 
@@ -76,6 +76,14 @@ class PlasmaHW(DomainState):
     def __repr__(self):
         return "plasma[density: %s, phi: %s, omega %s]" % (self.density, self.phi, self.omega)
 
+    def __mul__(self, other):
+        return self.copied_with(density=self.density*other, phi=self.phi*other, omega=self.omega*other)
+
+    __rmul__ = __mul__
+
+    def __add__(self, other):
+        return self.copied_with(density=self.density+other.density, phi=self.phi+other.phi, omega=self.omega+other.omega)
+
 
 class HasegawaWakatani(Physics):
     r"""
@@ -87,11 +95,12 @@ class HasegawaWakatani(Physics):
     Hasegawa-Wakatani Equations:
     $$
         \partial_t \Omega = \frac{1}{\nu} \nabla_{||}^2(n-\phi) - [\phi,\Omega] + nu_\bot \nabla^{2N} \Omega \\
-        \partial_t n      = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n] - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
+        \partial_t n = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n] - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
     $$
+
     """
 
-    def __init__(self, poisson_solver=None, dim=2, N=3, c1=1, K0=0.15, nu=10**-6):
+    def __init__(self, poisson_solver=None, dim=2, N=3, c1=1, nu=10**-6, K0=0.15, arakawa_coeff=1, kappa_coeff=1):
         """
         :param poisson_solver: Pressure solver to use for solving for phi
         :param dim: Dimension of HW model
@@ -100,6 +109,8 @@ class HasegawaWakatani(Physics):
         :type N: int
         :param c1: Adiabatic parameter (0.1: hydrodynamic - 5: adiabatic). T/(n_0 e^2 eta_||) * (k_||^2)/(c_s/L_n)
         :type c1: float
+        :param K0: 
+        :type K0: float
         :param nu: dissipation parameter (10^-10 - 10^-4)
         :type nu: float
         """
@@ -110,92 +121,132 @@ class HasegawaWakatani(Physics):
             #StateDependency('velocity_effects', 'velocity_effect', blocking=True)
         ])
         self.poisson_solver = poisson_solver
-        self.N = N
         self.dim = dim
+        self.N = N
         self.c1 = c1
+        self.nu = nu
         self.K0 = K0
+        self.arakawa_coeff = arakawa_coeff
+        self.kappa_coeff = kappa_coeff
+        # Derived Values
         self.L = 2*np.pi/K0
-
-        print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} ".format(
-            "o", "n", "nu",
-            "dzdz",
-            "[p,o]",
-            "nab2o",
-            "[p,n]",
-            "k*dyp",
-            "nab2n")
-        )
-
-    def step(self, plasma, dt=0.1):
+        self.energy = 0
+        self.enstrophy = 0
         if self.dim == 2:
-            return self.step2d(plasma, dt=dt)
+            print("Using: Step 2D.")
+            self.step = self.rk4_2d
         else:
-            return self.step3d(plasma, dt=dt)
+            print("Using: Step 3D.")
+            self.step = self.step3d
+        #print("{:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} ".format(
+        #       "o", "n", "nu", "dzdz", "[p,o]", "nab2o", "[p,n]", "k*dyp", "nab2n"))
+        print(self)
 
-    def step2d(self, plasma, dt=0.1):
+    def __repr__(self):
+        formatted_str = "\n".join([
+            "Hasegawa-Wakatani {}D".format(self.dim),
+            "- Poisson Solver: {}".format(self.poisson_solver),
+            "- Dissipation Order: laplace^{}".format(self.N),
+            "- Adiabatic Parameter (c1): {}".format(self.c1),
+            "- Dissipation Parameter (nu): {}".format(self.nu),
+            "- (K0): {}".format(self.K0),
+            "- (L): ".format(self.L),
+            "- Arakawa Coefficient: {}".format(self.arakawa_coeff),
+            "- Kappa Coefficient: {}".format(self.kappa_coeff),
+            "----------------------------------------------------------\n"
+        ])
+        return formatted_str
+
+    def rk4_2d(self, plasma, dt=0.1):
+        """Runge-Kutta 4 function
+        y_{n+1} = y_n  + (k1 + 2*k2 + 2*k3 + k4)/6
+        k1 = dt * f(y_n,        t)
+        k2 = dt * f(y_n + k1/2, t + dt/2)
+        k3 = dt * f(y_n + k2/2, t + dt/2)
+        k4 = dt * f(y_n + k3,   t + dt)
         """
+        yn = plasma
+        k1 = dt*self.gradient_2d(yn)
+        k2 = dt*self.gradient_2d(yn + k1*0.5)
+        k3 = dt*self.gradient_2d(yn + k2*0.5)
+        k4 = dt*self.gradient_2d(yn + k3)
+        res = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)
+        print("{:<7.2f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g}".format(
+            plasma.age + dt,
+            np.max(yn.density.data),
+            np.max(k1.density.data),
+            np.max(k2.density.data),
+            np.max(k3.density.data),
+            np.max(k4.density.data)
+        ))
+        return res.copied_with(res, age=plasma.age+dt)
 
-        Hase2D gawa-Wakatani Equations:
+    def euler_2d(self, plasma, dt=0.1):
+        # Recast to 3D: return Z from Batch-axis
+        plasma_grad = self.gradient_2d(plasma)
+        p = plasma.phi + dt * plasma_grad.phi
+        o = plasma.omega + dt * plasma_grad.omega
+        n = plasma.density + dt * plasma_grad.density
+        return plasma.copied_with(density=n, omega=o, phi=p, age=plasma.age+dt)
+
+    def calculate_properties(self, plasma):
+        self.energy = get_total_energy(plasma.density, plasma.phi)
+        self.enstrophy = get_generalized_enstrophy(plasma.density, plasma.phi)
+        print("{:>8.2g}  {:>8.2g}".format(np.max(self.energy.data), np.max(self.enstrophy.data)))
+        return
+
+    def gradient_2d(self, plasma):
+        """
+        2D Hasegawa-Wakatani Equations:
+        time-derivative   = parallel_mix - poiss_bracket - spatial_derivative     + damping/diffusion
+        ------------------|--------------|---------------|------------------------|----------------------
         $$
-        \partial_t \Omega = c_1 (n-\phi) - [\phi,\Omega] + nu \nabla^{2N} \Omega \\
-        \partial_t n      = c_1 (n-\phi) - [\phi,n]      + nu \nabla^{2N} n      - \kappa_n\partial_y\phi
+        \partial_t \Omega = c_1 (n-\phi) - [\phi,\Omega]                          + nu \nabla^{2N} \Omega \\
+        \partial_t n      = c_1 (n-\phi) - [\phi,n]      - \kappa_n\partial_y\phi + nu \nabla^{2N} n
         $$
         """
         # pylint: disable-msg = arguments-differ
-        domain2d = plasma.domain
-        p2d = plasma.phi
-        o2d = plasma.omega
-        n2d = plasma.density
-        shape2d = p2d.data.shape
         # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
         # Calculate: Omega -> Phi
         # Pressure Solvers require exact mean of zero. Set mean to zero:
-        o2d -= math.mean(o2d.data)  # NOTE: Only in 2D
-        p, _ = solve_poisson(o2d, FluidDomain(domain2d))
+        o2d = plasma.omega - math.mean(plasma.omega.data[0, ..., 0])  # NOTE: Only in 2D
+        p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))
 
         # Compute in numpy arrays through .data
         #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
         dy_p, dx_p = p.gradient(difference='central', padding='wrap').unstack()
-        dy_n, dx_n = n2d.gradient(difference='central', padding='wrap').unstack()
+        dy_n, dx_n = plasma.density.gradient(difference='central', padding='wrap').unstack()
         #dx_o = dx_o[0, 0, ...]; dy_o = dy_o[0, 0, ...]
-        dx_p = dx_p[0, 0, ...]
-        dy_p = dy_p[0, 0, ...]
-        dx_n = dx_n[0, 0, ...]
-        dy_n = dy_n[0, 0, ...]
-
-        # Diffusion Components
-        dif_o = diffuse(o2d, self.N) * self.nu
-        dif_n = diffuse(n2d, self.N) * self.nu
+        dx_p, dy_p = dx_p[0, 0, ...], dy_p[0, 0, ...]
+        dx_n, dy_n = dx_n[0, 0, ...], dy_n[0, 0, ...]
 
         # Step 2.1: New Omega.
-        o = (self.c1 * (n2d - p2d).data[0, ..., 0]
-            - periodic_arakawa(p2d.data[0, ..., 0], o2d.data[0, ..., 0])
-            + dif_o)
+        o = (self.c1 * (plasma.density - p).data[0, ..., 0]
+             - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.omega.data[0, ..., 0])
+             + self.nu * diffuse(plasma.omega, self.N))
         # Step 2.2: New Density.
-        kappa = dx_n.data * (1 / np.sum(n2d.data))
-        n = (self.c1 * (n2d - p2d).data[0, ..., 0]
-            - periodic_arakawa(p2d.data[0, ..., 0], n2d.data[0, ..., 0])
-            - kappa * dy_p.data
-            + dif_n)
-
-        # Recast to 3D: return Z from Batch-axis
-        p2d = euler(p2d, p, dt)
-        o2d = euler(o2d, o2d.copied_with(data=math.reshape(o, shape2d), box=domain2d.box), dt)
-        n2d = euler(n2d, n2d.copied_with(data=math.reshape(n, shape2d), box=domain2d.box), dt)
+        kappa = dx_n/plasma.density.data[0, ..., 0]
+        n = (self.c1 * (plasma.density - p).data[0, ..., 0]
+             - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])
+             - self.kappa_coeff * kappa * dy_p
+             + self.nu * diffuse(plasma.density, self.N))
 
         # Debug print
-        print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
-            np.max(o), np.max(n), plasma.nu,
-            np.max(dzdz),
-            np.max(periodic_arakawa(p2d.data[..., 0], o2d.data[..., 0])),
-            np.max(dif_o),
-            np.max(periodic_arakawa(p2d.data[..., 0], n2d.data[..., 0])),
-            np.max(kappa * dy_p.data),
-            np.max(dif_n)
-        ))
+        # print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
+        #     np.max(o), np.max(n), np.max(p.data[0, ..., 0]),
+        #     np.max(self.c1 * (plasma.density - p).data[0, ..., 0]),
+        #     np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], o2d.data[0, ..., 0])),
+        #     np.max(self.nu * diffuse(o2d, self.N)),
+        #     np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])),
+        #     np.max(self.kappa_coeff * kappa * dy_p),
+        #     np.max(self.nu * diffuse(plasma.density, self.N))
+        # ))
 
-        return plasma.copied_with(density=n2d, omega=o2d, phi=p2d,
-                                  age=(plasma.age + dt))
+        return plasma.copied_with(
+            density=plasma.density.copied_with(data=math.reshape(n, plasma.density.data.shape), box=plasma.domain.box),
+            omega=plasma.omega.copied_with(data=math.reshape(o, plasma.omega.data.shape), box=plasma.domain.box),
+            phi=p
+        )
 
     def step3d(self, plasma, dt=0.1):
         """
@@ -297,7 +348,23 @@ class HasegawaWakatani(Physics):
 HASEGAWAWAKATANI = HasegawaWakatani()
 
 
-def diffuse(field, N=1, nu=1):
+def get_total_energy(n, phi):
+    """
+    Calculate total energy of HW plasma
+    $E = \frac{1}{2} \int  d^2x (\tilde{n}^2  + |\nabla_\bot \tilde{\phi}|^2)$
+    """
+    return 0.5 * math.sum(n**2 + math.abs(phi.gradient(difference='central', padding='wrap'))**2)
+
+
+def get_generalized_enstrophy(n, phi):
+    """
+    Calculate generalized enstrophy of HW plasma
+    $U = \frac{1}{2} \int d^2 x (\tilde{n} - \nabla^2_\bot \tilde{\phi})^2 \equiv \frac{1}{2} \int d^2 x (\tilde{n} - \tilde{\Omega})^2$
+    """
+    return 0.5 * math.sum((n - phi.gradient(difference='central', padding='wrap'))**2)
+
+
+def diffuse(field, N=1):
     """
     returns nu*nabla_\bot^(2*N)*field :: allows diffusion of accumulation on small scales
     :param field: field to be diffused
@@ -306,7 +373,7 @@ def diffuse(field, N=1, nu=1):
     :type N: int
     :param nu: perpendicular nu
     :type nu: Field/Array/Tensor or int/float
-    :returns: nu*nabla^{2*N}(field)
+    :returns: nabla^{2*N}(field)
     """
     # Second Order for Diffusion
     #nabla2_o = math.nd.laplace(o3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
@@ -316,14 +383,14 @@ def diffuse(field, N=1, nu=1):
     	ret_field = 0
     else:
         # Apply laplace N times in perpendicular ([y, x])
-        ret_field = field.data[0, ..., 0]#
+        ret_field = field#.data[0, ..., 0]#
         for _ in range(N):
-            #ret_field = ret_field.laplace(axes=[1, 2])  # DOES NOT WORK
-            if field.rank == 3:
-                ret_field = math.nd.laplace(ret_field, axes=axes, padding='wrap')
-            else:
-                ret_field = math.nd.laplace(ret_field)
-    return nu * ret_field
+            ret_field = ret_field.laplace(axes=[1, 2])  # DOES NOT WORK
+            #if field.rank == 3:
+            #    ret_field = math.nd.laplace(ret_field, axes=axes, padding='wrap')
+            #else:
+            #    ret_field = math.nd.laplace(ret_field)
+    return ret_field.data[0, ..., 0]
 
 
 def solve_poisson(omega2d, fluiddomain, poisson_solver=SparseCG()):
