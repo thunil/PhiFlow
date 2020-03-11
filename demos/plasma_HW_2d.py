@@ -18,7 +18,7 @@ nu_dict = {"coarse-large": 5*10**-10,
            "fine-small": 10**-4}
 
 initial_state = {
-    "grid": grid_dict['test'],      # Grid size in points (resolution)
+    "grid": grid_dict['coarse'],      # Grid size in points (resolution)
     "K0":   K0_dict['large'],         # Box size defining parameter
     "N":    1,                        # N*2 order of dissipation
     "nu":   nu_dict['coarse-large'],  # Dissipation scaling coefficient

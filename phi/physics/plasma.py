@@ -82,7 +82,10 @@ class PlasmaHW(DomainState):
     __rmul__ = __mul__
 
     def __add__(self, other):
-        return self.copied_with(density=self.density+other.density, phi=self.phi+other.phi, omega=self.omega+other.omega)
+        return self.copied_with(density=self.density+other.density,
+                                phi=self.phi+other.phi,
+                                omega=self.omega+other.omega,
+                                age=max(self.age, other.age))
 
 
 class HasegawaWakatani(Physics):
@@ -165,22 +168,25 @@ class HasegawaWakatani(Physics):
         k3 = dt * f(y_n + k2/2, t + dt/2)
         k4 = dt * f(y_n + k3,   t + dt)
         """
+        t0 = time.time()
         yn = plasma
-        k1 = dt*self.gradient_2d(yn)
-        k2 = dt*self.gradient_2d(yn + k1*0.5)
-        k3 = dt*self.gradient_2d(yn + k2*0.5)
-        k4 = dt*self.gradient_2d(yn + k3)
+        k1 = dt*self.gradient_2d(yn, dt=0)
+        k2 = dt*self.gradient_2d(yn + k1*0.5, dt=dt/2)
+        k3 = dt*self.gradient_2d(yn + k2*0.5, dt=dt/2)
+        k4 = dt*self.gradient_2d(yn + k3, dt=dt)
         res = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)
-        print("{:<7.2f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g}".format(
+        t1 = time.time()
+        print("{:<7.2f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>6.2f}s".format(
             plasma.age + dt,
             np.max(yn.density.data),
             np.max(k1.density.data),
             np.max(k2.density.data),
             np.max(k3.density.data),
-            np.max(k4.density.data)
+            np.max(k4.density.data),
+            t1-t0
         ))
-        return res.copied_with(res, age=plasma.age+dt)
-
+        return res
+        
     def euler_2d(self, plasma, dt=0.1):
         # Recast to 3D: return Z from Batch-axis
         plasma_grad = self.gradient_2d(plasma)
@@ -195,7 +201,7 @@ class HasegawaWakatani(Physics):
         print("{:>8.2g}  {:>8.2g}".format(np.max(self.energy.data), np.max(self.enstrophy.data)))
         return
 
-    def gradient_2d(self, plasma):
+    def gradient_2d(self, plasma, dt=0):
         """
         2D Hasegawa-Wakatani Equations:
         time-derivative   = parallel_mix - poiss_bracket - spatial_derivative     + damping/diffusion
@@ -210,7 +216,7 @@ class HasegawaWakatani(Physics):
         # Calculate: Omega -> Phi
         # Pressure Solvers require exact mean of zero. Set mean to zero:
         o2d = plasma.omega - math.mean(plasma.omega.data[0, ..., 0])  # NOTE: Only in 2D
-        p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))
+        p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))  # NOTE: This is performance limiting
 
         # Compute in numpy arrays through .data
         #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
@@ -243,9 +249,10 @@ class HasegawaWakatani(Physics):
         # ))
 
         return plasma.copied_with(
-            density=plasma.density.copied_with(data=math.reshape(n, plasma.density.data.shape), box=plasma.domain.box),
-            omega=plasma.omega.copied_with(data=math.reshape(o, plasma.omega.data.shape), box=plasma.domain.box),
-            phi=p
+            density=plasma.density.copied_with(data=math.reshape(n, plasma.density.data.shape)),
+            omega=plasma.omega.copied_with(data=math.reshape(o, plasma.omega.data.shape)),
+            phi=p,
+            age=plasma.age+dt
         )
 
     def step3d(self, plasma, dt=0.1):
@@ -435,6 +442,8 @@ def arakawa_stencil(zeta, psi):
 
 @jit
 def arakawa_vec(zeta, psi, d):
+    """2D periodic first-order Arakawa
+    requires 1 cell padded input on each border"""
     return (zeta[2:, 1:-1] * (psi[1:-1, 2:] - psi[1:-1, 0:-2] + psi[2:, 2:] - psi[2:, 0:-2])
             - zeta[0:-2, 1:-1] * (psi[1:-1, 2:] - psi[1:-1, 0:-2] + psi[0:-2, 2:] - psi[0:-2, 0:-2])
             - zeta[1:-1, 2:] * (psi[2:, 1:-1] - psi[0:-2, 1:-1] + psi[2:, 2:] - psi[0:-2, 2:])
@@ -446,11 +455,12 @@ def arakawa_vec(zeta, psi, d):
 
 
 def arakawa(z, p, d=1.):
+    """apply periodic stencil"""
     return arakawa_stencil(z, p) / (12 * (d**2))
 
 
 def periodic_arakawa(zeta, psi, d=1.):
-    ''' 2D periodic padding and apply arakawa stencil to padded matrix '''
+    """2D periodic padding and apply Arakawa stencil to padded matrix"""
     z = periodic_padding(zeta)
     p = periodic_padding(psi)
     #return arakawa_stencil(z, p, d=d)[1:-1, 1:-1]
