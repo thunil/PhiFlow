@@ -4,11 +4,14 @@ Definition of Fluid, IncompressibleFlow as well as fluid-related functions.
 from numbers import Number
 
 import numpy as np
+import six
+
 from phi import math, struct
+from phi.physics.field import Field
 
 from .domain import Domain, DomainState
 from .field import CenteredGrid, StaggeredGrid, advect, union_mask
-from .field.effect import Gravity, effect_applied, gravity_tensor
+from .field.effect import Gravity, effect_applied, gravity_tensor, FieldEffect
 from .material import OPEN, Material
 from .physics import Physics, StateDependency
 from .pressuresolver.solver_api import FluidDomain, poisson_solve
@@ -20,8 +23,7 @@ class Fluid(DomainState):
     A Fluid state consists of a density field (centered grid) and a velocity field (staggered grid).
     """
 
-    def __init__(self, domain, density=0.0, velocity=0.0, buoyancy_factor=0.0,
-                 tags=('fluid', 'velocityfield'), name='fluid', **kwargs):
+    def __init__(self, domain, density=0.0, velocity=0.0, buoyancy_factor=0.0, tags=('fluid', 'velocityfield', 'velocity'), name='fluid', **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
         self.solve_info = {}
 
@@ -88,14 +90,54 @@ class IncompressibleFlow(Physics):
             density = effect_applied(effect, density, dt)
         for effect in velocity_effects:
             velocity = effect_applied(effect, velocity, dt)
-        velocity += buoyancy(fluid.density, gravity, fluid.buoyancy_factor) * dt
+        velocity += buoyancy(density, gravity, fluid.buoyancy_factor).at(velocity) * dt
         # --- Pressure solve ---
         if self.make_output_divfree:
             velocity, fluid.solve_info = divergence_free(velocity, fluid.domain, obstacles, pressure_solver=self.pressure_solver, return_info=True)
         return fluid.copied_with(density=density, velocity=velocity, age=fluid.age + dt)
 
 
+class IncompressibleVFlow(Physics):
+
+    def __init__(self, boundaries, pressure_solver=None):
+        Physics.__init__(self, dependencies=[
+            StateDependency('obstacles', 'obstacle'),
+            StateDependency('velocity_effects', 'velocity_effect', blocking=True),
+        ])
+        self.boundaries =  boundaries
+        self.pressure_solver = pressure_solver
+
+    def step(self, velocity, dt=1.0, obstacles=(), velocity_effects=()):
+        velocity = advect.semi_lagrangian(velocity, velocity, dt=dt)
+        for effect in velocity_effects:  # this is where buoyancy is applied
+            velocity = effect_applied(effect, velocity, dt)
+        velocity, _solve_info = divergence_free(velocity, Domain(velocity.resolution, self.boundaries, velocity.box), obstacles, pressure_solver=self.pressure_solver, return_info=True)
+        return velocity.copied_with(age=velocity.age + dt)
+
+
 INCOMPRESSIBLE_FLOW = IncompressibleFlow()
+
+
+class Drift(Physics):
+    """
+Passive advection with external velocity field.
+This Physics requires the world to contain a single velocity field or velocity-carrying state such as Fluid.
+
+This Physics can be applied to all built-in Fields.
+The fields will then be advected with the velocity field each time step.
+    """
+
+    def __init__(self, use_updated_velocity=False, conserve=True):
+        Physics.__init__(self, dependencies=[StateDependency('velocity', 'velocity', single_state=True, blocking=use_updated_velocity)])
+        self.conserve = conserve
+
+    def step(self, field, dt=1.0, velocity=None):
+        if not isinstance(velocity, Field):
+            velocity = velocity.velocity
+        advected = advect.advect(field, velocity, dt=dt).copied_with(age=field.age + dt)
+        if self.conserve and isinstance(field, (CenteredGrid, StaggeredGrid)) and np.all(~np.char.equal(struct.flatten(field.extrapolation), 'constant')):  # If field has zero extrapolation, it cannot be conserved
+            advected = advected.normalized(field)
+        return advected
 
 
 def buoyancy(density, gravity, buoyancy_factor):
@@ -108,8 +150,31 @@ Computes the buoyancy force proportional to the density.
     """
     if isinstance(gravity, (int, float)):
         gravity = math.to_float(math.as_tensor([gravity] + ([0] * (density.rank - 1))))
-    result = StaggeredGrid.from_scalar(density, -gravity * buoyancy_factor)
-    return result
+    return density * (-gravity * buoyancy_factor)
+
+
+def create_buoyancy(source, target='velocity', factor=0.1):
+    assert isinstance(source, six.string_types)
+    assert isinstance(target, six.string_types)
+    return {
+        'state': FieldEffect(None, targets=target),
+        'physics': _ComputeBuoyancy(source, factor)
+    }
+
+
+class _ComputeBuoyancy(Physics):
+
+    def __init__(self, source, factor):
+        Physics.__init__(self, dependencies=[
+            StateDependency('source_field', source, single_state=True, blocking=True),
+            StateDependency('gravity', 'gravity', single_state=True)
+        ])
+        self.factor = factor
+
+    def step(self, effect, dt=1.0, source_field=None, gravity=Gravity()):
+        gravity = gravity_tensor(gravity, source_field.rank)
+        buoyancy_field = buoyancy(source_field, gravity, self.factor)
+        return effect.copied_with(field=buoyancy_field)
 
 
 def _is_div_free(velocity, is_div_free):

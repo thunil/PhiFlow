@@ -49,7 +49,7 @@ class SciPyBackend(Backend):
 
     def is_tensor(self, x):
         """ is array """
-        return isinstance(x, np.ndarray)
+        return isinstance(x, (np.ndarray, int, float))
 
     def equal(self, x, y):
         """ array equality comparison """
@@ -266,16 +266,6 @@ class SciPyBackend(Backend):
         # Reduce rank of input indices, by convention it should be [index] so gather works for Tensorflow
         index, = indices
         return values[index]
-
-    def unstack(self, tensor, axis=0):
-        if axis < 0:
-            axis += len(tensor.shape)
-        if axis >= len(tensor.shape) or axis < 0:
-            raise ValueError("Illegal axis value")
-        result = []
-        for i in range(tensor.shape[axis]):
-            result.append(tensor[tuple([i if d == axis else slice(None) for d in range(len(tensor.shape))])])
-        return result
 
     def std(self, x, axis=None):
         return np.std(x, axis)
