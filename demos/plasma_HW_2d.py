@@ -18,7 +18,7 @@ nu_dict = {"coarse-large": 5*10**-10,
            "fine-small": 10**-4}
 
 initial_state = {
-    "grid": grid_dict['coarse'],      # Grid size in points (resolution)
+    "grid": grid_dict['test'],      # Grid size in points (resolution)
     "K0":   K0_dict['large'],         # Box size defining parameter
     "N":    1,                        # N*2 order of dissipation
     "nu":   nu_dict['coarse-large'],  # Dissipation scaling coefficient
@@ -55,6 +55,15 @@ x_field = scipy.ndimage.rotate(cross_field[0, :, :, 0], angle=45, reshape=False)
 
 random_field = np.random.uniform(1, 2, size=shape)
 
+def gaus2d(shape, stds, phys_scales=(5, 5), centers=(0, 0)):
+    x = np.linspace(-phys_scales[0], phys_scales[1], shape[0])
+    y = np.linspace(-phys_scales[1], phys_scales[1], shape[1])
+    x, y = np.meshgrid(x, y)
+    mx, my = centers
+    sx, sy = stds
+    return 1. / (2. * np.pi * sx * sy) * np.exp(-((x-mx)**2. / (2. * sx**2.) + (y-my)**2. / (2. * sy**2.)))
+gaussian_field = gaus2d(shape[1:3], (2, 2)).reshape(shape)
+
 class PlasmaSim(App):
 
     def __init__(self, resolution):
@@ -66,14 +75,14 @@ class PlasmaSim(App):
                     box=box[0:N, 0:N],
                     boundaries=(PERIODIC, PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
                 ),
-                density=step_field,#np.ones(shape=shape),
-                omega=step_field,#np.random.uniform(low=1, high=10, size=shape),
-                phi=np.ones(shape)#np.random.uniform(low=1, high=10, size=shape)
+                density=gaussian_field,#np.ones(shape=shape),
+                omega=gaussian_field,#np.random.uniform(low=1, high=10, size=shape),
+                phi=gaussian_field#np.random.uniform(low=1, high=10, size=shape)
             ),
             physics=HasegawaWakatani(**initial_state)
         )
         # Add Fields
-        self.dt = EditableFloat('dt', 0.01)
+        self.dt = EditableFloat('dt', 0.0001)
         self.add_field('Density', lambda: plasma.density)
         self.add_field('Phi', lambda: plasma.phi)
         self.add_field('Omega', lambda: plasma.omega)

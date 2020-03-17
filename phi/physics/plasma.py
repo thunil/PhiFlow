@@ -176,7 +176,7 @@ class HasegawaWakatani(Physics):
         k4 = dt*self.gradient_2d(yn + k3, dt=dt)
         res = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)
         t1 = time.time()
-        print("{:<7.2f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>6.2f}s".format(
+        print("{:<7.4f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>6.2f}s".format(
             plasma.age + dt,
             np.max(yn.density.data),
             np.max(k1.density.data),
