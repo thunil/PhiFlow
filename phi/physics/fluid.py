@@ -1,6 +1,7 @@
 """
 Definition of Fluid, IncompressibleFlow as well as fluid-related functions.
 """
+import warnings
 from numbers import Number
 
 import numpy as np
@@ -11,7 +12,7 @@ from phi.physics.field import Field
 
 from .domain import Domain, DomainState
 from .field import CenteredGrid, StaggeredGrid, advect, union_mask
-from .field.effect import Gravity, effect_applied, gravity_tensor, FieldEffect
+from .field.effect import Gravity, effect_applied, gravity_tensor, FieldEffect, FieldPhysics
 from .material import OPEN, Material
 from .physics import Physics, StateDependency
 from .pressuresolver.solver_api import FluidDomain, poisson_solve
@@ -56,6 +57,16 @@ class Fluid(DomainState):
         return "Fluid[density: %s, velocity: %s]" % (self.density, self.velocity)
 
 
+def create_smoke(domain, density=0.0, velocity=0.0, buoyancy_factor=0.0):
+    velocity_field = StaggeredGrid.sample(velocity, domain, name='velocity')
+    velocity_physics = IncompressibleVFlow(domain.boundaries)
+    density_field = CenteredGrid.sample(density, domain, name='density')
+    density_physics = [Drift(), FieldPhysics('density')]
+    buoyancy_state = FieldEffect(None, targets='velocity')
+    buoyancy_physics = _ComputeBuoyancy('density', buoyancy_factor)
+    return (velocity_field, density_field, buoyancy_state), (velocity_physics, density_physics, buoyancy_physics)
+
+
 class IncompressibleFlow(Physics):
     """
     Physics modelling the incompressible Navier-Stokes equations.
@@ -90,7 +101,7 @@ class IncompressibleFlow(Physics):
             density = effect_applied(effect, density, dt)
         for effect in velocity_effects:
             velocity = effect_applied(effect, velocity, dt)
-        velocity += buoyancy(density, gravity, fluid.buoyancy_factor).at(velocity) * dt
+        velocity += (density * -gravity * fluid.buoyancy_factor * dt).at(velocity)
         # --- Pressure solve ---
         if self.make_output_divfree:
             velocity, fluid.solve_info = divergence_free(velocity, fluid.domain, obstacles, pressure_solver=self.pressure_solver, return_info=True)
@@ -148,9 +159,11 @@ Computes the buoyancy force proportional to the density.
     :param buoyancy_factor: float
     :return: StaggeredGrid for the domain of the density
     """
+    warnings.warn('buoyancy() is deprecated. Use (density * -gravity * buoyancy_factor).at(target_grid) instead.', DeprecationWarning)
     if isinstance(gravity, (int, float)):
         gravity = math.to_float(math.as_tensor([gravity] + ([0] * (density.rank - 1))))
-    return density * (-gravity * buoyancy_factor)
+    result = StaggeredGrid.from_scalar(density, -gravity * buoyancy_factor)
+    return result
 
 
 def create_buoyancy(source, target='velocity', factor=0.1):
@@ -173,8 +186,7 @@ class _ComputeBuoyancy(Physics):
 
     def step(self, effect, dt=1.0, source_field=None, gravity=Gravity()):
         gravity = gravity_tensor(gravity, source_field.rank)
-        buoyancy_field = buoyancy(source_field, gravity, self.factor)
-        return effect.copied_with(field=buoyancy_field)
+        return effect.copied_with(field=source_field * -gravity * self.factor)
 
 
 def _is_div_free(velocity, is_div_free):

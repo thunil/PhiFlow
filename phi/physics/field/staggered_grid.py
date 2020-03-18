@@ -33,10 +33,11 @@ def _res(tensor, axis):
 
 def unstack_staggered_tensor(tensor):
     tensors = math.unstack(tensor, -1)
+    result = []
     for i, dim in enumerate(math.spatial_dimensions(tensor)):
         slices = [slice(None, -1) if d != dim else slice(None) for d in math.spatial_dimensions(tensor)]
-        tensors[i] = math.expand_dims(tensors[i][tuple([slice(None)]+slices)], -1)
-    return tensors
+        result.append(math.expand_dims(tensors[i][tuple([slice(None)]+slices)], -1))
+    return result
 
 
 def stack_staggered_components(tensors):
@@ -215,7 +216,7 @@ class StaggeredGrid(Field):
 
     @staticmethod
     def from_scalar(scalar_field, axis_forces, name=None):
-        warnings.warn('StaggeredGrid.from_scalar() is deprecated. Use (scalar * axis_forces).at(staggered_grid) or StaggeredField.sample(scalar * axis_forces, domain) instead.')
+        warnings.warn('StaggeredGrid.from_scalar() is deprecated. Use (scalar * axis_forces).at(staggered_grid) or StaggeredField.sample(scalar * axis_forces, domain) instead.', DeprecationWarning)
         assert isinstance(scalar_field, CenteredGrid)
         assert scalar_field.component_count == 1, 'channel must be scalar but has %d components' % scalar_field.component_count
         tensors = []
