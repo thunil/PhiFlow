@@ -90,17 +90,14 @@ class PlasmaHW(DomainState):
 
 class HasegawaWakatani(Physics):
     r"""
-    Physics modelling the Hasegawa-Wakatani equations with diffusion factor.
+    Physics modelling the Hasegawa-Wakatani equations with diffusion factor
     Solves for phi using:  poisson_solver
     Solves Poisson Bracket using:  Arakawa Scheme
     Diffuses small scales using:  N times laplace on field to diffuse
 
     Hasegawa-Wakatani Equations:
-    $$
-        \partial_t \Omega = \frac{1}{\nu} \nabla_{||}^2(n-\phi) - [\phi,\Omega] + nu_\bot \nabla^{2N} \Omega \\
-        \partial_t n = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n] - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
-    $$
-
+        \partial_t \Omega = \frac{1}{\nu} \nabla_{||}^2(n-\phi) - [\phi,\Omega]                          + nu_\bot \nabla^{2N} \Omega \\
+        \partial_t n      = \frac{1}{\nu} \nabla^2_{||}(n-\phi) - [\phi,n]      - \kappa_n\partial_y\phi + nu_\bot \nabla^{2N} n
     """
 
     def __init__(self, poisson_solver=None, dim=2, N=3, c1=1, nu=10**-6, K0=0.15, arakawa_coeff=1, kappa_coeff=1):
@@ -112,7 +109,7 @@ class HasegawaWakatani(Physics):
         :type N: int
         :param c1: Adiabatic parameter (0.1: hydrodynamic - 5: adiabatic). T/(n_0 e^2 eta_||) * (k_||^2)/(c_s/L_n)
         :type c1: float
-        :param K0: 
+        :param K0:
         :type K0: float
         :param nu: dissipation parameter (10^-10 - 10^-4)
         :type nu: float
@@ -174,7 +171,7 @@ class HasegawaWakatani(Physics):
         k2 = dt*self.gradient_2d(yn + k1*0.5, dt=dt/2)
         k3 = dt*self.gradient_2d(yn + k2*0.5, dt=dt/2)
         k4 = dt*self.gradient_2d(yn + k3, dt=dt)
-        res = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)
+        y1 = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)  # TODO: currently adds two timesteps
         t1 = time.time()
         print("{:<7.4f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>6.2f}s".format(
             plasma.age + dt,
@@ -185,7 +182,7 @@ class HasegawaWakatani(Physics):
             np.max(k4.density.data),
             t1-t0
         ))
-        return res
+        return y1
         
     def euler_2d(self, plasma, dt=0.1):
         # Recast to 3D: return Z from Batch-axis
@@ -199,17 +196,15 @@ class HasegawaWakatani(Physics):
         self.energy = get_total_energy(plasma.density, plasma.phi)
         self.enstrophy = get_generalized_enstrophy(plasma.density, plasma.phi)
         print("{:>8.2g}  {:>8.2g}".format(np.max(self.energy.data), np.max(self.enstrophy.data)))
-        return
+        return None
 
     def gradient_2d(self, plasma, dt=0):
         """
         2D Hasegawa-Wakatani Equations:
         time-derivative   = parallel_mix - poiss_bracket - spatial_derivative     + damping/diffusion
         ------------------|--------------|---------------|------------------------|----------------------
-        $$
         \partial_t \Omega = c_1 (n-\phi) - [\phi,\Omega]                          + nu \nabla^{2N} \Omega \\
         \partial_t n      = c_1 (n-\phi) - [\phi,n]      - \kappa_n\partial_y\phi + nu \nabla^{2N} n
-        $$
         """
         # pylint: disable-msg = arguments-differ
         # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
@@ -231,10 +226,10 @@ class HasegawaWakatani(Physics):
              - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.omega.data[0, ..., 0])
              + self.nu * diffuse(plasma.omega, self.N))
         # Step 2.2: New Density.
-        kappa = dx_n/plasma.density.data[0, ..., 0]
+        kappa = np.divide(1, plasma.density.data[0, ..., 0])#dx_n  # TODO: Figure out how to express kappa
         n = (self.c1 * (plasma.density - p).data[0, ..., 0]
              - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])
-             - self.kappa_coeff * kappa * dy_p
+             - self.kappa_coeff * kappa #* dy_p
              + self.nu * diffuse(plasma.density, self.N))
 
         # Debug print

@@ -21,10 +21,10 @@ initial_state = {
     "grid": grid_dict['test'],      # Grid size in points (resolution)
     "K0":   K0_dict['large'],         # Box size defining parameter
     "N":    1,                        # N*2 order of dissipation
-    "nu":   nu_dict['coarse-large'],  # Dissipation scaling coefficient
-    "c1":   c1_dict['hydrodynamic'],     # Adiabatic parameter
+    "nu":   0,#nu_dict['coarse-large'],  # Dissipation scaling coefficient
+    "c1":   0,#c1_dict['hydrodynamic'],     # Adiabatic parameter
     "kappa_coeff":   1,
-    "arakawa_coeff": 1,
+    "arakawa_coeff": 0,
 }
 
 N = initial_state['grid'][1]
@@ -95,9 +95,9 @@ class PlasmaSim(App):
                 box=box[0:N, 0:N],
                 boundaries=(CLOSED, CLOSED)  # Each dim: OPEN / CLOSED / PERIODIC
             ),
-            density=random_field,#np.ones(shape=shape),
-            omega=random_field,#np.random.uniform(low=1, high=10, size=shape),
-            phi=random_field#np.random.uniform(low=1, high=10, size=shape)
+            density=gaussian_field,#np.ones(shape=shape),
+            omega=-gaussian_field,#np.random.uniform(low=1, high=10, size=shape),
+            phi=-gaussian_field#np.random.uniform(low=1, high=10, size=shape)
         )
         self.plasma.density = plasma.density #np.random.uniform(low=1, high=2, size=shape)
         self.plasma.omega = plasma.omega #np.random.uniform(low=1, high=2, size=shape)

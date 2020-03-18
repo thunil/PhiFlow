@@ -55,11 +55,13 @@ def heatmap(data, settings):
             data = data.at_centers()
         else:
             raise ValueError(component)
-    z = data.data[batch,...]
+    z = data.data[batch, ...]
     z = reduce_component(z, component)
     y = data.points.data[0, :, 0, 0]
     x = data.points.data[0, 0, :, 1]
-    return {'data': [{'x': x, 'y': y, 'z': z, 'type': 'heatmap'}]}
+    return {'data': [{'x': x, 'y': y, 'z': z, 'type': 'heatmap', 
+            'colorscale': 'RdYlBu',#[[0.0, 'rgb(0,0,255)'], [0.5, 'rgb(255,255,255)'], [1.0, 'rgb(255,0,0)']], 
+            'zmid': '0'}]}
 
 
 def slice_2d(field3d, settings):
@@ -109,16 +111,16 @@ def plot(field1d, settings):
 def reduce_component(tensor, component):
     clen = tensor.shape[-1]
     if clen == 1:
-        return tensor[...,0]
+        return tensor[..., 0]
     if component == 'x':
-        return tensor[...,-1]
+        return tensor[..., -1]
     if component == 'y':
-        return tensor[...,-2]
+        return tensor[..., -2]
     if component == 'z':
         if clen >= 3:
-            return tensor[...,-3]
+            return tensor[..., -3]
         else:
-            return numpy.zeros_like(tensor[...,0])
+            return numpy.zeros_like(tensor[..., 0])
     if component == 'length':
         return numpy.sqrt(numpy.sum(tensor ** 2, axis=-1, keepdims=False))
     if component == 'vec2':
@@ -135,8 +137,8 @@ def vector_field(field2d, settings, draw_arrows_backward=True, max_resolution=40
     batch = settings.get('batch', 0)
     batch = min(batch, field2d.data.shape[0])
 
-    y, x = math.unstack(field2d.points.data[0,...,-2:], axis=-1)
-    data_y, data_x = math.unstack(field2d.data[batch,...], -1)[-2:]
+    y, x = math.unstack(field2d.points.data[0, ..., -2:], axis=-1)
+    data_y, data_x = math.unstack(field2d.data[batch, ...], -1)[-2:]
 
     while numpy.prod(x.shape) > max_resolution ** 2:
         y = y[::2, ::2]
@@ -171,8 +173,8 @@ def vector_field(field2d, settings, draw_arrows_backward=True, max_resolution=40
         result.update_yaxes(range=[field2d.box.get_lower(0), field2d.box.get_upper(0)])
         return result
     else:
-        lines_y = numpy.stack([y, y+data_y, [None]*len(x)], -1).flatten()  # 3 points per arrow
-        lines_x = numpy.stack([x, x+data_x, [None]*len(x)], -1).flatten()
+        lines_y = numpy.stack([y, y + data_y, [None] * len(x)], -1).flatten()  # 3 points per arrow
+        lines_x = numpy.stack([x, x + data_x, [None] * len(x)], -1).flatten()
         return {
             'data': [
                 {
