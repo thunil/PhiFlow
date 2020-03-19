@@ -93,7 +93,7 @@ class IncompressibleFlow(Physics):
             velocity, fluid.solve_info = divergence_free(velocity, fluid.domain, obstacles, pressure_solver=self.pressure_solver, return_info=True)
         # --- Advection ---
         density = advect.semi_lagrangian(density, velocity, dt=dt)
-        velocity = advect.semi_lagrangian(velocity, velocity, dt=dt)
+        velocity = advected_velocity = advect.semi_lagrangian(velocity, velocity, dt=dt)
         if self.conserve_density and np.all(Material.solid(fluid.domain.boundaries)):
             density = density.normalized(fluid.density)
         # --- Effects ---
@@ -102,9 +102,12 @@ class IncompressibleFlow(Physics):
         for effect in velocity_effects:
             velocity = effect_applied(effect, velocity, dt)
         velocity += (density * -gravity * fluid.buoyancy_factor * dt).at(velocity)
+        divergent_velocity = velocity
         # --- Pressure solve ---
         if self.make_output_divfree:
             velocity, fluid.solve_info = divergence_free(velocity, fluid.domain, obstacles, pressure_solver=self.pressure_solver, return_info=True)
+        fluid.solve_info['advected_velocity'] = advected_velocity
+        fluid.solve_info['divergent_velocity'] = divergent_velocity
         return fluid.copied_with(density=density, velocity=velocity, age=fluid.age + dt)
 
 
@@ -198,16 +201,17 @@ def _is_div_free(velocity, is_div_free):
     return False
 
 
-def solve_pressure(divergence, fluiddomain, pressure_solver=None):
+def solve_pressure(divergence, fluiddomain, pressure_solver=None, guess=None):
     """
 Computes the pressure from the given velocity divergence using the specified solver.
     :param divergence: CenteredGrid
     :param fluiddomain: FluidDomain instance
     :param pressure_solver: PressureSolver to use, None for default
+    :param guess: CenteredGrid with same size and resolution as divergence
     :return: pressure field, iteration count
     :rtype: CenteredGrid, int
     """
-    return poisson_solve(divergence, fluiddomain, solver=pressure_solver)
+    return poisson_solve(divergence, fluiddomain, solver=pressure_solver, guess=guess)
 
 
 def divergence_free(velocity, domain=None, obstacles=(), pressure_solver=None, return_info=False):
