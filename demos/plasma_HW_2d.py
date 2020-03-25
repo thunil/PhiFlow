@@ -21,10 +21,10 @@ initial_state = {
     "grid": grid_dict['test'],      # Grid size in points (resolution)
     "K0":   K0_dict['large'],         # Box size defining parameter
     "N":    1,                        # N*2 order of dissipation
-    "nu":   0,#nu_dict['coarse-large'],  # Dissipation scaling coefficient
-    "c1":   0,#c1_dict['hydrodynamic'],     # Adiabatic parameter
+    "nu":   nu_dict['coarse-large'],  # Dissipation scaling coefficient
+    "c1":   c1_dict['adiabatic'],     # Adiabatic parameter
     "kappa_coeff":   1,
-    "arakawa_coeff": 0,
+    "arakawa_coeff": 1,
 }
 
 N = initial_state['grid'][1]
@@ -55,6 +55,11 @@ x_field = scipy.ndimage.rotate(cross_field[0, :, :, 0], angle=45, reshape=False)
 
 random_field = np.random.uniform(1, 2, size=shape)
 
+perturbation_field = np.ones(shape)*10
+for i in [np.random.randint(0, shape[1], size=3)]:
+    for j in [np.random.randint(0, shape[2], size=3)]:
+        perturbation_field[0, i, j, 0] += np.random.rand()*np.random.choice([-1, +1])*3
+
 def gaus2d(shape, stds, phys_scales=(5, 5), centers=(0, 0)):
     x = np.linspace(-phys_scales[0], phys_scales[1], shape[0])
     y = np.linspace(-phys_scales[1], phys_scales[1], shape[1])
@@ -75,9 +80,10 @@ class PlasmaSim(App):
                     box=box[0:N, 0:N],
                     boundaries=(PERIODIC, PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
                 ),
-                density=gaussian_field,#np.ones(shape=shape),
-                omega=gaussian_field,#np.random.uniform(low=1, high=10, size=shape),
-                phi=gaussian_field#np.random.uniform(low=1, high=10, size=shape)
+                density=random_field,#np.ones(shape=shape),
+                omega=random_field,#np.random.uniform(low=1, high=10, size=shape),
+                phi=random_field,#np.random.uniform(low=1, high=10, size=shape)
+                initial_density=random_field
             ),
             physics=HasegawaWakatani(**initial_state)
         )
