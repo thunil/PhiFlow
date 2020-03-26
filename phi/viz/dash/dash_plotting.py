@@ -40,14 +40,17 @@ def dash_graph_plot(data, settings):
 
 
 def get_color_interpolation(val, cm_arr):
-    """Weighted average between point smaller and larger than it"""
+    """Interpolate between point smaller and larger than it"""
     if 0 in cm_arr[:, 0]-val:
         center = cm_arr[cm_arr[:, 0] == val][-1]
     else:
         zero_centered = (cm_arr[:, 0]-val)
         row1 = cm_arr[np.argmax(zero_centered[zero_centered < 0])]  # largest value smaller than val
         row2 = cm_arr[np.argmin(zero_centered[zero_centered > 0])]  # smallest value larger than val
-        center = row1 * (1-(val-row1[0])/(row2[0]-row1[0])) + row2 * (val-row1[0])/(row2[0]-row1[0])  # Interpolate
+        if row1 != row2:
+            center = row1 * (1-(val-row1[0])/(row2[0]-row1[0])) + row2 * (val-row1[0])/(row2[0]-row1[0])  # Interpolate
+        else:
+            center = row1  # zero division occurs otherwise
     center[0] = val
     return center
 
