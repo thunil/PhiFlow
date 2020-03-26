@@ -115,6 +115,13 @@ class PlasmaHW(DomainState):
 class HasegawaWakatani(Physics):
     r"""
     Physics modelling the Hasegawa-Wakatani equations with diffusion factor
+    Used for: Studying Resistive drift- wave turbulence in slab geometry for cold ions with isothermal electrons
+    - Equilibrium constant magnetic field, B, in z-direction (batch dimension)
+    - Equilibrium initial density, n_0, has gradient (dn_0/dx) < 0 (negative n direction)
+    - Equilibrium density scale, L_n = n_0 / |dn_0/dx|
+    - Neglect: finite Larmor radius effects, temperature gradients, temperature fluctuations
+    - Using dimensionless variables: x=x/rho_s, y=y/rho_s, t=tc_s/L_n
+
     Solves for phi using:  poisson_solver
     Solves Poisson Bracket using:  Arakawa Scheme
     Diffuses small scales using:  N times laplace on field to diffuse
@@ -314,6 +321,7 @@ class HasegawaWakatani(Physics):
 
     def step3d(self, plasma, dt=0.1):
         """
+        WORK IN PROGRESS
         Computes the next state of a physical system, given the current state.
         Solves the simulation for a time increment self.dt.
 
