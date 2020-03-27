@@ -80,22 +80,25 @@ gaussian_field = gaus2d(shape[1:3], (2, 2)).reshape(shape)
 random_field -= np.mean(random_field)  # zero center
 
 
+domain = Domain([N, N],
+                box=AABox(0, [get_box_size(initial_state['K0'])]*len([N, N])),  # NOTE: Assuming square
+                boundaries=(PERIODIC, PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
+                )
+fft_random = CenteredGrid.sample(Noise(), domain)
+integral = np.sum(fft_random.data**2)
+fft_random /= np.sqrt(integral)
+
 class PlasmaSim(App):
 
     def __init__(self, initial_state, resolution):
         App.__init__(self, 'Plasma Sim', DESCRIPTION, summary='plasma' + 'x'.join([str(d) for d in resolution]), framerate=20)
         plasma = self.plasma = world.add(
             PlasmaHW(
-                Domain(
-                    # dx = self.box.size / self.resolution
-                    resolution,
-                    box=AABox(0, [get_box_size(initial_state['K0'])]*len(resolution)),  # NOTE: Assuming square
-                    boundaries=(PERIODIC, PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
-                ),
-                density=2*random_field,
-                omega=random_field,
-                phi=random_field,
-                initial_density=random_field
+                domain,
+                density=fft_random,
+                omega=fft_random,
+                phi=fft_random,
+                initial_density=fft_random
             ),
             physics=HasegawaWakatani(**initial_state)
         )
@@ -123,6 +126,7 @@ class PlasmaSim(App):
 
     def step(self):
         world.step(dt=self.dt)
+        #energy_array[i] = world.state.plasma.energy
 
 
 show(PlasmaSim(initial_state, [N, N]), display=('Density', 'Phi', 'Omega'), framerate=1, debug=True)

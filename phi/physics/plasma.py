@@ -278,10 +278,15 @@ class HasegawaWakatani(Physics):
         o_mean = math.mean(plasma.omega.data[0, ..., 0])
         o2d = plasma.omega - o_mean  # NOTE: Only in 2D
         p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))  # NOTE: This is performance limiting
-        o_recalc = p.laplace(axes=[1, 2])
-        o_diff = np.max(np.abs((o2d-o_recalc).data[0, ..., 0]))
+        o_recalc = p.laplace()
+        o_diff = np.max(np.abs((o2d-o_recalc).data[0, 2:-2, 2:-2, 0]))
         print(f"o-shape: {plasma.omega.data.shape},  p-shape: {p.data.shape},  o_recalc: {o_recalc.data.shape}")
-        print(f"omega_max: {np.max(plasma.omega.data[0, ..., 0])},  o_recalc_max: {np.max(o_recalc.data[0, ..., 0])},  o_diff: {o_diff},  o_mean: {o_mean}")
+        print("omega_max: {:.4g},  o_recalc_max: {:.4g},  o_diff: {:.4g},  o_mean: {:.4g}".format(
+            np.max(plasma.omega.data[0, ..., 0]),
+            np.max(o_recalc.data[0, ..., 0]),
+            o_diff,
+            o_mean
+            ))
 
         # Compute in numpy arrays through .data
         #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
