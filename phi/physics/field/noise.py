@@ -9,10 +9,10 @@ from ..domain import Domain
 @struct.definition()
 class Noise(AnalyticField):
     """
-Generates random noise fluctuations which can be configured in physical size and smoothness.
-Each call to at() or sample_at() generates a new noise field.
-Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
-"""
+    Generates random noise fluctuations which can be configured in physical size and smoothness.
+    Each call to at() or sample_at() generates a new noise field.
+    Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
+    """
 
     def __init__(self, **kwargs):
         AnalyticField.__init__(self, None, **struct.kwargs(locals()))
