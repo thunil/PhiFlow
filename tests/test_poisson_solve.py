@@ -38,6 +38,9 @@ DOMAINS = [
             Domain([4, 5], boundaries=PERIODIC),
             Domain([4, 5], boundaries=[PERIODIC, CLOSED]),
             Domain([4, 5], boundaries=[CLOSED, OPEN]),
+            Domain([4, 5], boundaries=[PERIODIC, PERIODIC]),
+            Domain([4, 5], boundaries=[OPEN, OPEN]),
+            Domain([4, 5], boundaries=[CLOSED, CLOSED]),
         ]
 
 SOLVERS = [
