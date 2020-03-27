@@ -47,7 +47,7 @@ def get_color_interpolation(val, cm_arr):
         zero_centered = (cm_arr[:, 0]-val)
         row1 = cm_arr[np.argmax(zero_centered[zero_centered < 0])]  # largest value smaller than val
         row2 = cm_arr[np.argmin(zero_centered[zero_centered > 0])]  # smallest value larger than val
-        if row1 != row2:
+        if all(row1 != row2):
             center = row1 * (1-(val-row1[0])/(row2[0]-row1[0])) + row2 * (val-row1[0])/(row2[0]-row1[0])  # Interpolate
         else:
             center = row1  # zero division occurs otherwise
