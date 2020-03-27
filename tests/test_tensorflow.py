@@ -1,11 +1,7 @@
 from unittest import TestCase
 
 import numpy
-import tensorflow as tf
-if tf.__version__[0] == '2':
-    tf = tf.compat.v1
-    tf.disable_eager_execution()
-
+from phi.tf import tf
 
 from phi.tf.util import placeholder
 

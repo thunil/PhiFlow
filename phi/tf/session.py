@@ -4,15 +4,10 @@ import os
 import threading
 
 import numpy as np
+from . import tf
 from phi import struct
-
 from .profiling import Timeliner
 from .util import isplaceholder, istensor
-import tensorflow as tf
-if tf.__version__[0] == '2':
-    logging.info('Adjusting for tensorflow 2.0')
-    tf = tf.compat.v1
-    tf.disable_eager_execution()
 
 
 class Session(object):
