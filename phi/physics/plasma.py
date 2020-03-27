@@ -215,7 +215,7 @@ class HasegawaWakatani(Physics):
         # Percentage Deviation
         perc_E = 1 - pred_E/E
         perc_U = 1 - pred_U/U
-        print("{:<7.4f} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>6.2f}s | {:>7.2g} | {:>7.2g}".format(
+        print("{:<7.04g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>6.2f}s | {:>7.02g} | {:>7.02g}".format(
             plasma.age + dt,
             np.max(np.abs(yn.density.data)),
             np.max(np.abs(k1.density.data)),
@@ -275,8 +275,13 @@ class HasegawaWakatani(Physics):
         # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
         # Calculate: Omega -> Phi
         # Pressure Solvers require exact mean of zero. Set mean to zero:
-        o2d = plasma.omega - math.mean(plasma.omega.data[0, ..., 0])  # NOTE: Only in 2D
+        o_mean = math.mean(plasma.omega.data[0, ..., 0])
+        o2d = plasma.omega - o_mean  # NOTE: Only in 2D
         p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))  # NOTE: This is performance limiting
+        o_recalc = p.laplace(axes=[1, 2])
+        o_diff = np.max(np.abs((o2d-o_recalc).data[0, ..., 0]))
+        print(f"o-shape: {plasma.omega.data.shape},  p-shape: {p.data.shape},  o_recalc: {o_recalc.data.shape}")
+        print(f"omega_max: {np.max(plasma.omega.data[0, ..., 0])},  o_recalc_max: {np.max(o_recalc.data[0, ..., 0])},  o_diff: {o_diff},  o_mean: {o_mean}")
 
         # Compute in numpy arrays through .data
         #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
@@ -438,6 +443,7 @@ def get_generalized_enstrophy(n, omega):
 def diffuse(field, N=1):
     """
     returns nu*nabla_\bot^(2*N)*field :: allows diffusion of accumulation on small scales
+
     :param field: field to be diffused
     :type field: Field or Array or Tensor
     :param N: order of diffusion (nabla^(2*N))
@@ -446,27 +452,20 @@ def diffuse(field, N=1):
     :type nu: Field/Array/Tensor or int/float
     :returns: nabla^{2*N}(field)
     """
-    # Second Order for Diffusion
-    #nabla2_o = math.nd.laplace(o3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
-    #nabla2_n = math.nd.laplace(n3d.data[0, ..., 0], axes=[1, 2], padding='wrap')
-    #return math.nd.laplace(field.data[0, ..., 0], axes=[1, 2], padding='wrap')
     if N == 0:
     	ret_field = 0
     else:
         # Apply laplace N times in perpendicular ([y, x])
-        ret_field = field#.data[0, ..., 0]#
+        ret_field = field
         for _ in range(N):
-            ret_field = ret_field.laplace(axes=[1, 2])  # DOES NOT WORK
-            #if field.rank == 3:
-            #    ret_field = math.nd.laplace(ret_field, axes=axes, padding='wrap')
-            #else:
-            #    ret_field = math.nd.laplace(ret_field)
+            ret_field = ret_field.laplace(axes=[1, 2])
     return ret_field.data[0, ..., 0]
 
 
 def solve_poisson(omega2d, fluiddomain, poisson_solver=SparseCG(accuracy=1e-5)):
     """
     Computes the pressure from the given Omega field with z in batch-axis using the specified solver.
+
     :param omega2d: CenteredGrid
     :param fluiddomain: FluidDomain instance
     :type fluiddomain: FluidDomain
