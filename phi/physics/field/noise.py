@@ -66,3 +66,7 @@ class Noise(AnalyticField):
         array /= math.std(array, axis=tuple(range(1, math.ndims(array))), keepdims=True)
         array -= math.mean(array, axis=tuple(range(1, math.ndims(array))), keepdims=True)
         return array
+
+    @property
+    def component_count(self):
+        return self.channels
