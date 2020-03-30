@@ -70,9 +70,7 @@ DOMAINS = [
     Domain([4, 5], boundaries=PERIODIC),
     Domain([4, 5], boundaries=[CLOSED, PERIODIC]),
     Domain([4, 5], boundaries=[CLOSED, OPEN]),
-    Domain([4, 5], boundaries=[PERIODIC, PERIODIC]),
-    Domain([4, 5], boundaries=[OPEN, OPEN]),
-    Domain([4, 5], boundaries=[CLOSED, CLOSED]),
+    Domain([4, 5], boundaries=[PERIODIC, OPEN]),
 ]
 
 
@@ -109,7 +107,6 @@ def run_higher_order_fft_reconstruction(in_field, set_accuracy, tolerance=20, or
     max_error = np.max(np.abs(error.data))
     passed = max_error < tolerance * set_accuracy
     print("{:.2g} vs. {:.2g}".format(max_error, tolerance * set_accuracy))
-    #print("{}^2 reconstruction {}within set accuracy. {:.2g} vs. {:.2g}".format('FFT*2', 'NOT ' if not passed else '', max_error, tolerance * set_accuracy))
     #assert passed, "{}^2 reconstruction not within set accuracy. {:.2g} vs. {:.2g}".format('FFT*2', max_error, tolerance * set_accuracy)
 
 
@@ -147,7 +144,7 @@ def test_reconstruction_second_order(in_field, solve_func, laplace_func, set_acc
     reconst2 = laplace_func(laplace_func(solved_field2)) + mean
     error2 = (in_field - reconst2) / in_field
     max_error2 = np.max(np.abs(error2.data))
-    passed = max_error2 < second_order_tolerance*set_accuracy
+    passed = max_error2 < second_order_tolerance * set_accuracy
     print("{}^2 reconstruction {}within set accuracy: {:.2g} vs. {:.2g}".format(name, 'NOT ' if not passed else '', max_error2, second_order_tolerance * set_accuracy))
     #assert max_error2 < second_order_tolerance*set_accuracy, "{}^2 reconstruction not within set accuracy. {:.2g} vs. {:.2g}".format(name, max_error2, second_order_tolerance*set_accuracy)
 
