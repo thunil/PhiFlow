@@ -141,6 +141,12 @@ class Field(State):
 
     __rmul__ = __mul__
 
+    def __div__(self, other):
+        return self.__dataop__(other, True, lambda d1, d2: d1 / d2)
+
+    def __truediv__(self, other):
+        return self.__dataop__(other, True, lambda d1, d2: d1 / d2)
+
     def __sub__(self, other):
         return self.__dataop__(other, False, lambda d1, d2: d1 - d2)
 
@@ -154,9 +160,6 @@ class Field(State):
 
     def __pow__(self, power, modulo=None):
         return self.__dataop__(power, False, lambda f, p: f ** p)
-
-    def __truediv__(self, other):
-        return self.__dataop__(other, True, lambda d1, d2: d1 / d2)
 
     def __dataop__(self, other, linear_if_scalar, data_operator):
         if isinstance(other, Field):

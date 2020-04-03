@@ -70,7 +70,7 @@ class TorchBackend(Backend):
     def sum(self, value, axis=None, keepdims=False):
         value = self.as_tensor(value)
         if axis is None:
-            axis = range(len(value.shape))
+            axis = tuple(range(len(value.shape)))
         return torch.sum(value, dim=axis, keepdim=keepdims)
 
     def prod(self, value, axis=None):
@@ -292,6 +292,10 @@ class TorchBackend(Backend):
             return self.as_tensor(complex)
 
     def cast(self, x, dtype):
+        if isinstance(dtype, torch.dtype):
+            x = self.as_tensor(x)
+            return x.to(dtype)
+        # --- NumPy Types ---
         if dtype == np.float32:
             return self.to_float(x)
         if dtype == np.int32:

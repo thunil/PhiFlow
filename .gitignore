@@ -12,3 +12,5 @@ data/*
 *.bat
 *.buildinfo
 *.inv
+.cache
+run_tests.sh
