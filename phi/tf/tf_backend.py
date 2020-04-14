@@ -4,6 +4,10 @@ from packaging import version
 import six
 
 import numpy as np
+import six
+import tensorflow as tf
+from packaging import version
+from phi.tf.tf_cuda_resample import *
 from . import tf
 
 from phi.backend.backend import Backend
@@ -152,6 +156,9 @@ class TFBackend(Backend):
             boundary = 'zero'
         boundary_func = SUPPORTED_BOUNDARY[boundary.lower()]
         assert interpolation.lower() == 'linear'
+        # Check if CUDA can be used benefitially
+        if use_cuda(inputs):
+            return resample_cuda(inputs, sample_coords, boundary)
         # return _resample_no_pack(inputs, sample_coords, boundary_func)
         return _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func)
 
@@ -199,11 +206,11 @@ class TFBackend(Backend):
     def floor(self, x):
         return tf.floor(x)
 
-    def max(self, x, axis=None):
-        return tf.reduce_max(x, axis=axis)
+    def max(self, x, axis=None, keepdims=False):
+        return tf.reduce_max(x, axis=axis, keepdims=keepdims)
 
-    def min(self, x, axis=None):
-        return tf.reduce_min(x, axis=axis)
+    def min(self, x, axis=None, keepdims=False):
+        return tf.reduce_min(x, axis=axis, keepdims=keepdims)
 
     def with_custom_gradient(self, function, inputs, gradient, input_index=0, output_index=None, name_base="custom_gradient_func"):
         # Setup custom gradient
