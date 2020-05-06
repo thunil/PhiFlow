@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import numbers
 import warnings
 
@@ -31,7 +31,7 @@ class SciPyBackend(Backend):
             return True
         if scipy.sparse.issparse(values):
             return True
-        if isinstance(values, collections.Iterable):
+        if isinstance(values, collections.abc.Iterable):
             try:
                 for value in values:
                     if not self.is_applicable(value):
