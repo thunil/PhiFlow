@@ -161,3 +161,63 @@ class TestMath(TestCase):
         accuracy = 2
         results = sum_finite_diff(tensor, order, axes, accuracy=accuracy, padding=padding, dx=1)
         self.assertEqual(results[0, ..., 0], np.array([[12, 9, 6], [3, 0, -3], [-6, -9, -12]]))
+
+
+class TestPhysics(TestCase):
+
+    def test_hasegawa_wakatani_2d_adiabatic(self):
+        """test HW 2D model in the adiabatic limit for square data"""
+        from phi.physics.world import World
+        from phi.physics.field import Noise
+        from phi.physics.material import PERIODIC
+        from phi.physics.hasegawa_wakatani import HasegawaWakatani2D  # Plasma Physics
+        from phi.physics.plasma_field import PlasmaHW  # Plasma Field
+        # Define Setup
+        MODE = "NumPy"
+        step_size = 10**-2
+        initial_state = {
+            "grid": [64, 64],    # Grid size in points (resolution)
+            "K0":   0.0375/2,    # Box size defining parameter
+            "N":    1,           # N*2 order of dissipation
+            "nu":   0,           # Dissipation scaling coefficient
+            "c1":   5,           # Adiabatic parameter
+            "kappa_coeff":   0,
+            "arakawa_coeff": 1,
+        }
+        # Process Setup
+        N = initial_state['grid'][1]
+        shape = (1, *initial_state['grid'], 1)
+        del initial_state['grid']
+        def get_box_size(k0):
+            return 2*np.pi/k0
+        # Setup Experiment
+        domain = Domain([N, N],
+                        box=AABox(0, [get_box_size(initial_state['K0'])]*len([N, N])),  # NOTE: Assuming square
+                        boundaries=(PERIODIC, PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
+                        )
+        fft_random = CenteredGrid.sample(Noise(), domain)
+        integral = np.sum(fft_random.data**2)
+        fft_random /= np.sqrt(integral)
+        # Instantiate Physics
+        world = World()
+        world.add(
+            PlasmaHW(
+                domain,
+                density=fft_random,
+                omega=0.5*fft_random,
+                phi=0.5*fft_random,
+                initial_density=fft_random
+            ),
+            physics=HasegawaWakatani2D(**initial_state)
+        )
+        # Test
+        def get_adiabatic_deviation(plasma):
+            diff = (plasma.density - plasma.phi).data[0, ..., 0]
+            return np.max(np.abs(diff))
+
+        for i in range(200):
+            world.step(dt=step_size)
+            diff = get_adiabatic_deviation(world.state.plasma)
+            if diff < 1e-5:
+                break
+        self.assertLess(diff, 1e-5)

@@ -14,6 +14,7 @@ from phi.physics.material import OPEN, Material, PERIODIC
 from phi.physics.physics import Physics, StateDependency
 from phi.physics.pressuresolver.solver_api import FluidDomain
 from phi.physics.pressuresolver.sparse import SparseCG
+from phi.physics.pressuresolver.fourier import FourierSolver
 
 import time
 
@@ -82,6 +83,10 @@ class PlasmaHW(DomainState):
         return self.enstrophy
 
     # Fields for checking things are working
+
+    @struct.variable(default=0, dependencies=DomainState.domain)
+    def grad_density(self, grad_density):
+        return self.centered_grid('grad_density', grad_density)
 
     @struct.variable(default=0, dependencies=DomainState.domain)
     def laplace_phi(self, laplace_phi):
@@ -167,7 +172,7 @@ class HasegawaWakatani(Physics):
         self.energy = 0
         self.enstrophy = 0
         if self.dim == 2:
-            print("Using: Step 2D.")
+            print("Using: RK4 with gradient_2d.")
             self.step = self.rk4_2d
         else:
             print("Using: Step 3D.")
@@ -226,14 +231,22 @@ class HasegawaWakatani(Physics):
             perc_E,
             perc_U
         ))
-        return y1.copied_with(energy=E, enstrophy=U)
+        return y1.copied_with(energy=E, enstrophy=U, phi=k1.phi/dt)
+
+    def euler_2d(self, plasma, dt=0.1):
+        # Recast to 3D: return Z from Batch-axis
+        plasma_grad = self.gradient_2d(plasma)
+        p = plasma_grad.phi  # NOT A GRADIENT
+        o = plasma.omega + dt * plasma_grad.omega
+        n = plasma.density + dt * plasma_grad.density
+        return plasma.copied_with(density=n, omega=o, phi=p, age=plasma.age+dt, grad_density=plasma_grad.density)
 
     def gradient_invariants(self, plasma):
         """returns dE, dU for timestepping
         Equations:
         dE/dt = G_n + G_c - D^E
         dZ/dt = G_n - D^U
-        
+
         :param plasma: [description]
         :type plasma: [type]
         """
@@ -255,14 +268,6 @@ class HasegawaWakatani(Physics):
         dU = gamma_n - DU
         return dE, dU
 
-    def euler_2d(self, plasma, dt=0.1):
-        # Recast to 3D: return Z from Batch-axis
-        plasma_grad = self.gradient_2d(plasma)
-        p = plasma.phi + dt * plasma_grad.phi
-        o = plasma.omega + dt * plasma_grad.omega
-        n = plasma.density + dt * plasma_grad.density
-        return plasma.copied_with(density=n, omega=o, phi=p, age=plasma.age+dt)
-
     def gradient_2d(self, plasma, dt=0):
         """
         2D Hasegawa-Wakatani Equations:
@@ -274,21 +279,18 @@ class HasegawaWakatani(Physics):
         # pylint: disable-msg = arguments-differ
         # Step 1: New Phy (Poisson equation). phi_0 = nabla^-2_bot Omega_0
         # Calculate: Omega -> Phi
-        # Pressure Solvers require exact mean of zero. Set mean to zero:
+        # Pressure Solvers req uire exact mean of zero. Set mean to zero:
         o_mean = math.mean(plasma.omega.data[0, ..., 0])
-        o2d = plasma.omega - o_mean  # NOTE: Only in 2D
-        p, _ = solve_poisson(o2d, FluidDomain(plasma.domain))  # NOTE: This is performance limiting
-        o_recalc = p.laplace()
-        o_diff = np.max(np.abs((o2d-o_recalc).data))
-        o_err = np.max(np.abs(((o2d-o_recalc)/o2d).data))
-        print(f"o-shape: {plasma.omega.data.shape},  p-shape: {p.data.shape},  o_recalc: {o_recalc.data.shape}")
-        print("omega_err: {:.4g},  omega_max: {:.4g},  o_recalc_max: {:.4g},  o_diff: {:.4g},  o_mean: {:.4g}".format(
-            o_err,
-            np.max(plasma.omega.data[0, ..., 0]),
-            np.max(o_recalc.data[0, ..., 0]),
-            o_diff,
-            o_mean
-            ))
+        #p = math.fourier_poisson(o2d)
+        p, _  = solve_poisson(plasma.omega - o_mean,  # NOTE: Only in 2D,
+                              FluidDomain(plasma.domain),
+                              poisson_solver=SparseCG())#FourierSolver)  # NOTE: This is performance limiting
+        p += o_mean
+        # Recalculate Omega
+        #o_recalc = math.fourier_laplace(p) + o_mean
+        #o_diff = np.max(np.abs((o2d-o_recalc).data))
+        #o_err = np.max(np.abs(((o2d-o_recalc)/o2d).data))
+        #print("omega_err: {:.4g}".format(o_err))
 
         # Compute in numpy arrays through .data
         #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
@@ -299,33 +301,35 @@ class HasegawaWakatani(Physics):
         dx_n, dy_n = dx_n[0, 0, ...], dy_n[0, 0, ...]
 
         # Step 2.1: New Omega.
-        o = (self.c1 * (plasma.density - p).data[0, ..., 0]
+        o = (self.c1 * (p - plasma.density).data[0, ..., 0]
              - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.omega.data[0, ..., 0])
              + self.nu * diffuse(plasma.omega, self.N))
         # Step 2.2: New Density.
         kappa = np.divide(dx_n, plasma.initial_density[0, ..., 0])
-        n = (self.c1 * (plasma.density - p).data[0, ..., 0]
+        n = (self.c1 * (p - plasma.density).data[0, ..., 0]
              - self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])
              - self.kappa_coeff * kappa * dy_p
              + self.nu * diffuse(plasma.density, self.N))
 
         # Debug print
-        # print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
-        #     np.max(o), np.max(n), np.max(p.data[0, ..., 0]),
-        #     np.max(self.c1 * (plasma.density - p).data[0, ..., 0]),
-        #     np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], o2d.data[0, ..., 0])),
-        #     np.max(self.nu * diffuse(o2d, self.N)),
-        #     np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])),
-        #     np.max(self.kappa_coeff * kappa * dy_p),
-        #     np.max(self.nu * diffuse(plasma.density, self.N))
-        # ))
+        deviation = (plasma.density - p).data[0, ..., 0]
+        print(f"{np.max(deviation):>7.2g} | {np.mean(deviation):7.2g} | {np.min(deviation):7.2g}")
+        #print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
+        #    np.max(o), np.max(n), np.max(p.data[0, ..., 0]),
+        #    np.max(self.c1 * (plasma.density - p).data[0, ..., 0]),
+        #    np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], o2d.data[0, ..., 0])),
+        #    np.max(self.nu * diffuse(o2d, self.N)),
+        #    np.max(self.arakawa_coeff * periodic_arakawa(p.data[0, ..., 0], plasma.density.data[0, ..., 0])),
+        #    np.max(self.kappa_coeff * kappa * dy_p),
+        #    np.max(self.nu * diffuse(plasma.density, self.N))
+        #))
 
         energy, enstrophy = self.gradient_invariants(plasma)
 
         return plasma.copied_with(
             density=plasma.density.copied_with(data=math.reshape(n, plasma.density.data.shape)),
             omega=plasma.omega.copied_with(data=math.reshape(o, plasma.omega.data.shape)),
-            phi=p,
+            phi=plasma.phi.copied_with(data=math.reshape(p, plasma.phi.data.shape)),
             energy=energy,
             enstrophy=enstrophy,
             age=plasma.age+dt
@@ -466,6 +470,7 @@ def diffuse(field, N=1):
         ret_field = field
         for _ in range(N):
             ret_field = ret_field.laplace(axes=[1, 2])
+            #ret_field = math.fourier_laplace(ret_field)
     return ret_field.data[0, ..., 0]
 
 
@@ -480,22 +485,10 @@ def solve_poisson(omega2d, fluiddomain, poisson_solver=SparseCG(accuracy=1e-5)):
     :return: scalar tensor or CenteredGrid, depending on the type of divergence
     """
     assert isinstance(omega2d, CenteredGrid)
-    phi2d, iteration = poisson_solver.solve(omega2d.data, fluiddomain, guess=None)
+    phi2d, iteration = poisson_solver.solve(field=omega2d.data, domain=fluiddomain, guess=None)
     if isinstance(omega2d, CenteredGrid):
         phi2d = CenteredGrid(phi2d, omega2d.box, name='phi')
     return phi2d, iteration
-
-
-def euler(x, dx, dt):
-    return x + dx * dt
-
-
-def leapfrog():
-    return
-
-
-def rk4():
-    return
 
 
 @stencil
@@ -510,6 +503,11 @@ def arakawa_stencil(zeta, psi):
             - zeta[-1, -1] * (psi[-1, 0] - psi[0, -1]))
 
 
+def arakawa(z, p, d=1.):
+    """apply periodic stencil"""
+    return arakawa_stencil(z, p) / (12 * (d**2))
+
+
 @jit
 def arakawa_vec(zeta, psi, d):
     """2D periodic first-order Arakawa
@@ -522,11 +520,6 @@ def arakawa_vec(zeta, psi, d):
             + zeta[2:, 2:] * (psi[1:-1, 2:] - psi[2:, 1:-1])
             - zeta[0:-2, 2:] * (psi[1:-1, 2:] - psi[0:-2, 1:-1])
             - zeta[0:-2, 0:-2] * (psi[0:-2, 1:-1] - psi[1:-1, 0:-2])) / (4 * d**2)
-
-
-def arakawa(z, p, d=1.):
-    """apply periodic stencil"""
-    return arakawa_stencil(z, p) / (12 * (d**2))
 
 
 def periodic_arakawa(zeta, psi, d=1.):
