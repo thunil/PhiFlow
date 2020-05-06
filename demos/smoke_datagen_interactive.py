@@ -32,4 +32,4 @@ class SmokeDataGen(App):
         self.scene.write(self.smoke.state, frame=self.steps)
 
 
-show()
+show(SmokeDataGen())
