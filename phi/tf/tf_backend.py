@@ -1,3 +1,4 @@
+import numbers
 import uuid
 import warnings
 from packaging import version
@@ -7,6 +8,9 @@ import numpy as np
 import six
 import tensorflow as tf
 from packaging import version
+
+from phi.backend.backend_helper import split_multi_mode_pad, PadSettings, general_grid_sample_nd, equalize_shapes, circular_pad, replicate_pad
+from phi.backend.scipy_backend import SciPyBackend
 from phi.tf.tf_cuda_resample import *
 from . import tf
 
@@ -19,15 +23,29 @@ class TFBackend(Backend):
     def __init__(self):
         Backend.__init__(self, "TensorFlow")
 
-    def is_tensor(self, x):
+    @property
+    def precision_dtype(self):
+        return {16: np.float16, 32: np.float32, 64: np.float64, None: np.float32}[self.precision]
+
+    def is_tensor(self, x, only_native=False):
+        if not only_native and SciPyBackend().is_tensor(x, only_native=False):
+            return True
         return isinstance(x, (tf.Tensor, tf.Variable, tf.SparseTensor, tf.Operation))
 
-    def as_tensor(self, x):
-        if self.is_tensor(x):
-            return x
-        if isinstance(x, np.ndarray) and x.dtype == np.float64:
-            return tf.convert_to_tensor(x, dtype=tf.float32)
-        return tf.convert_to_tensor(x)
+    def as_tensor(self, x, convert_external=True):
+        if self.is_tensor(x, only_native=convert_external):
+            tensor = x
+        elif isinstance(x, np.ndarray):
+            tensor = tf.convert_to_tensor(SciPyBackend(precision=self.precision).as_tensor(x))
+        else:
+            tensor = tf.convert_to_tensor(x)
+        # --- Enforce Precision ---
+        if not isinstance(tensor, numbers.Number):
+            if isinstance(tensor, np.ndarray):
+                tensor = SciPyBackend(precision=self.precision).as_tensor(tensor)
+            elif tensor.dtype.is_floating and self.has_fixed_precision:
+                tensor = self.to_float(tensor)
+        return tensor
 
     def copy(self, tensor, only_mutable=False):
         if not only_mutable or tf.executing_eagerly():
@@ -55,6 +73,8 @@ class TFBackend(Backend):
         return tf.range(start, limit, delta, dtype)
 
     def tile(self, value, multiples):
+        if isinstance(multiples, (tuple, list)) and self.ndims(value) < len(multiples):
+            value = self.expand_dims(value, axis=0, number=len(multiples) - self.ndims(value))
         return tf.tile(value, multiples)
 
     def stack(self, values, axis=0):
@@ -64,51 +84,21 @@ class TFBackend(Backend):
         return tf.concat(values, axis)
 
     def pad(self, value, pad_width, mode='constant', constant_values=0):
-        dims = range(len(self.staticshape(value)))
-        if isinstance(mode, six.string_types) and len(self.staticshape(constant_values)) == 0:
-            return self._single_mode_single_constant_pad(value, pad_width, mode, constant_values)
-        else:
-            mode = expand(mode, shape=(len(dims), 2))
-            passes = [('circular', 0), ('wrap', 0), ('replicate', 0), ('symmetric', 0), ('reflect', 0)]
-            constant_values = expand(constant_values, shape=(len(dims), 2))
-            constant_value_set = set()
-            for d in dims:
-                for upper in (False, True):
-                    constant_value_set.add(constant_values[d][upper])
-            for const in constant_value_set:
-                passes.append(('constant', const))
-            for single_mode, constant_value in passes:  # order matters! wrap first
-                widths = [[collapsed_gather_nd(pad_width, [d, upper]) if mode[d][upper] == single_mode and constant_values[d][upper] == constant_value else 0 for upper in (False, True)] for d in dims]
-                value = self._single_mode_single_constant_pad(value, widths, single_mode, constant_value)
-            return value
+        passes = split_multi_mode_pad(self.ndims(value), PadSettings(pad_width, mode, constant_values), split_by_constant_value=True)
+        for pad_pass in passes:
+            value = self._single_mode_single_constant_pad(value, *pad_pass)
+        return value
 
     def _single_mode_single_constant_pad(self, value, pad_width, single_mode, constant_value=0):
-        single_mode = single_mode.lower()
-        if single_mode == 'wrap':
-            warnings.warn("'wrap' is deprecated, use 'circular' instead", DeprecationWarning, stacklevel=2)
-            single_mode = 'circular'
         assert single_mode in ('constant', 'symmetric', 'circular', 'reflect', 'replicate'), single_mode
-        if np.sum(np.array(pad_width)) == 0:
-            return value
         if single_mode == 'circular':
-            dims = range(len(value.shape))
-            for dim in dims:
-                s = value.shape[dim]
-                pad_lower, pad_upper = pad_width[dim]
-                if pad_lower is 0 and pad_upper is 0:
-                    continue  # Nothing to pad
-                lower_slices = [slice(s-pad_lower, None) if d == dim else slice(None) for d in dims]
-                upper_slices = [slice(None, pad_upper) if d == dim else slice(None) for d in dims]
-                lower = value[lower_slices]
-                upper = value[upper_slices]
-                value = tf.concat([lower, value, upper], axis=dim)
-            return value
+            return circular_pad(value, pad_width, self)
         if single_mode == 'replicate':
             if np.any(np.array(pad_width) > 1):
-                raise NotImplementedError()  # ToDo: manual padding with slices
+                return replicate_pad(value, pad_width, self)
             else:
                 single_mode = 'symmetric'
-        return tf.pad(value, pad_width, single_mode.upper(), constant_values=constant_value)
+        return tf.pad(value, pad_width, single_mode.upper(), constant_values=constant_value)  # constant, symmetric, reflect
 
     def reshape(self, value, shape):
         return tf.reshape(value, shape)
@@ -128,7 +118,9 @@ class TFBackend(Backend):
         return tf.reduce_prod(value, axis=axis)
 
     def where(self, condition, x=None, y=None):
-        return tf.where(condition, x, y)
+        c = self.cast(condition, self.dtype(x))
+        return c * x + (1 - c) * y
+        # return tf.where(condition, x, y)  # TF1 has an inconsistent broadcasting rule for where
 
     def mean(self, value, axis=None, keepdims=False):
         if axis is not None:
@@ -151,16 +143,12 @@ class TFBackend(Backend):
             result.set_shape(shape_out)
         return result
 
-    def resample(self, inputs, sample_coords, interpolation='linear', boundary='constant'):
-        if boundary.lower() == 'constant':
-            boundary = 'zero'
-        boundary_func = SUPPORTED_BOUNDARY[boundary.lower()]
-        assert interpolation.lower() == 'linear'
-        # Check if CUDA can be used benefitially
+    def resample(self, inputs, sample_coords, interpolation='linear', boundary='constant', constant_values=0):
+        assert interpolation == 'linear'
         if use_cuda(inputs):
             return resample_cuda(inputs, sample_coords, boundary)
-        # return _resample_no_pack(inputs, sample_coords, boundary_func)
-        return _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func)
+        else:
+            return general_grid_sample_nd(inputs, sample_coords, boundary, constant_values, self)  # while this is a bit slower than niftynet, it give consisten results at the boundaries
 
     def zeros_like(self, tensor):
         return tf.zeros_like(tensor)
@@ -237,6 +225,9 @@ class TFBackend(Backend):
     def minimum(self, a, b):
         return tf.minimum(a, b)
 
+    def clip(self, x, minimum, maximum):
+        return tf.clip_by_value(x, minimum, maximum)
+
     def sqrt(self, x):
         return tf.sqrt(x)
 
@@ -257,6 +248,8 @@ class TFBackend(Backend):
         return result
 
     def expand_dims(self, a, axis=0, number=1):
+        if number == 0:
+            return a
         for _i in range(number):
             a = tf.expand_dims(a, axis)
         return a
@@ -265,10 +258,14 @@ class TFBackend(Backend):
         return tf.shape(tensor)
 
     def to_float(self, x, float64=False):
-        return tf.cast(x, tf.float64) if float64 else tf.cast(x, tf.float32)
+        if float64:
+            warnings.warn('float64 argument is deprecated, set Backend.precision = 64 to use 64 bit operations.', DeprecationWarning)
+            return tf.cast(x, tf.float64)
+        else:
+            return tf.cast(x, self.precision_dtype)
 
     def staticshape(self, tensor):
-        if self.is_tensor(tensor):
+        if self.is_tensor(tensor, only_native=True):
             return tuple(tensor.shape.as_list())
         else:
             return np.shape(tensor)
@@ -277,7 +274,12 @@ class TFBackend(Backend):
         return tf.cast(x, tf.int64) if int64 else tf.cast(x, tf.int32)
 
     def to_complex(self, x):
-        return tf.to_complex64(x)
+        if self.dtype(x) in (np.complex64, np.complex128):
+            return x
+        if self.dtype(x) == np.float64:
+            return tf.to_complex128(x)
+        else:
+            return tf.to_complex64(x)
 
     def gather(self, values, indices):
         if isinstance(indices, slice):
@@ -455,7 +457,7 @@ def _resample_no_pack(grid, coords, boundary_func):
     return result
 
 
-def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
+def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func, float_type):
     inputs = tf.convert_to_tensor(inputs)
     sample_coords = tf.convert_to_tensor(sample_coords)
 
@@ -479,8 +481,8 @@ def _resample_linear_niftynet(inputs, sample_coords, boundary, boundary_func):
     ceil_coords = [tf.cast(boundary_func(x + 1.0, in_spatial_size[idx]), COORDINATES_TYPE) for (idx, x) in enumerate(base_coords)]
 
     if boundary.upper() == 'ZERO':
-        weight_0 = [tf.expand_dims(x - tf.cast(i, tf.float32), -1) for (x, i) in zip(xy, floor_coords)]
-        weight_1 = [tf.expand_dims(tf.cast(i, tf.float32) - x, -1) for (x, i) in zip(xy, ceil_coords)]
+        weight_0 = [tf.expand_dims(x - tf.cast(i, float_type), -1) for (x, i) in zip(xy, floor_coords)]
+        weight_1 = [tf.expand_dims(tf.cast(i, float_type) - x, -1) for (x, i) in zip(xy, ceil_coords)]
     else:
         weight_0 = [tf.expand_dims(x - i, -1) for (x, i) in zip(xy, base_coords)]
         weight_1 = [1.0 - w for w in weight_0]

@@ -67,6 +67,7 @@ class PoissonDomain(struct.Struct):
         if active is not None:
             assert isinstance(active, CenteredGrid)
             assert active.rank == self.domain.rank
+            assert active.component_count == 1
             if active.extrapolation != extrapolation:
                 active = active.copied_with(extrapolation=extrapolation)
             return active
@@ -78,6 +79,7 @@ class PoissonDomain(struct.Struct):
         if accessible is not None:
             assert isinstance(accessible, CenteredGrid)
             assert accessible.rank == self.domain.rank
+            assert accessible.component_count == 1
             return accessible
         else:
             return self.domain.centered_grid(1, extrapolation=Material.extrapolation_mode(self.domain.boundaries))
@@ -146,12 +148,7 @@ Solves the Poisson equation Δp = input_field for p.
     if isinstance(poisson_domain, Domain):
         poisson_domain = PoissonDomain(poisson_domain)
     if solver is None:
-        from .sparse import SparseSciPy, SparseCG
-        if math.choose_backend([input_field.data, poisson_domain.active.data, poisson_domain.accessible.data]).matches_name('SciPy'):
-            solver = SparseSciPy()
-        else:
-            from phi.physics.pressuresolver.fourier import FourierSolver
-            solver = FourierSolver() & SparseCG()
+        solver = _choose_solver(input_field.resolution, math.choose_backend([input_field.data, poisson_domain.active.data, poisson_domain.accessible.data]))
     pressure, iteration = solver.solve(input_field.data, poisson_domain, guess=guess)
     pressure = CenteredGrid(pressure, input_field.box, extrapolation=input_field.extrapolation, name='pressure')
     return pressure, iteration
@@ -171,3 +168,21 @@ class _PoissonSolverChain(PoissonSolver):
         for solver in self.solvers:
             guess, iterations = solver.solve(field, domain, guess)
         return guess, iterations
+
+
+def _choose_solver(resolution, backend):
+    use_fourier = math.max(resolution) > 64
+    if backend.precision == 64:
+        from .fourier import FourierSolver
+        from .geom import GeometricCG
+        return FourierSolver() & GeometricCG() if use_fourier else GeometricCG()
+    elif backend.precision == 32 and backend.matches_name('SciPy'):
+        from .sparse import SparseSciPy
+        return SparseSciPy()
+    elif backend.precision == 32:
+        from .fourier import FourierSolver
+        from .sparse import SparseCG
+        return FourierSolver() & SparseCG() if use_fourier else SparseCG()
+    else:
+        from .geom import GeometricCG
+        return GeometricCG()

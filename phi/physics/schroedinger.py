@@ -84,7 +84,7 @@ SCHROEDINGER = Schroedinger()
 
 
 def StepPotential(geometry, height):
-    return FieldEffect(GeometryMask([geometry], height, 'potential'), ['potential'], mode=ADD)
+    return FieldEffect(GeometryMask(geometry, name='potential') * height, ['potential'], mode=ADD)
 
 
 @struct.definition()
@@ -134,33 +134,35 @@ class HarmonicPotential(AnalyticField):
         pot = math.sum(x ** 2, -1, keepdims=True) * self.data
         if self.maximum_value is not None:
             pot = math.minimum(pot, self.maximum_value)
-        return math.cast(pot, np.float32)
+        return math.to_float(pot)
 
 
 @struct.definition()
 class SinPotential(AnalyticField):
 
-    def __init__(self, k, phase_offset=0, data=1.0, name='harmonic', dtype=np.float32, **kwargs):
+    def __init__(self, k, phase_offset=0, data=1.0, name='harmonic', **kwargs):
         rank = math.size(k)
         AnalyticField.__init__(self, **struct.kwargs(locals()))
 
-    @struct.constant()
-    def k(self, k): return k
+    @struct.variable()
+    def k(self, k):
+        """ Wave vector. Determines wave length and direction. """
+        return k
 
-    @struct.constant()
+    @struct.variable()
     def phase_offset(self, phase_offset): return phase_offset
-
-    @struct.constant()
-    def dtype(self, dtype):
-        return dtype
 
     def sample_at(self, x):
         phase_offset = math.batch_align_scalar(self.phase_offset, 0, x)
         k = math.batch_align(self.k, 1, x)
-        data = math.batch_align_scalar(self.data, 0, x)
+        data = math.batch_align(self.data, 1, x)
         spatial_phase = math.sum(k * x, -1, keepdims=True)
-        wave = math.sin(spatial_phase + phase_offset) * data
-        return math.cast(wave, self.dtype)
+        result = math.sin(math.to_float(spatial_phase + phase_offset)) * math.to_float(data)
+        return result
 
     def __repr__(self):
         return 'Sin(x*%s)' % self.k
+
+    @property
+    def component_count(self):
+        return math.staticshape(self.data)[-1]

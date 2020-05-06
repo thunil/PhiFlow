@@ -7,9 +7,9 @@ from phi import math, struct
 from phi.geom import AABox
 from phi.geom.geometry import assert_same_rank
 from phi.struct.tensorop import collapse
-from .field import Field, propagate_flags_children, IncompatibleFieldTypes, broadcast_at, StaggeredSamplePoints, \
-    propagate_flags_resample, propagate_flags_operation
+from .field import Field, propagate_flags_children, IncompatibleFieldTypes, broadcast_at, StaggeredSamplePoints, propagate_flags_resample, propagate_flags_operation
 from .grid import CenteredGrid
+from ..domain import Domain
 
 
 _SUBSCRIPTS = ['x', 'y', 'z', 'w']
@@ -61,6 +61,17 @@ class StaggeredGrid(Field):
 
     @staticmethod
     def sample(value, domain, batch_size=None, name=None):
+        """
+        Sampmles the value to a staggered grid.
+
+        :param value: Either constant, staggered tensor, or Field
+        :param domain: the domain defines resolution and physical size of the grid
+        :type domain: Domain
+        :param batch_size: batch size
+        :param name: field name
+        :return: Sampled values in staggered grid form matching domain resolution
+        :rtype: StaggeredGrid
+        """
         return domain.staggered_grid(value, batch_size=batch_size, name=name)
 
     @struct.variable(dependencies=[Field.name, Field.flags])
@@ -70,10 +81,10 @@ class StaggeredGrid(Field):
             components = unstack_staggered_tensor(data)
         else:
             components = data
-        data = []
+        result = []
         for cmp_idx, grid in enumerate(components):
-            data.append(self._component_grid(grid, cmp_idx))
-        return tuple(data)
+            result.append(self._component_grid(grid, cmp_idx))
+        return tuple(result)
 
     def _component_grid(self, grid, axis):
         resolution = list(grid.resolution if isinstance(grid, CenteredGrid) else math.staticshape(grid)[1:-1])
@@ -168,7 +179,7 @@ class StaggeredGrid(Field):
 
     def __repr__(self):
         if self.is_valid:
-            return 'StaggeredGrid[%s, size=%s]' % ('x'.join([str(r) for r in self.resolution]), self.box.size)
+            return 'StaggeredGrid[%s, size=%s, %s]' % ('x'.join([str(r) for r in self.resolution]), self.box.size, self.unstack()[0].dtype.data)
         else:
             return struct.Struct.__repr__(self)
 
@@ -185,9 +196,13 @@ class StaggeredGrid(Field):
             assert self.compatible(other), 'Fields are not compatible: %s and %s' % (self, other)
             data = [data_operator(c1, c2) for c1, c2 in zip(self.data, other.data)]
             flags = propagate_flags_operation(self.flags+other.flags, False, self.rank, self.component_count)
+        elif math.ndims(other) > 0 and math.staticshape(other)[-1] > 1:
+            other_components = math.unstack(math.as_tensor(other), axis=-1, keepdims=True)
+            data = [data_operator(c1, c2) for c1, c2 in zip(self.data, other_components)]
+            flags = propagate_flags_operation(self.flags, False, self.rank, self.component_count)
         else:
-            flags = propagate_flags_operation(self.flags, linear_if_scalar, self.rank, self.component_count)
             data = [data_operator(c1, other) for c1 in self.data]
+            flags = propagate_flags_operation(self.flags, linear_if_scalar, self.rank, self.component_count)
         return self.copied_with(data=np.array(data, dtype=np.object), flags=flags)
 
     def staggered_tensor(self):
@@ -211,6 +226,15 @@ class StaggeredGrid(Field):
         w_lower, w_upper = np.transpose(widths)
         box = AABox(self.box.lower - w_lower * self.dx, self.box.upper + w_upper * self.dx)
         return self.copied_with(data=new_grids, box=box)
+
+    def downsample2x(self):
+        data = []
+        for axis in range(self.rank):
+            grid = self.unstack()[axis].data
+            grid = grid[tuple([slice(None, None, 2) if d - 1 == axis else slice(None) for d in range(self.rank + 2)])]  # Discard odd indices along axis
+            grid = math.downsample2x(grid, axes=tuple(filter(lambda ax2: ax2 != axis, range(self.rank))))  # Interpolate values along other axes
+            data.append(grid)
+        return self.with_data(data)
 
     @staticmethod
     def gradient(scalar_field, padding_mode='replicate'):

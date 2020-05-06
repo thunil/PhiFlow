@@ -3,7 +3,7 @@ import logging
 import warnings
 import numpy as np
 from tensorflow.python import pywrap_tensorflow
-from . import tf
+from . import tf, TF_BACKEND
 
 from phi import struct
 from phi.math.math_util import is_static_shape
@@ -19,7 +19,7 @@ def _tf_name(trace, basename):
     return result
 
 
-def placeholder(shape, dtype=np.float32, basename='Placeholder'):
+def placeholder(shape, dtype=None, basename='Placeholder'):
     if struct.isstruct(dtype):
         def placeholder_map(trace):
             shape, dtype = trace.value
@@ -28,7 +28,7 @@ def placeholder(shape, dtype=np.float32, basename='Placeholder'):
         return struct.map(placeholder_map, zipped, leaf_condition=is_static_shape, trace=True)
     else:
         def f(trace):
-            return tf.placeholder(dtype, trace.value, _tf_name(trace, basename))
+            return tf.placeholder(TF_BACKEND.precision_dtype if dtype is None else dtype, trace.value, _tf_name(trace, basename))
         return struct.map(f, shape, leaf_condition=is_static_shape, trace=True)
 
 
@@ -44,20 +44,28 @@ def placeholder_like(obj, basename='Placeholder'):
     return struct.map(f, obj, leaf_condition=is_static_shape, trace=True)
 
 
-def variable(initial_value, dtype=np.float32, basename='Variable', trainable=True):
-    def f(attr): return tf.Variable(attr.value, name=_tf_name(attr, basename), dtype=dtype, trainable=trainable)
+def variable(initial_value, dtype=None, basename='Variable', trainable=True):
+    def f(attr): return tf.Variable(attr.value, name=_tf_name(attr, basename), dtype=TF_BACKEND.precision_dtype if dtype is None else dtype, trainable=trainable)
     return struct.map(f, initial_value, trace=True)
 
 
-def variable_generator(initializer, dtype=np.float32, basename='Variable', trainable=True):
+def variable_generator(initializer, dtype=None, basename='Variable', trainable=True):
     def create_variable(shape):
         initial_value = initializer(shape)
         return variable(initial_value, dtype, basename, trainable)
     return create_variable
 
 
-def isplaceholder(obj):
+def constant(value, dtype=None, basename='const'):
+    def f(trace): return tf.constant(trace.value, dtype=TF_BACKEND.precision_dtype if dtype is None else dtype, name=_tf_name(trace, basename))
+    return struct.map(f, value, trace=True)
+
+
+def is_placeholder(obj):
     return isinstance(obj, tf.Tensor) and obj.op.type == 'Placeholder'
+
+
+isplaceholder = is_placeholder
 
 
 def dataset_handle(shape, dtype, frames=None):
@@ -103,8 +111,8 @@ If an integer is passed to frames, a list of such structs is created by unstacki
 
 def group_normalization(x, group_count, eps=1e-5):
     batch_size, H, W, C = tf.shape(x)
-    gamma = tf.Variable(np.ones([1, 1, 1, C]), dtype=tf.float32, name="GN_gamma")
-    beta = tf.Variable(np.zeros([1, 1, 1, C]), dtype=tf.float32, name="GN_beta")
+    gamma = tf.Variable(np.ones([1, 1, 1, C]), dtype=TF_BACKEND.precision_dtype, name="GN_gamma")
+    beta = tf.Variable(np.zeros([1, 1, 1, C]), dtype=TF_BACKEND.precision_dtype, name="GN_beta")
     x = tf.reshape(x, [batch_size, group_count, H, W, C // group_count])
     mean, var = tf.nn.moments(x, [2, 3, 4], keep_dims=True)
     x = (x - mean) / tf.sqrt(var + eps)

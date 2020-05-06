@@ -5,10 +5,9 @@ import warnings
 import numpy as np
 import scipy.signal
 import scipy.sparse
-import six
 
+from phi.backend.backend_helper import split_multi_mode_pad, PadSettings, general_grid_sample_nd
 from .backend import Backend
-from .tensorop import collapsed_gather_nd, expand
 
 
 class SciPyBackend(Backend):
@@ -17,8 +16,12 @@ class SciPyBackend(Backend):
     Core Python Backend using NumPy & SciPy
     """
 
-    def __init__(self):
-        Backend.__init__(self, "SciPy")
+    def __init__(self, precision=32):
+        Backend.__init__(self, "SciPy", precision=precision)
+
+    @property
+    def precision_dtype(self):
+        return {16: np.float16, 32: np.float32, 64: np.float64, None: np.float32}[self.precision]
 
     def is_applicable(self, values):
         if values is None:
@@ -43,16 +46,24 @@ class SciPyBackend(Backend):
 
     # --- Abstract math functions ---
 
-    def as_tensor(self, x):
-        """ as array """
-        return np.array(x)
+    def as_tensor(self, x, convert_external=True):
+        if self.is_tensor(x, only_native=convert_external):
+            array = x
+        else:
+            array = np.array(x)
+        # --- Enforce Precision ---
+        if not isinstance(array, numbers.Number):
+            if array.dtype in (np.float16, np.float32, np.float64, np.longdouble) and self.has_fixed_precision:
+                array = self.to_float(array)
+        return array
 
-    def is_tensor(self, x):
-        """ is array """
+    def is_tensor(self, x, only_native=False):
+        if not only_native and isinstance(x, numbers.Number):
+            return True
         if isinstance(x, np.ndarray):
             return x.dtype != np.object
         else:
-            return isinstance(x, (int, float))
+            return False
 
     def copy(self, tensor, only_mutable=False):
         return np.copy(tensor)
@@ -90,29 +101,19 @@ class SciPyBackend(Backend):
         return np.concatenate(values, axis)
 
     def pad(self, value, pad_width, mode='constant', constant_values=0):
-        dims = range(len(self.shape(value)))
-        constant_values = expand(constant_values, shape=(len(dims), 2))
-        if isinstance(mode, six.string_types):
-            return self._single_mode_pad(value, pad_width, mode, constant_values)
-        else:
-            mode = expand(mode, shape=(len(dims), 2))
-            for single_mode in ('wrap', 'circular', 'replicate', 'symmetric', 'reflect', 'constant'):  # order matters! circular first
-                widths = [[collapsed_gather_nd(pad_width, [d, upper]) if mode[d][upper] == single_mode else 0 for upper in (False, True)] for d in dims]
-                value = self._single_mode_pad(value, widths, single_mode, constant_values)
-            return value
+        passes = split_multi_mode_pad(self.ndims(value), PadSettings(pad_width, mode, constant_values), split_by_constant_value=False)
+        for pad_pass in passes:
+            value = self._single_mode_pad(value, *pad_pass)
+        return value
 
     def _single_mode_pad(self, value, pad_width, single_mode, constant_values=0):
-        if np.sum(np.array(pad_width)) == 0:
-            return value
-        if single_mode.lower() == 'wrap':
-            warnings.warn("padding mode 'wrap' is deprecated. Use 'circular' instead.", DeprecationWarning, stacklevel=2)
-        elif single_mode.lower() == 'constant':
+        assert single_mode in ('constant', 'symmetric', 'circular', 'reflect', 'replicate'), single_mode
+        if single_mode.lower() == 'constant':
             return np.pad(value, pad_width, 'constant', constant_values=constant_values)
-        elif single_mode.lower() == 'circular':
-            single_mode = 'wrap'
-        elif single_mode.lower() == 'replicate':
-            single_mode = 'edge'
-        return np.pad(value, pad_width, single_mode.lower())
+        else:
+            if single_mode in ('circular', 'replicate'):
+                single_mode = {'circular': 'wrap', 'replicate': 'edge'}[single_mode]
+            return np.pad(value, pad_width, single_mode)
 
     def reshape(self, value, shape):
         return np.reshape(value, shape)
@@ -138,31 +139,9 @@ class SciPyBackend(Backend):
         assert result.shape == shape_out, "returned value has wrong shape: {}, expected {}".format(result.shape, shape_out)
         return result
 
-    def resample(self, inputs, sample_coords, interpolation='linear', boundary='constant'):
-        """ resample input array at certain coordinates """
-        if boundary.lower() in ('zero', 'constant'):
-            pass  # default
-        elif boundary.lower() == 'replicate':
-            sample_coords = clamp(sample_coords, inputs.shape[1:-1])
-        elif boundary.lower() == 'circular':
-            resolution = self.staticshape(inputs)[1:-1]
-            inputs = self.pad(inputs, [[0, 0]] + [[0, 1]] * tensor_spatial_rank(inputs) + [[0, 0]], mode='circular')
-            sample_coords = sample_coords % self.to_float(resolution)
-        else:
-            raise ValueError("Unsupported boundary: %s" % boundary)
-        # Interpolate
-        import scipy.interpolate
-        points = [np.arange(dim) for dim in inputs.shape[1:-1]]
-        result = []
-        for batch in range(sample_coords.shape[0]):
-            components = []
-            for dim in range(inputs.shape[-1]):
-                resampled = scipy.interpolate.interpn(points,inputs[batch, ..., dim], sample_coords[batch, ...],
-                                                      method=interpolation.lower(), bounds_error=False, fill_value=0)
-                components.append(resampled)
-            result.append(np.stack(components, -1))
-        result = np.stack(result).astype(inputs.dtype)
-        return result
+    def resample(self, inputs, sample_coords, interpolation='linear', boundary='constant', constant_values=0):
+        assert interpolation == 'linear'
+        return general_grid_sample_nd(inputs, sample_coords, boundary, constant_values, self)
 
     def zeros_like(self, tensor):
         return np.zeros_like(tensor)
@@ -219,6 +198,9 @@ class SciPyBackend(Backend):
     def minimum(self, a, b):
         return np.minimum(a, b)
 
+    def clip(self, x, minimum, maximum):
+        return np.clip(x, minimum, maximum)
+
     def sqrt(self, x):
         return np.sqrt(x)
 
@@ -230,10 +212,10 @@ class SciPyBackend(Backend):
         assert tensor.shape[-1] == kernel.shape[-2]
         # kernel = kernel[[slice(None)] + [slice(None, None, -1)] + [slice(None)]*(len(kernel.shape)-3) + [slice(None)]]
         if padding.lower() == "same":
-            result = np.zeros(tensor.shape[:-1] + (kernel.shape[-1],), np.float32)
+            result = np.zeros(tensor.shape[:-1] + (kernel.shape[-1],), dtype=self.precision_dtype)
         elif padding.lower() == "valid":
             valid = [tensor.shape[i + 1] - (kernel.shape[i] + 1) // 2 for i in range(tensor_spatial_rank(tensor))]
-            result = np.zeros([tensor.shape[0]] + valid + [kernel.shape[-1]], np.float32)
+            result = np.zeros([tensor.shape[0]] + valid + [kernel.shape[-1]], dtype=self.precision_dtype)
         else:
             raise ValueError("Illegal padding: %s" % padding)
         for batch in range(tensor.shape[0]):
@@ -254,7 +236,11 @@ class SciPyBackend(Backend):
         return np.shape(tensor)
 
     def to_float(self, x, float64=False):
-        return np.array(x).astype(np.float64 if float64 else np.float32)
+        if float64:
+            warnings.warn('float64 argument is deprecated, set Backend.precision = 64 to use 64 bit operations.', DeprecationWarning)
+            return np.array(x).astype(np.float64)
+        else:
+            return np.array(x).astype(self.precision_dtype)
 
     def to_int(self, x, int64=False):
         return np.array(x).astype(np.int64 if int64 else np.int32)
@@ -270,6 +256,9 @@ class SciPyBackend(Backend):
 
     def gather_nd(self, values, indices, batch_dims=0):
         assert indices.shape[-1] == self.ndims(values) - batch_dims - 1
+        if batch_dims == 0:
+            indices_list = self.unstack(indices, axis=-1)
+            return values[indices_list]
         for dim in range(batch_dims):
             assert indices.shape[dim] == values.shape[dim] or values.shape[dim] == 1 or indices.shape[dim] == 1, 'Batch dimension %d does not match: %s (values) and %s (indices)' % (dim, values.shape, indices.shape)
         values_batch_max = np.array(values.shape[:batch_dims]) - 1
@@ -308,7 +297,7 @@ class SciPyBackend(Backend):
 
     def scatter(self, points, indices, values, shape, duplicates_handling='undefined'):
         indices = self.unstack(indices, axis=-1)
-        array = np.zeros(shape, np.float32)
+        array = np.zeros(shape, self.precision_dtype if self.has_fixed_precision else values.dtype)
         if duplicates_handling == 'add':
             np.add.at(array, tuple(indices), values)
         elif duplicates_handling == 'mean':
@@ -354,6 +343,8 @@ class SciPyBackend(Backend):
         return np.cos(x)
 
     def dtype(self, array):
+        if isinstance(array, float):
+            return self.precision_dtype
         if not isinstance(array, np.ndarray):
             array = np.array(array)
         return array.dtype

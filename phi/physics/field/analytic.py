@@ -8,7 +8,7 @@ from .field import Field
 @struct.definition()
 class AnalyticField(Field):
 
-    def __init__(self, rank, data=1.0, name=None, **kwargs):
+    def __init__(self, rank, data=None, name=None, **kwargs):
         Field.__init__(self, **struct.kwargs(locals(), ignore='rank'))
         self._rank = rank
 
@@ -31,7 +31,12 @@ class AnalyticField(Field):
         if self.component_count == 1:
             return [self]
         else:
-            return [_SymbolicOpField(lambda x: x.unstack()[i], [self]) for i in range(self.component_count)]
+            components = []
+            for i in range(self.component_count):
+                def _context(index=i):
+                    return lambda x: x.unstack()[index]
+                components.append(_SymbolicOpField(_context(i), [self]))
+            return components
 
     @property
     def points(self):
@@ -40,8 +45,37 @@ class AnalyticField(Field):
     def compatible(self, other_field):
         return True
 
+    def __mul__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x1 * x2, [self, other])
+
+    __rmul__ = __mul__
+
+    def __div__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x1 / x2, [self, other])
+
+    def __truediv__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x1 / x2, [self, other])
+
+    def __sub__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x1 - x2, [self, other])
+
+    def __rsub__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x2 - x1, [self, other])
+
+    def __add__(self, other):
+        return _SymbolicOpField(lambda x1, x2: x1 + x2, [self, other])
+
+    __radd__ = __add__
+
+    def __pow__(self, power, modulo=None):
+        return _SymbolicOpField(lambda x1, x2: x1 ** x2, [self, power])
+
     def __dataop__(self, other, linear_if_scalar, data_operator):
         return _SymbolicOpField(data_operator, [self, other])
+
+    @struct.constant(default=None)
+    def data(self, data):
+        return data
 
 
 class SymbolicFieldBackend(Backend):
@@ -66,20 +100,26 @@ class SymbolicFieldBackend(Backend):
         backend_func = getattr(self.backend, func)
         return _SymbolicOpField(backend_func, args)
 
-    def is_tensor(self, x):
+    def is_tensor(self, x, only_native=False):
         return isinstance(x, AnalyticField)
 
 
 @struct.definition()
 class _SymbolicOpField(AnalyticField):
 
-    def __init__(self, function, function_args):
+    def __init__(self, function, function_args, **kwargs):
         fields = filter(lambda arg: isinstance(arg, Field), function_args)
-        AnalyticField.__init__(self, _determine_rank(fields), name=function.__name__)
+        AnalyticField.__init__(self, _determine_rank(fields), name=function.__name__, **struct.kwargs(locals(), ignore='fields'))
         self.fields = tuple(fields)
-        self.function_args = function_args
-        self.function = function
         self.channels = _determine_component_count(function_args)
+
+    @struct.constant()
+    def function_args(self, args):
+        return args
+
+    @struct.constant()
+    def function(self, function):
+        return function
 
     def at(self, other_field):
         args = []
@@ -137,6 +177,8 @@ def _determine_component_count(args):
         elif math.is_tensor(arg) and math.ndims(arg) > 0:
             arg_channels = arg.shape[-1]
         if result is None:
+            result = arg_channels
+        elif result == 1 and arg_channels is not None:
             result = arg_channels
         else:
             assert result == arg_channels or arg_channels is None

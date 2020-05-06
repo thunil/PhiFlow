@@ -65,7 +65,7 @@ class Struct(object):
         # call traits in order
         for trait in self.__traits__:
             trait.endow(self)
-        if content_type is VALID:
+        if content_type is not INVALID:
             self.validate()
 
     @derived()
@@ -158,12 +158,16 @@ Performs validation on this struct if it holds data and is invalid.
 Data-holding structs should always be valid while structs holding non-data content such as shapes or data types are not regarded as valid.
         :return: True if validation was performed, False otherwise
         """
-        if not skip_validate() and self.__content_type__ is INVALID:
+        if not skip_validate() and self.__can_validate__():
             self.__validate__()
-            self.__content_type__ = VALID
+            if self.__content_type__ is INVALID:
+                self.__content_type__ = VALID
             return True
         else:
             return False
+
+    def __can_validate__(self):
+        return self.__content_type__ is INVALID
 
     def __validate__(self):
         for trait in self.__traits__:

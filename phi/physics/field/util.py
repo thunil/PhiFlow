@@ -36,9 +36,11 @@ Otherwise, finite differencing is used to approximate the
         data = math.ifft(frequencies * diffuse_kernel)
         data = math.real(data)
     else:
+        data = field.data
         if isinstance(amount, Field):
             amount = amount.at(field).data
-        data = field.data
+        else:
+            amount = math.batch_align(amount, 0, data)
         for i in range(substeps):
             data += amount / substeps * field.laplace().data
     return field.with_data(data)
@@ -57,12 +59,12 @@ def data_bounds(field):
     return AABox(min_vec, max_vec)
 
 
-def staggered_curl_2d(grid):
+def staggered_curl_2d(grid, pad_width=(1, 2)):
     assert isinstance(grid, CenteredGrid)
-    kernel = np.zeros((3, 3, 1, 2), np.float32)
+    kernel = math.zeros((3, 3, 1, 2))
     kernel[1, :, 0, 0] = [0, 1, -1]  # y-component: - dz/dx
     kernel[:, 1, 0, 1] = [0, -1, 1]  # x-component: dz/dy
-    scalar_potential = grid.padded(1).data
+    scalar_potential = grid.padded([pad_width, pad_width]).data
     vector_field = math.conv(scalar_potential, kernel, padding='valid')
     return StaggeredGrid(vector_field, box=grid.box)
 
