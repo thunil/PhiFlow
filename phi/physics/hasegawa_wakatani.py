@@ -121,7 +121,7 @@ class HasegawaWakatani2D(Physics):
         # Percentage Deviation
         perc_E = 1 - pred_E/E
         perc_U = 1 - pred_U/U
-        print("{:<7.04g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>6.2f}s | {:>7.02%} | {:>7.02%}".format(
+        print("{:<7.04g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>6.2f}s | {:>7.02g} | {:>7.02g}".format(
             plasma.age + dt,
             np.max(np.abs(yn.density.data)),
             np.max(np.abs(k1.density.data)),
@@ -159,11 +159,11 @@ class HasegawaWakatani2D(Physics):
         o = omega.data[0, ..., 0]
         #omega = omega - math.mean(omega)
         # Gamma_n = - \int{d^2 x \tilde{n} \frac{\partial \tilde{\phi}}{\partial y}}
-        dy_p, dx_p = phi.gradient(difference='central', padding='wrap').unstack()
+        dy_p, dx_p = phi.gradient(difference='central', padding='circular').unstack()
         gamma_n = -math.sum(n * dy_p[0, 0, ...])
         # Gamma_c = c_1 \int{d^2 x /\tilde{n} - \tilde{\phi})^2}
         gamma_c = self.c1 * math.sum((n - p)**2)
-        DE = math.sum(n*diffuse(density, self.N)-phi*diffuse(omega, self.N))
+        DE = math.sum(n*diffuse(density, self.N)-p*diffuse(omega, self.N))
         DU = -math.sum((n-o)*(diffuse(density, self.N)-diffuse(omega, self.N)))
         # dE/dt = G_n - G_c - DE
         dE = gamma_n - gamma_c - DE
@@ -191,9 +191,9 @@ class HasegawaWakatani2D(Physics):
         \partial_t n      = c_1 (\phi-n) - [\phi,n]      - \kappa_n\partial_y\phi + nu \nabla^{2N} n
         """
         # Compute in numpy arrays through .data
-        #dy_o, dx_o = o2d.gradient(difference='central', padding='wrap').unstack()
-        dy_p, dx_p = phi.gradient(difference='central', padding='wrap').unstack()
-        dy_n, dx_n = plasma.density.gradient(difference='central', padding='wrap').unstack()
+        #dy_o, dx_o = o2d.gradient(difference='central', padding='circular').unstack()
+        dy_p, dx_p = phi.gradient(difference='central', padding='circular').unstack()
+        dy_n, dx_n = plasma.density.gradient(difference='central', padding='circular').unstack()
         #dx_o = dx_o[0, 0, ...]; dy_o = dy_o[0, 0, ...]
         dx_p, dy_p = dx_p[0, 0, ...], dy_p[0, 0, ...]
         dx_n, dy_n = dx_n[0, 0, ...], dy_n[0, 0, ...]
@@ -256,9 +256,8 @@ def get_total_energy(n, phi):
     Calculate total energy of HW plasma
     $E = \frac{1}{2} \int  d^2x (\tilde{n}^2  + |\nabla_\bot \tilde{\phi}|^2)$
     """
-    n = n.data[0, ..., 0]
-    nabla_phi = phi.gradient(difference='central', padding='wrap').data[0, ..., 0]
-    return 0.5 * math.sum(n**2 + math.abs(nabla_phi)**2)
+    nabla_phi = phi.gradient(difference='central', padding='circular')
+    return 0.5 * math.sum(n**2 + math.abs(nabla_phi)**2).data[0, ..., 0]
 
 
 def get_generalized_enstrophy(n, omega):
@@ -266,10 +265,7 @@ def get_generalized_enstrophy(n, omega):
     Calculate generalized enstrophy of HW plasma
     $U = \frac{1}{2} \int d^2 x (\tilde{n} - \nabla^2_\bot \tilde{\phi})^2 \equiv \frac{1}{2} \int d^2 x (\tilde{n} - \tilde{\Omega})^2$
     """
-    #omega = omega.data[0, ..., 0]
-    #n = n.data[0, ..., 0]
-    #omega = omega - math.mean(omega)
-    return 0.5 * math.sum(((n - omega)*(n - omega)).data)
+    return 0.5 * math.sum(((n - omega)*(n - omega))).data[0, ..., 0]
 
 
 def diffuse(field, N=1):
@@ -295,8 +291,8 @@ def diffuse(field, N=1):
     return ret_field.data[0, ..., 0]
 
 
-@jit(#f4[:,:](f4[:,:], f4[:,:], f4),
-     cache=True, nopython=True, nogil=True, parallel=True)
+@jit(#f4[:,:](f8[:,:], f8[:,:], f4),
+     cache=True, nopython=True)#, nogil=True, parallel=True)
 def arakawa_vec(zeta, psi, d):
     """2D periodic first-order Arakawa
     requires 1 cell padded input on each border"""
@@ -310,8 +306,6 @@ def arakawa_vec(zeta, psi, d):
             - zeta[0:-2, 0:-2] * (psi[0:-2, 1:-1] - psi[1:-1, 0:-2])) / (4 * d**2)
 
 
-#@jit(#float32[:,:](float32[:,:], float32[:,:], float32),
-     #cache=True, nopython=True, nogil=True, parallel=True)
 def periodic_arakawa(zeta, psi, d=1.):
     """2D periodic padding and apply Arakawa stencil to padded matrix"""
     z = periodic_padding(zeta)
@@ -320,7 +314,5 @@ def periodic_arakawa(zeta, psi, d=1.):
     return arakawa_vec(z, p, d=d)
 
 
-#@jit(#float32[:,:](float32[:,:]),
-     #cache=True, nopython=True, nogil=True, parallel=True)
 def periodic_padding(A):
-    return np.pad(A, 1, mode='wrap')
+    return math.pad(A, 1, mode='circular')
