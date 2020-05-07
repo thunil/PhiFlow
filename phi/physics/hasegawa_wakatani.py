@@ -194,9 +194,9 @@ class HasegawaWakatani2D(Physics):
         #dy_o, dx_o = o2d.gradient(difference='central', padding='circular').unstack()
         dy_p, dx_p = phi.gradient(difference='central', padding='circular').unstack()
         dy_n, dx_n = plasma.density.gradient(difference='central', padding='circular').unstack()
-        #dx_o = dx_o[0, 0, ...]; dy_o = dy_o[0, 0, ...]
-        dx_p, dy_p = dx_p[0, 0, ...], dy_p[0, 0, ...]
-        dx_n, dy_n = dx_n[0, 0, ...], dy_n[0, 0, ...]
+        #dx_o = dx_o[0, ..., 0]; dy_o = dy_o[0, ..., 0]
+        dx_p, dy_p = dx_p[0, ..., 0], dy_p[0, ..., 0]
+        dx_n, dy_n = dx_n[0, ..., 0], dy_n[0, ..., 0]
 
         # Calculate Gradients
         diff = (phi - plasma.density).data[0, ..., 0]
@@ -280,8 +280,9 @@ def diffuse(field, N=1):
     :type nu: Field/Array/Tensor or int/float
     :returns: nabla^{2*N}(field)
     """
+    ret_field = field
     if N == 0:
-    	ret_field = 0
+    	ret_field = CenteredGrid(np.zeros(ret_field.data.shape))
     else:
         # Apply laplace N times in perpendicular ([y, x])
         ret_field = field
