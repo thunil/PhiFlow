@@ -2,6 +2,7 @@ import numpy as np
 import scipy
 import scipy.sparse
 import scipy.sparse.linalg
+import logging
 
 from phi import math
 from phi.math.blas import conjugate_gradient
