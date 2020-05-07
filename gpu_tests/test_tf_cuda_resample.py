@@ -11,6 +11,9 @@ from phi.tf.tf_backend import *
 from phi.tf.tf_backend import _resample_linear_niftynet
 
 from phi.tf.tf_cuda_resample import resample_cuda
+if tf.__version__[0] == '2':
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
 
 
 class TestTfCudaResample(TestCase):

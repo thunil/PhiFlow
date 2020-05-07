@@ -9,6 +9,9 @@ from phi import struct
 from phi.math.math_util import is_static_shape
 from phi.physics.field.staggered_grid import StaggeredGrid
 from phi.physics.field.grid import CenteredGrid
+if tf.__version__[0] == '2':
+    tf = tf.compat.v1
+    tf.disable_eager_execution()
 
 
 def _tf_name(trace, basename):
