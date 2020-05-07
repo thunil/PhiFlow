@@ -100,8 +100,8 @@ class SparseCG(PoissonSolver):
                                                             name_base='scg_pressure_solve')
 
             max_gradient_iterations = iteration if self.max_gradient_iterations == 'mirror' else self.max_gradient_iterations
-        if iteration >= self.max_iterations:
-            logging.warning('ITERATIONS EXCEED MAXIMUM:  Solution no longer to be trusted.')
+        #if iteration >= self.max_iterations:
+        #    logging.warning('ITERATIONS EXCEED MAXIMUM:  Solution no longer to be trusted.')
         return pressure, iteration
 
 
