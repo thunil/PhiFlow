@@ -66,13 +66,6 @@ class TestMath(TestCase):
         self.assertEqual(np.max(np.abs(laplace_axis_z-laplace_axis_z.mean())), 0, OUTPUT_NOT_UNIFORM)
         self.assertEqual(np.max(np.abs(laplace_axis_y-laplace_axis_y.mean())), 0, OUTPUT_NOT_UNIFORM)
         self.assertEqual(np.max(np.abs(laplace_axis_x-laplace_axis_x.mean())), 0, OUTPUT_NOT_UNIFORM)
-        # Wrap
-        laplace_axis_z = laplace(array_in, padding='wrap', axes=[0])
-        laplace_axis_y = laplace(array_in, padding='wrap', axes=[1])
-        laplace_axis_x = laplace(array_in, padding='wrap', axes=[2])
-        self.assertEqual(np.max(np.abs(laplace_axis_z-laplace_axis_z.mean())), 0, OUTPUT_NOT_UNIFORM)
-        self.assertEqual(np.max(np.abs(laplace_axis_y-laplace_axis_y.mean())), 0, OUTPUT_NOT_UNIFORM)
-        self.assertEqual(np.max(np.abs(laplace_axis_x-laplace_axis_x.mean())), 0, OUTPUT_NOT_UNIFORM)
 
     def test_periodic_poisson_solver_SparseCG(self):
         """ check that periodic pressure solve of uniform array is uniform """
@@ -142,7 +135,7 @@ class TestMath(TestCase):
         from phi.math.nd import finite_diff
         n = 3
         tensor = np.arange(0, n**2).reshape(1, n, n, 1)
-        padding = 'wrap'
+        padding = 'circular'
         axes = [1, 0]
         order = 2
         accuracy = 2
@@ -155,7 +148,7 @@ class TestMath(TestCase):
         from phi.math.nd import sum_finite_diff
         n = 3
         tensor = np.arange(0, n**2).reshape(1, n, n, 1)
-        padding = 'wrap'
+        padding = 'circular'
         axes = [1, 0]
         order = 2
         accuracy = 2
@@ -217,7 +210,7 @@ class TestPhysics(TestCase):
 
         for i in range(200):
             world.step(dt=step_size)
-            diff = get_adiabatic_deviation(world.state.plasma)
+            diff = get_adiabatic_deviation(world.state.plasma)  # TODO: Fix (KeyError)
             if diff < 1e-5:
                 break
         self.assertLess(diff, 1e-5)
