@@ -121,17 +121,17 @@ class HasegawaWakatani2D(Physics):
         # Percentage Deviation
         perc_E = 1 - pred_E/E
         perc_U = 1 - pred_U/U
-        print("{:<7.04g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>7.02g} | {:>6.2f}s | {:>7.02g} | {:>7.02g}".format(
-            plasma.age + dt,
-            np.max(np.abs(yn.density.data)),
-            np.max(np.abs(k1.density.data)),
-            np.max(np.abs(k2.density.data)),
-            np.max(np.abs(k3.density.data)),
-            np.max(np.abs(k4.density.data)),
-            t1-t0,
-            perc_E,
-            perc_U
-        ))
+        print(" | ".join([
+            f"{plasma.age + dt:<7.04g}",
+            f"{np.max(np.abs(yn.density.data)):>7.02g}",
+            f"{np.max(np.abs(k1.density.data)):>7.02g}",
+            f"{np.max(np.abs(k2.density.data)):>7.02g}",
+            f"{np.max(np.abs(k3.density.data)):>7.02g}",
+            f"{np.max(np.abs(k4.density.data)):>7.02g}",
+            f"{t1-t0:>6.02f}s",
+            f"{perc_E:>8.02g}",
+            f"{perc_U:>8.02g}"
+        ]))
         return y1.copied_with(energy=E, enstrophy=U, phi=phi)
 
     def euler(self, plasma, dt=0.1):
