@@ -34,7 +34,7 @@ class CUDASolver(PoissonSolver):
         else:
             self.max_gradient_iterations = max_gradient_iterations
 
-    def solve(self, divergence, domain, guess):
+    def solve(self, field, domain, guess):
         """
         :param guess: not used in this implementation, Kernel takes the last pressure value for initial_guess
         """
@@ -45,7 +45,7 @@ class CUDASolver(PoissonSolver):
 
         pressure, iteration = math.with_custom_gradient(
             cuda_solve_forward,
-            [divergence, active, accessible, self.accuracy, self.max_iterations],
+            [field, active, accessible, self.accuracy, self.max_iterations],
             pressure_gradient,
             input_index=0, output_index=0, name_base='cuda_pressure_solve'
         )
@@ -53,9 +53,9 @@ class CUDASolver(PoissonSolver):
         return pressure, iteration
 
 
-def cuda_solve_forward(divergence, active_mask, fluid_mask, accuracy, max_iterations):
+def cuda_solve_forward(field, active_mask, fluid_mask, accuracy, max_iterations):
     # Setup
-    dimensions = math.staticshape(divergence)[1:-1]
+    dimensions = math.staticshape(field)[1:-1]
     dimensions = dimensions[::-1]  # the custom op needs it in the x,y,z order
     dim_array = np.array(dimensions)
     dim_product = np.prod(dimensions)
@@ -63,13 +63,13 @@ def cuda_solve_forward(divergence, active_mask, fluid_mask, accuracy, max_iterat
     laplace_matrix = tf.zeros(dim_product * (len(dimensions) * 2 + 1), dtype=tf.int8)
     # Helper variables for CG, make sure new memory is allocated for each variable.
     one_vector = tf.ones(dim_product, dtype=tf.float32)
-    p = tf.zeros_like(divergence, dtype=tf.float32) + 1
-    z = tf.zeros_like(divergence, dtype=tf.float32) + 2
-    r = tf.zeros_like(divergence, dtype=tf.float32) + 3
-    pressure = tf.zeros_like(divergence, dtype=tf.float32) + 4
+    p = tf.zeros_like(field, dtype=tf.float32) + 1
+    z = tf.zeros_like(field, dtype=tf.float32) + 2
+    r = tf.zeros_like(field, dtype=tf.float32) + 3
+    pressure = tf.zeros_like(field, dtype=tf.float32) + 4
     # Solve
     pressure, iteration = pressure_op.pressure_solve(
         dimensions, mask_dimensions, active_mask, fluid_mask, laplace_matrix,
-        divergence, p, r, z, pressure, one_vector, dim_product, accuracy, max_iterations
+        field, p, r, z, pressure, one_vector, dim_product, accuracy, max_iterations
     )
     return pressure, iteration
