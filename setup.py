@@ -3,6 +3,7 @@ import distutils.log
 import errno
 import subprocess
 import os
+import sys
 from setuptools import setup
 
 
@@ -31,9 +32,7 @@ class CudaCommand(distutils.cmd.Command):
             try:
                 import tensorflow_addons as tfa
             except:
-                import subprocesss
-                import sys
-                subprocess.check_Call([sys.executable, "-m", "pip", "install", "tensorflow-addons"])
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "tensorflow-addons"])
 
         tf_cflags = tf.sysconfig.get_compile_flags()
         tf_lflags = tf.sysconfig.get_link_flags()
@@ -71,6 +70,7 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
         )
+        print("[x] laplace matrix generation Cuda kernels")
 
         # Build the Laplace Matrix Generation Custom Op
         # This is only needed for the Laplace Matrix Generation Benchmark
@@ -87,8 +87,9 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
             + tf_lflags
-            + ['-L/usr/local/cuda/lib64/','-lcudart']
+            + [f'-L{self.cuda_lib}', '-lcudart']
         )
+        print("[x] laplace matrix generation custom op")
 
         # Build the Pressure Solver CUDA Kernels
         subprocess.check_call(
@@ -106,6 +107,7 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
         )
+        print("[x] pressure solver CUDA Kernels")
 
         # Build the Pressure Solver Custom Op
         subprocess.check_call(
@@ -122,8 +124,9 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
             + tf_lflags
-            + ['-L/usr/local/cuda/lib64/','-lcudart']
+            + [f'-L{self.cuda_lib}','-lcudart']
         )
+        print("[x] pressure solver custom op")
 
         #Build the Resample CUDA Kernels
         subprocess.check_call(
@@ -144,6 +147,7 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
         )
+        print("[x] resample CUDA kernels")
 
         #Build the Resample Custom Op
         try:
@@ -164,6 +168,7 @@ class CudaCommand(distutils.cmd.Command):
                 + tf_cflags
                 + tf_lflags
             )
+            print("[x] resample custom op")
         except OSError as e:
             if e.errno == errno.ENOENT:
                 print('Please install g++-4.8 as it is needed to compile the advection operator.')
@@ -190,6 +195,7 @@ class CudaCommand(distutils.cmd.Command):
             ]
             + tf_cflags
         )
+        print("[x] resample gradient CUDA Kernels")
 
         #Build the Resample Gradient Custom Op
         try:
@@ -210,6 +216,7 @@ class CudaCommand(distutils.cmd.Command):
                 + tf_cflags
                 + tf_lflags
             )
+            print("[x] resample gradient custom op")
         except OSError as e:
             if e.errno == errno.ENOENT:
                 print('Please install g++-4.8 as it is needed to compile the advection operator.')
