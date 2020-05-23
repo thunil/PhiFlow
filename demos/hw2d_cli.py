@@ -1,5 +1,6 @@
 import sys
-from phi.flow import *  # Use NumPy
+from phi.tf.flow import *
+from phi.tf.tf_cuda_pressuresolver import CUDASolver
 from phi.physics.hasegawa_wakatani import *  # Plasma Physics
 from phi.physics.plasma_field import PlasmaHW  # Plasma Field
 import pandas as pd
@@ -26,7 +27,9 @@ import click
               help="Kappa coefficient.")
 @click.option("--arakawa_coeff", default=1, type=click.INT, show_default=True,
               help="Poisson Bracket coefficient.")
-def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff):
+@click.option("--out", "-o", "output_path", required=True, type=click.STRING, show_default=True,
+              help="Output path for writing data.")
+def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, output_path):
     MODE=mode
     step_size = float(step_size)
     steps = int(steps)
@@ -71,10 +74,10 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff)
                          initial_density=fft_random
                          )
     plasma = world.add(plasma_hw,
-                       physics=HasegawaWakatani2D(**initial_state)#, poisson_solver=FourierSolver())
+                       physics=HasegawaWakatani2D(**initial_state, poisson_solver=CUDASolver())
                        )
 
-    scene = Scene.create('~/phi/data/sim')
+    scene = Scene.create(output_path)
 
     for step in range(steps):
         world.step(dt=step_size)
