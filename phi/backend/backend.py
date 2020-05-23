@@ -149,6 +149,9 @@ class Backend:
     def matmul(self, A, b):
         raise NotImplementedError(self)
 
+    def einsum(self, equation, *tensors):
+        raise NotImplementedError(self)
+
     def while_loop(self, cond, body, loop_vars, shape_invariants=None, parallel_iterations=10, back_prop=True,
                    swap_memory=False, name=None, maximum_iterations=None):
         raise NotImplementedError(self)
@@ -209,6 +212,8 @@ class Backend:
 Converts a tensor to floating point values.
 If this Backend uses a fixed precision, the tensor will be converted to that precision.
 Otherwise, non-float inputs are converted to float32 (unless `float64=True`).
+
+If `x` is mutable and of the correct floating type, returns a copy of `x`.
 
 To convert float tensors to the backend precision but leave non-float tensors untouched, use `Backend.as_tensor()`.
         :param x: tensor
