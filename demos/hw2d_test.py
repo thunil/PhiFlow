@@ -1,8 +1,8 @@
 import sys
-from phi.flow import *  # Use NumPy
+from phi.tf.flow import *  # Use NumPy
 from phi.physics.hasegawa_wakatani import *  # Plasma Physics
 from phi.physics.plasma_field import PlasmaHW  # Plasma Field
-MODE = "NumPy"
+MODE = "TensorFlow"
 
 import sys
 import os
@@ -22,14 +22,14 @@ K0_dict = {"small": 0.15,  # focus on high-k
            "large": 0.0375}  # focus on low-k
 nu_dict = {"coarse-large": 5*10**-10,
            "fine-small": 10**-4}
-
+print(math)
 
 step_size = 10**-3
 initial_state = {
-    "grid": [256, 256],#grid_dict['coarse'],      # Grid size in points (resolution)
+    "grid": [128, 128],#grid_dict['coarse'],      # Grid size in points (resolution)
     "K0":   0.15,#K0_dict['large'],         # Box size defining parameter
     "N":    3,                        # N*2 order of dissipation
-    "nu":   10**-8,#nu_dict['coarse-large'],  # Dissipation scaling coefficient
+    "nu":   10**-6,#nu_dict['coarse-large'],  # Dissipation scaling coefficient
     "c1":   1,#c1_dict['transition'],     # Adiabatic parameter
     "kappa_coeff":   1,#0**3,
     "arakawa_coeff": 1,
@@ -52,7 +52,6 @@ domain = Domain([N, N],
 fft_random = CenteredGrid.sample(Noise(), domain)
 integral = np.sum(fft_random.data**2)
 fft_random /= np.sqrt(integral)
-fft_random *= 100
 
 
 scalars = {"energy": [],
