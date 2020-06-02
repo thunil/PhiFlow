@@ -5,6 +5,7 @@ import subprocess
 import os
 import sys
 from setuptools import setup
+import sys
 
 
 class CudaCommand(distutils.cmd.Command):
