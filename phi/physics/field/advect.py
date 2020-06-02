@@ -5,7 +5,8 @@ from .field import StaggeredSamplePoints, Field
 
 def advect(field, velocity, dt):
     """
-Advect `field` along the `velocity` vectors using the default advection method.
+    Advect `field` along the `velocity` vectors using the default advection method.
+
     :param field: any built-in Field
     :type field: Field
     :param velocity: any Field
@@ -20,6 +21,7 @@ Advect `field` along the `velocity` vectors using the default advection method.
     if isinstance(field, (CenteredGrid, StaggeredGrid)):
         return semi_lagrangian(field, velocity, dt=dt)
     raise NotImplementedError(field)
+
 
 """
 Advection functions
@@ -75,7 +77,8 @@ def mac_cormack(field, velocity_field, dt, correction_strength=1.0):
 
 def runge_kutta_4(field, velocity, dt):
     """
-Lagrangian advection of particles.
+    Explicit Runge-Kutta 4th order advection of particles.
+    
     :param field: SampledField with any number of components
     :type field: SampledField
     :param velocity: Vector field
