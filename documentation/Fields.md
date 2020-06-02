@@ -21,7 +21,7 @@ All fields are subclasses of `Struct` (see the [documentation](Structs.ipynb)) a
 [ConstantField](../phi/physics/field/constant.py): has the same value everywhere.
 Has no sample points.
 
-[GeometryMask](../phi/physics/field/mask.py): 1 inside the geometry, 0 outiside.
+[GeometryMask](../phi/physics/field/mask.py): 1 inside the geometry, 0 outside.
 Has no sample points.
 
 [CenteredGrid](../phi/physics/field/grid.py): has regular sample points.
