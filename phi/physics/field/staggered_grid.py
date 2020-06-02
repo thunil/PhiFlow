@@ -104,6 +104,7 @@ class StaggeredGrid(Field):
 
     @property
     def rank(self):
+        """Dimensions of the physical space (1=1D, 2=2D, 3=3D)"""
         return len(self.resolution)
 
     @struct.derived()

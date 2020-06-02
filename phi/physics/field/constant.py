@@ -11,6 +11,13 @@ from .field import Field, propagate_flags_children
 class ConstantField(Field):
 
     def __init__(self, value=1.0, name=None, **kwargs):
+        """Constant Field has the same value everywhere. Has no sample points.
+
+        :param value: value of field, defaults to 1.0
+        :type value: float, optional
+        :param name: name of field, defaults to None
+        :type name: str, optional
+        """
         data = _convert_constant_to_data(value)
         Field.__init__(self, **struct.kwargs(locals(), ignore='value'))
 
@@ -19,6 +26,7 @@ class ConstantField(Field):
 
     @property
     def rank(self):
+        """None for ConstantField. Otherwise, dimensions of the physical space (1=1D, 2=2D, 3=3D)"""
         return None
 
     @property

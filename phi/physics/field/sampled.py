@@ -129,6 +129,7 @@ class SampledField(Field):
 
     @property
     def rank(self):
+        """Dimensions of the physical space (1=1D, 2=2D, 3=3D)"""
         return math.staticshape(self.sample_points)[-1]
 
     @property

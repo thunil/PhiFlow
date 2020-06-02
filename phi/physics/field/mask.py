@@ -10,6 +10,15 @@ from .analytic import AnalyticField
 class GeometryMask(AnalyticField):
 
     def __init__(self, geometries, antialias=False, value=None, **kwargs):
+        """GeometryMask: 1 inside the geometry, 0 outside. Has no sample points.
+
+        :param geometries: geometry
+        :type geometries: Geometry
+        :param antialias: if interpolation should be used for smooth transition, defaults to False
+        :type antialias: bool, optional
+        :param value: value inside, defaults to None
+        :type value: float, optional
+        """
         if value is not None:
             warnings.warn('Passing a value to GeometryMask has no effect.')
         rank = geometries.rank if isinstance(geometries, geom.Geometry) else geometries[0].rank

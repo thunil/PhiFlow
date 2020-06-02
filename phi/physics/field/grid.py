@@ -24,6 +24,7 @@ def _crop_for_interpolation(data, offset_float, window_resolution):
 
 @struct.definition()
 class CenteredGrid(Field):
+    """CenteredGrid: has regular sample points."""
 
     def __init__(self, data, box=None, extrapolation='boundary', name=None, **kwargs):
         """Create new CenteredGrid from array like data
@@ -85,10 +86,12 @@ class CenteredGrid(Field):
 
     @property
     def dx(self):
+        """returns array of grid spacings (same shape as box/resolution)"""
         return self.box.size / self.resolution
 
     @property
     def rank(self):
+        """Dimensions of the physical space (1=1D, 2=2D, 3=3D)"""
         return len(self.resolution)
 
     @struct.constant(default='boundary')
