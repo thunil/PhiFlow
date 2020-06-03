@@ -158,6 +158,9 @@ class SciPyBackend(Backend):
     def matmul(self, A, b):
         return np.stack([A.dot(b[i]) for i in range(b.shape[0])])
 
+    def einsum(self, equation, *tensors):
+        return np.einsum(equation, *tensors)
+
     def while_loop(self, cond, body, loop_vars, shape_invariants=None, parallel_iterations=10, back_prop=True,
                    swap_memory=False, name=None, maximum_iterations=None):
         i = 0
@@ -246,7 +249,11 @@ class SciPyBackend(Backend):
         return np.array(x).astype(np.int64 if int64 else np.int32)
 
     def to_complex(self, x):
-        return np.array(x).astype(np.complex64)
+        x = self.as_tensor(x)
+        if x.dtype == np.float64:
+            return x.astype(np.complex128)
+        else:
+            return x.astype(np.complex64)
 
     def cast(self, x, dtype):
         return np.array(x).astype(dtype)
