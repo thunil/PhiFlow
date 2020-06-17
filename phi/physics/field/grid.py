@@ -53,6 +53,10 @@ class CenteredGrid(Field):
                 point_field._batch_size = batch_size
                 data = value.at(point_field).data
         else:  # value is constant
+            if callable(value):
+                x = CenteredGrid.getpoints(domain.box, domain.resolution).copied_with(extrapolation=Material.extrapolation_mode(domain.boundaries), name=name)
+                value = value(x)
+                return value
             components = math.staticshape(value)[-1] if math.ndims(value) > 0 else 1
             data = math.add(math.zeros((batch_size,) + tuple(domain.resolution) + (components,)), value)
         return CenteredGrid(data, box=domain.box, extrapolation=Material.extrapolation_mode(domain.boundaries), name=name)
@@ -84,7 +88,7 @@ class CenteredGrid(Field):
     def box(self, box):
         return AABox.to_box(box, resolution_hint=self.resolution)
 
-    @property
+    @struct.derived()
     def dx(self):
         """returns array of grid spacings (same shape as box/resolution)"""
         return self.box.size / self.resolution
@@ -226,9 +230,8 @@ class CenteredGrid(Field):
         else:
             ext = extrapolation
         if not physical_units or self.has_cubic_cells:
-            data = math.gradient(self.data, dx=np.mean(self.dx), padding=pad,
-                                 difference=difference)
-            return self.copied_with(data=data, extrapolation=ext, flags=())
+            data = math.gradient(self.data, dx=np.mean(self.dx), difference=difference, padding=pad)
+            return self.copied_with(data=data, extrapolation=_gradient_extrapolation(ext), flags=())
         else:
             raise NotImplementedError('Only cubic cells supported.')
 

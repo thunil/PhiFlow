@@ -11,7 +11,7 @@ from .physics import Physics, StateDependency
 @struct.definition()
 class BurgersVelocity(DomainState):
 
-    def __init__(self, domain, velocity=0, viscosity=0.1, **kwargs):
+    def __init__(self, domain, velocity=0, viscosity=0.1, name='burgers', **kwargs):
         DomainState.__init__(self, **struct.kwargs(locals()))
 
     @struct.variable(dependencies=DomainState.domain, default=0)
@@ -21,6 +21,9 @@ class BurgersVelocity(DomainState):
     @struct.constant(default=0.1)
     def viscosity(self, viscosity):
         return viscosity
+
+    def __add__(self, other):
+        return self.copied_with(velocity=self.velocity + other)
 
 
 class Burgers(Physics):
@@ -41,8 +44,8 @@ class Burgers(Physics):
 
     @staticmethod
     def step_velocity(v, viscosity, dt, effects, diffusion_substeps):
-        v = advect.semi_lagrangian(v, v, dt)
         v = diffuse(v, dt * viscosity, substeps=diffusion_substeps)
+        v = advect.semi_lagrangian(v, v, dt)
         for effect in effects:
             v = effect_applied(effect, v, dt)
         return v.copied_with(age=v.age + dt)

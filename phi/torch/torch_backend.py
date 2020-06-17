@@ -51,7 +51,10 @@ class TorchBackend(Backend):
         return x == y
 
     def random_uniform(self, shape):
-        return torch.rand(shape)
+        return torch.rand(size=shape, dtype=self.precision_dtype)
+
+    def random_normal(self, shape):
+        return torch.randn(size=shape, dtype=self.precision_dtype)
 
     def stack(self, values, axis=0):
         return torch.stack(values, dim=axis)
@@ -286,6 +289,8 @@ class TorchBackend(Backend):
         return x.int()
 
     def to_complex(self, x):
+        if isinstance(x, ComplexTensor):
+            return x
         x = self.as_tensor(x)
         return ComplexTensor(self.stack([x, torch.zeros_like(x)], -1))
 
