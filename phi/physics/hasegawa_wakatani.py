@@ -174,7 +174,8 @@ class HasegawaWakatani2D(Physics):
     def get_phi(self, plasma, guess=None):
         # Calculate Phi from Omega
         o_mean = math.mean(plasma.omega.data[0, ..., 0])
-        phi, _ = solve_poisson(plasma.omega - o_mean,
+        field = math.to_float(plasma.omega - o_mean, float64=True)
+        phi, _ = solve_poisson(field,
                                FluidDomain(plasma.domain),
                                poisson_solver=self.poisson_solver,
                                guess=guess)

@@ -1,13 +1,14 @@
 import sys
+import click
+import os
+import pandas as pd
+import phi.flow as flow
+from pprint import pprint
 from phi.physics.hasegawa_wakatani import *  # Plasma Physics
 from phi.physics.plasma_field import PlasmaHW  # Plasma Field
-import pandas as pd
-import click
-import phi.flow as flow
-import phi.tf.flow as tf_flow
-import os
 
 global flow
+math.set_precision(64)
 
 translation_dic = {'o': 'output_path',
                    'out': 'output_path',
@@ -44,12 +45,9 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
     DESCRIPTION = """
     Hasegawa-Wakatani Plasma
     """
-    if mode.lower() not in ("tensorflow", "tf"):
-        Solver = flow.SparseCG()
-    else:
-        from phi.tf.tf_cuda_pressuresolver import CUDASolver
-        Solver = CUDASolver()
-        
+    Solver = flow.FourierSolver()#SparseCG()
+
+    parameters = {}
     # Load previous
     if in_path:
         print("\rLoading parameters of previous run...", end="", flush=True)
@@ -61,7 +59,6 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         #print(argv)
         indices = list(range(len(argv)))
         partial = False
-        parameters = {}
         for i in indices:
             if argv[i][:2] == "--":
                 if "=" in argv[i]:
@@ -85,8 +82,24 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
                 key = translation_dic[key]
             if not partial:
                 parameters[key] = val
-        locals().update(parameters)  # Bad practice. Quick and dirty fix.
+        if 'steps' in parameters:
+            del parameters['steps']  # Run defined step
+        locals().update(parameters)  # Bad practice. Quick and dirty fix.  TODO: Broken?
         print("\r[x] Loaded all parameters from previous run.")
+        pprint(parameters)
+        pprint(locals())
+    if 'grid_size' in parameters:
+        grid_size = parameters['grid_size']
+    if 'step_size' in parameters:
+        step_size = parameters['step_size']
+    if 'nu' in parameters:
+        nu = parameters['nu']
+    if 'N' in parameters:
+        N = parameters['N']
+    if 'k0' in parameters:
+        k0 = parameters['k0']
+    if 'c1' in parameters:
+        c1 = parameters['c1']
 
     step_size = float(step_size)
     steps = int(steps)
@@ -121,24 +134,29 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         print("\rLoading field values of previous run...", end="", flush=True)
         # Find last item
         files = os.listdir(in_path)
+        index = int(in_path.split('_')[-1].split('.')[0])
         files = [f.split("_")[1].split(".")[0] for f in files
                  if "density" in f]
         num_len = len(files[0])
         init_step = max([int(f) for f in files])
         # Load last fields
-        scene = flow.Scene(dir="/ptmp/rccg/", category="", index=39)
+        scene = flow.Scene(dir="/ptmp/rccg/", category="", index=index)
         init_density, init_phi, init_omega = flow.read_sim_frames(in_path, fieldnames=["density", "phi", "omega"], frames=init_step)
-        initial_density = flow.read_sim_frames(in_path, fieldnames="density", frames=0)
+        initial_density = flow.read_sim_frames(in_path, fieldnames="density", frames=1)
         assert init_density.shape == init_phi.shape == init_omega.shape == initial_density.shape, f"\nShape mismatch in loading: density={density.shape}, phi={phi.shape}, omega={omega.shape}, init_density={initial_density.shape}"
         print("\r[x] Loaded all field values from previous run.")
     # Initialize
     else:
         init_density = fft_random
-        init_phi = -0.5*fft_random
-        init_omega = -0.5*fft_random
+        init_phi = 0.5*fft_random
+        init_omega = 0.5*fft_random
         initial_density = fft_random
-        scene = Scene.create(output_path)
+        scene = flow.Scene.create(output_path)
         init_step = 0
+        # Write initial data
+        scene.write(init_density, names='density', frame=0)
+        scene.write(init_phi, names='phi', frame=0)
+        scene.write(init_omega, names='omega', frame=0)
 
     plasma_hw = PlasmaHW(domain,
                          density=init_density,
@@ -150,13 +168,14 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
                        physics=HasegawaWakatani2D(**initial_state, poisson_solver=Solver)
                        )
 
-
     for step in range(steps):
         step_ix = step + init_step + 1
         flow.world.step(dt=step_size)
         scene.write(plasma.density, names='density', frame=step_ix)
         scene.write(plasma.omega, names='omega', frame=step_ix)
         scene.write(plasma.phi, names='phi', frame=step_ix)
+        if np.isnan(math.sum(plasma.density).data):
+            break
 
     return
 
