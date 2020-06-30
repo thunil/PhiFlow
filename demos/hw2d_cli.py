@@ -9,6 +9,7 @@ from phi.physics.plasma_field import PlasmaHW  # Plasma Field
 
 global flow
 math.set_precision(64)
+BASE_PATH = "/ptmp/rccg/"
 
 translation_dic = {'o': 'output_path',
                    'out': 'output_path',
@@ -40,7 +41,9 @@ translation_dic = {'o': 'output_path',
               help="Output path for writing data.")
 @click.option("--in", "-i", "in_path", default="", type=click.STRING, show_default=True,
               help="Path to previous simulation to continue")
-def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, output_path, in_path):
+@click.option("--snaps", "snaps", default="", type=click.INT, show_default=True,
+              help="Intervals in which snapshots are saved")
+def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, output_path, in_path, snaps):
     MODE=mode
     DESCRIPTION = """
     Hasegawa-Wakatani Plasma
@@ -56,7 +59,6 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         import json
         context = json.load(open(f"{in_path}/src/context.json", "r"))
         argv = context["argv"]
-        #print(argv)
         indices = list(range(len(argv)))
         partial = False
         for i in indices:
@@ -121,11 +123,13 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
     shape = (1, *initial_state['grid'], 1)
     del initial_state['grid']
 
+    # NOTE: Assuming square
+    box = flow.AABox(0, [get_box_size(initial_state['K0'])]*len([N, N]))
     domain = flow.Domain([N, N],
-                    box=flow.AABox(0, [get_box_size(initial_state['K0'])]*len([N, N])),  # NOTE: Assuming square
-                    boundaries=(flow.PERIODIC, flow.PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
-                    )
-    fft_random = flow.CenteredGrid.sample(flow.Noise(), domain)
+                         box=box,
+                         boundaries=(flow.PERIODIC, flow.PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
+                         )
+    fft_random = flow.CenteredGrid.sample(flow.Noise(1), domain)
     integral = np.sum(fft_random.data**2)
     fft_random /= np.sqrt(integral)
 
@@ -140,7 +144,7 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         num_len = len(files[0])
         init_step = max([int(f) for f in files])
         # Load last fields
-        scene = flow.Scene(dir="/ptmp/rccg/", category="", index=index)
+        scene = flow.Scene(dir=BASE_PATH, category="", index=index)
         init_density, init_phi, init_omega = flow.read_sim_frames(in_path, fieldnames=["density", "phi", "omega"], frames=init_step)
         initial_density = flow.read_sim_frames(in_path, fieldnames="density", frames=1)
         assert init_density.shape == init_phi.shape == init_omega.shape == initial_density.shape, f"\nShape mismatch in loading: density={density.shape}, phi={phi.shape}, omega={omega.shape}, init_density={initial_density.shape}"
@@ -157,7 +161,7 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         scene.write(init_density, names='density', frame=0)
         scene.write(init_phi, names='phi', frame=0)
         scene.write(init_omega, names='omega', frame=0)
-
+    
     plasma_hw = PlasmaHW(domain,
                          density=init_density,
                          phi=init_phi,
@@ -165,15 +169,16 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
                          initial_density=initial_density
                          )
     plasma = flow.world.add(plasma_hw,
-                       physics=HasegawaWakatani2D(**initial_state, poisson_solver=Solver)
-                       )
+                            physics=HasegawaWakatani2D(**initial_state, poisson_solver=Solver)
+                            )
 
     for step in range(steps):
         step_ix = step + init_step + 1
         flow.world.step(dt=step_size)
-        scene.write(plasma.density, names='density', frame=step_ix)
-        scene.write(plasma.omega, names='omega', frame=step_ix)
-        scene.write(plasma.phi, names='phi', frame=step_ix)
+        if step_ix % snaps == 0:
+            scene.write(plasma.density, names='density', frame=step_ix)
+            scene.write(plasma.omega, names='omega', frame=step_ix)
+            scene.write(plasma.phi, names='phi', frame=step_ix)
         if np.isnan(math.sum(plasma.density).data):
             break
 
