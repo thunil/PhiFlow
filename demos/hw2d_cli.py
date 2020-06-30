@@ -9,7 +9,7 @@ from phi.physics.plasma_field import PlasmaHW  # Plasma Field
 
 global flow
 math.set_precision(64)
-BASE_PATH = "/ptmp/rccg/"
+BASE_PATH = ""
 
 translation_dic = {'o': 'output_path',
                    'out': 'output_path',
@@ -41,7 +41,7 @@ translation_dic = {'o': 'output_path',
               help="Output path for writing data.")
 @click.option("--in", "-i", "in_path", default="", type=click.STRING, show_default=True,
               help="Path to previous simulation to continue")
-@click.option("--snaps", "snaps", default="", type=click.INT, show_default=True,
+@click.option("--snaps", "snaps", default=1000, type=click.INT, show_default=True,
               help="Intervals in which snapshots are saved")
 def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, output_path, in_path, snaps):
     MODE=mode
