@@ -9,7 +9,6 @@ from phi.physics.plasma_field import PlasmaHW  # Plasma Field
 
 global flow
 math.set_precision(64)
-BASE_PATH = ""
 
 translation_dic = {'o': 'output_path',
                    'out': 'output_path',
@@ -55,7 +54,7 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
 
     parameters = {}
     # Load previous
-    if in_path:
+    if (in_path) and (seed is None):
         print("\rLoading parameters of previous run...", end="", flush=True)
         if in_path[-1] == "/":
             in_path = in_path[:-1]
@@ -91,8 +90,7 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
             del parameters['steps']  # Run defined step
         locals().update(parameters)  # Bad practice. Quick and dirty fix.  TODO: Broken?
         print("\r[x] Loaded all parameters from previous run.")
-        pprint(parameters)
-        pprint(locals())
+        #pprint(parameters
     if 'grid_size' in parameters:
         grid_size = parameters['grid_size']
     if 'step_size' in parameters:
@@ -109,6 +107,7 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
     step_size = float(step_size)
     steps = int(steps)
 
+    pprint(locals())
     initial_state = {
         "grid": (int(grid_size), int(grid_size)),      # Grid size in points (resolution)
         "K0":   k0,         # Box size defining parameter
