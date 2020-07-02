@@ -60,7 +60,7 @@ class HasegawaWakatani2D(Physics):
         self.dim = dim
         self.N = N
         self.c1 = c1
-        self.nu = nu
+        self.nu = (-1)**(self.N+1) * nu
         self.K0 = K0
         self.arakawa_coeff = arakawa_coeff
         self.kappa_coeff = kappa_coeff
@@ -132,7 +132,7 @@ class HasegawaWakatani2D(Physics):
             f"{perc_E:>8.02g}",
             f"{perc_U:>8.02g}"
         ]))
-        return y1.copied_with(energy=E, enstrophy=U, phi=phi)
+        return y1.copied_with(energy=E, enstrophy=U, phi=phi, age=plasma.age+dt)
 
     def euler(self, plasma, dt=0.1):
         # Recast to 3D: return Z from Batch-axis
