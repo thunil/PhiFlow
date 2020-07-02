@@ -56,7 +56,7 @@ class PlasmaHW(DomainState):
     def energy(self, energy):
         """Total energy of HW plasma"""
         return self.energy
-    
+
     @struct.variable(default=0, dependencies=DomainState.domain)
     def enstrophy(self, enstrophy):
         """Generalized enstrophy"""
