@@ -17,13 +17,13 @@ translation_dic = {'o': 'output_path',
                    'i': 'in_path'}
 
 @click.command()
-@click.option("--mode", default="NUMPY", type=click.STRING, show_default=True,
+@click.option("--mode", "mode", default="NUMPY", type=click.STRING, show_default=True,
               help="NUMPY vs. TENSORFLOW vs. PYTORCH")
-@click.option("--step_size", default=10**-3, type=click.FloatRange(0, 1), show_default=True,
+@click.option("--step_size", "step_size", default=10**-3, type=click.FloatRange(0, 1), show_default=True,
               help="Step size in time")
-@click.option("--steps", default=10**4, type=click.IntRange(0, None), show_default=True,
+@click.option("--steps", "steps", default=10**4, type=click.IntRange(0, None), show_default=True,
               help="Number of steps to take in the simulation")
-@click.option("--grid_size", default=128, type=click.IntRange(8, None), show_default=True,
+@click.option("--grid_size", "grid_size", default=128, type=click.IntRange(8, None), show_default=True,
               help="Integer. coarse: 128, fine: 1024")
 @click.option("--k0", default=0.15, type=click.FloatRange(0, None), show_default=True,
               help="small: 0.15 (focus on high-k), large: 0.0375 (focus on low-k)")
@@ -33,7 +33,7 @@ translation_dic = {'o': 'output_path',
               help="coarse-large: 5*10**-10, fine-small: 10**-4")
 @click.option("--c1", default=1, type=click.FloatRange(0, None), show_default=True,
               help="Scale between: hydrodynamic: 0.1, transition: 1, adiabatic: 5")
-@click.option("--kappa", default=1, type=click.INT, show_default=True,
+@click.option("--kappa", default=1,  type=click.INT, show_default=True,
               help="Kappa coefficient.")
 @click.option("--arakawa_coeff", default=1, type=click.INT, show_default=True,
               help="Poisson Bracket coefficient.")
@@ -43,7 +43,10 @@ translation_dic = {'o': 'output_path',
               help="Path to previous simulation to continue")
 @click.option("--snaps", "snaps", default=1000, type=click.INT, show_default=True,
               help="Intervals in which snapshots are saved")
-def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, output_path, in_path, snaps):
+@click.option("--seed", "seed", default=None, type=click.INT, show_default=False,
+              help="Index of initial seed. Default is last timestep")
+def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, 
+         output_path, in_path, snaps, seed):
     MODE=mode
     DESCRIPTION = """
     Hasegawa-Wakatani Plasma
@@ -138,17 +141,21 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
         print("\rLoading field values of previous run...", end="", flush=True)
         # Find last item
         files = os.listdir(in_path)
-        index = int(in_path.split('_')[-1].split('.')[0])
         files = [f.split("_")[1].split(".")[0] for f in files
                  if "density" in f]
-        num_len = len(files[0])
-        init_step = max([int(f) for f in files])
+        # No seed given
+        if seed is None:
+            sim_index = int(in_path.split('_')[-1].split('.')[0])
+            init_step = max([int(f) for f in files])
+            scene = flow.Scene(dir=output_path, category="", index=sim_index)
+        else:
+            init_step = seed
+            scene = flow.Scene.create(output_path)
         # Load last fields
-        scene = flow.Scene(dir=BASE_PATH, category="", index=index)
         init_density, init_phi, init_omega = flow.read_sim_frames(in_path, fieldnames=["density", "phi", "omega"], frames=init_step)
-        initial_density = flow.read_sim_frames(in_path, fieldnames="density", frames=1)
+        initial_density = flow.read_sim_frames(in_path, fieldnames="density", frames=0)
         assert init_density.shape == init_phi.shape == init_omega.shape == initial_density.shape, f"\nShape mismatch in loading: density={density.shape}, phi={phi.shape}, omega={omega.shape}, init_density={initial_density.shape}"
-        print("\r[x] Loaded all field values from previous run.")
+        print(f"\r[x] Loaded all field values from previous run. (step={init_step:,})")
     # Initialize
     else:
         init_density = fft_random
@@ -166,7 +173,8 @@ def main(mode, step_size, steps, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
                          density=init_density,
                          phi=init_phi,
                          omega=init_omega,
-                         initial_density=initial_density
+                         initial_density=initial_density,
+                         age=init_step*step_size
                          )
     plasma = flow.world.add(plasma_hw,
                             physics=HasegawaWakatani2D(**initial_state, poisson_solver=Solver)
