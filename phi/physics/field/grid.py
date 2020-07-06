@@ -39,7 +39,6 @@ class CenteredGrid(Field):
         :type name: string, optional
         """
         Field.__init__(self, **struct.kwargs(locals()))
-        self._sample_points = None
 
     @staticmethod
     def sample(value, domain, batch_size=None, name=None):
@@ -159,9 +158,7 @@ class CenteredGrid(Field):
     def points(self):
         if self.is_valid and SAMPLE_POINTS in self.flags:
             return self
-        if self._sample_points is None:
-            self._sample_points = CenteredGrid.getpoints(self.box, self.resolution)
-        return self._sample_points
+        return CenteredGrid.getpoints(self.box, self.resolution)
 
     @property
     def elements(self):
@@ -253,9 +250,25 @@ class CenteredGrid(Field):
         return resampled
 
 
-def _required_paddings_transposed(box, dx, target):
-    lower = math.to_int(math.ceil(math.maximum(0, box.lower - target.lower) / dx))
-    upper = math.to_int(math.ceil(math.maximum(0, target.upper - box.upper) / dx))
+    @struct.derived()
+    def frequencies(self):
+        return self.with_data(math.fftfreq(self.resolution, mode='vector') / self.dx)
+
+    @struct.derived()
+    def squared_frequencies(self):
+        return self.with_data(math.sum(self.frequencies.data ** 2, axis=-1, keepdims=True))
+
+    def fft(self):
+        return self.with_data(math.fft(self.data))
+
+    @struct.derived()
+    def abs(self):
+        return self.with_data(math.abs(self.data))
+
+
+def _required_paddings_transposed(box, dx, target, threshold=1e-5):
+    lower = math.to_int(math.ceil(math.maximum(0, box.lower - target.lower) / dx - threshold))
+    upper = math.to_int(math.ceil(math.maximum(0, target.upper - box.upper) / dx - threshold))
     return [lower, upper]
 
 

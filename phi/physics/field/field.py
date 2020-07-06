@@ -170,11 +170,11 @@ class Field(State):
 
     __rmul__ = __mul__
 
-    def __div__(self, other):
-        return self.__dataop__(other, True, lambda d1, d2: math.div(d1, d2))
-
     def __truediv__(self, other):
         return self.__dataop__(other, True, lambda d1, d2: math.div(d1, d2))
+
+    def __rtruediv__(self, other):
+        return self.__dataop__(other, False, lambda d1, d2: math.div(d2, d1))
 
     def __sub__(self, other):
         return self.__dataop__(other, False, lambda d1, d2: math.sub(d1, d2))
@@ -192,6 +192,18 @@ class Field(State):
 
     def __neg__(self):
         return self * -1
+
+    def __gt__(self, other):
+        return self.__dataop__(other, False, lambda x, y: x > y)
+
+    def __ge__(self, other):
+        return self.__dataop__(other, False, lambda x, y: x >= y)
+
+    def __lt__(self, other):
+        return self.__dataop__(other, False, lambda x, y: x < y)
+
+    def __le__(self, other):
+        return self.__dataop__(other, False, lambda x, y: x <= y)
 
     def __dataop__(self, other, linear_if_scalar, data_operator):
         if isinstance(other, Field):
