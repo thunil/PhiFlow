@@ -85,13 +85,13 @@ class TestPoissonSolve(TestCase):
                 np.testing.assert_almost_equal(field, pressure_fields[0], decimal=4)
 
     def test_sparse_cg(self):
-        _test_all(SparseCG())
+        _test_all(SparseCG(accuracy=1e-5, max_iterations=10000))
 
     def test_sparse_scipy(self):
-        _test_all(SparseSciPy())
+        _test_all(SparseSciPy(accuracy=1e-5, max_iterations=10000))
 
     def test_geometric_cg(self):
-        _test_all(GeometricCG())
+        _test_all(GeometricCG(accuracy=1e-5, max_iterations=10000))
 
 
 def _run_higher_order_fft_reconstruction(in_field, set_accuracy, tolerance=20, order=2):

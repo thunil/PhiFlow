@@ -9,6 +9,7 @@ from phi.physics.hasegawa_wakatani import *  # Plasma Physics
 from phi.physics.plasma_field import PlasmaHW  # Plasma Field
 import cv2
 
+
 global flow
 math.set_precision(64)
 INTERPOLATION_FUNC = cv2.INTER_CUBIC
