@@ -19,6 +19,7 @@ translation_dic = {'o': 'output_path',
                    'in': 'in_path',
                    'i': 'in_path'}
 
+
 @click.command()
 @click.option("--mode", "mode", default="NUMPY", type=click.STRING, show_default=True,
               help="NUMPY vs. TENSORFLOW vs. PYTORCH")
@@ -38,7 +39,7 @@ translation_dic = {'o': 'output_path',
               help="coarse-large: 5*10**-10, fine-small: 10**-4")
 @click.option("--c1", default=1, type=click.FloatRange(0, None), show_default=True,
               help="Scale between: hydrodynamic: 0.1, transition: 1, adiabatic: 5")
-@click.option("--kappa", default=1,  type=click.INT, show_default=True,
+@click.option("--kappa", default=1, type=click.INT, show_default=True,
               help="Kappa coefficient.")
 @click.option("--arakawa_coeff", default=1, type=click.INT, show_default=True,
               help="Poisson Bracket coefficient.")
@@ -52,14 +53,14 @@ translation_dic = {'o': 'output_path',
               help="Intervals in which snapshots are saved in time.")
 @click.option("--seed", "seed", default=None, type=click.INT, show_default=False,
               help="Index of initial seed. Default is last timestep")
-def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arakawa_coeff, 
+def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arakawa_coeff,
          output_path, in_path, snaps, snaps_time, seed):
-    time.sleep(np.random.rand()*10)  # Ensure no conflict with jobs that ran at the same time
-    MODE=mode
+    time.sleep(np.random.rand() * 10)  # Ensure no conflict with jobs that ran at the same time
+    MODE = mode
     DESCRIPTION = """
     Hasegawa-Wakatani Plasma
     """
-    Solver = flow.FourierSolver()#SparseCG()
+    Solver = flow.FourierSolver()  # SparseCG()
 
     parameters = {}
     # Load previous
@@ -102,7 +103,7 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
             del parameters['steps']  # Run defined step
         locals().update(parameters)  # Bad practice. Quick and dirty fix.  TODO: Broken?
         print("\r[x] Loaded all parameters from previous run.")
-        #pprint(parameters
+        # pprint(parameters
     if 'grid_size' in parameters:
         grid_size = parameters['grid_size']
     if 'step_size' in parameters:
@@ -121,30 +122,30 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
 
     # Time Adjustment
     if end_time is not None:
-        steps = int(end_time/step_size)
+        steps = int(end_time / step_size)
     if snaps_time is not None:
-        snaps = int(snaps_time/step_size)
+        snaps = int(snaps_time / step_size)
 
     pprint(locals())
     initial_state = {
         "grid": (int(grid_size), int(grid_size)),      # Grid size in points (resolution)
-        "K0":   k0,         # Box size defining parameter
-        "N":    int(N),                        # N*2 order of dissipation
-        "nu":   nu,#nu_dict['coarse-large'],  # Dissipation scaling coefficient
-        "c1":   c1,     # Adiabatic parameter
-        "kappa_coeff":   kappa,
+        "K0": k0,         # Box size defining parameter
+        "N": int(N),                        # N*2 order of dissipation
+        "nu": nu,  # nu_dict['coarse-large'],  # Dissipation scaling coefficient
+        "c1": c1,     # Adiabatic parameter
+        "kappa_coeff": kappa,
         "arakawa_coeff": arakawa_coeff,
     }
 
     def get_box_size(k0):
-        return 2*np.pi/k0
+        return 2 * np.pi / k0
 
     N = initial_state['grid'][1]
     shape = (1, *initial_state['grid'], 1)
     del initial_state['grid']
 
     # NOTE: Assuming square
-    box = flow.AABox(0, [get_box_size(initial_state['K0'])]*len([N, N]))
+    box = flow.AABox(0, [get_box_size(initial_state['K0'])] * len([N, N]))
     domain = flow.Domain([N, N],
                          box=box,
                          boundaries=(flow.PERIODIC, flow.PERIODIC)  # Each dim: OPEN / CLOSED / PERIODIC
@@ -159,7 +160,7 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
         # Find last item
         files = os.listdir(in_path)
         step_list = [int(f.split("_")[1].split(".")[0]) for f in files
-                      if "phi" in f]
+                     if "phi" in f]
         # No seed given: Continue previous simulation
         if seed is None:
             sim_index = int(in_path.split('_')[-1].split('.')[0])
@@ -172,16 +173,18 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
 
         # Load last fields
         init_density, init_phi, init_omega = flow.read_sim_frames(in_path, fieldnames=["density", "phi", "omega"], frames=init_step)
-        initial_density = init_density #TODO: Read true init density when restarting##flow.read_sim_frames(in_path, fieldnames="density", frames=0)
+        initial_density = init_density  # TODO: Read true init density when restarting##flow.read_sim_frames(in_path, fieldnames="density", frames=0)
+
         def get_stats(arr):
             return dict(mean=np.mean(arr), var=np.var(arr), sum=np.sum(arr), min=np.min(arr), max=np.max(arr), std=np.std(arr))
-        print_stats = lambda init_density: print("  ".join([f"{key}={val:>9.2e}" for key, val in get_stats(init_density).items()]))
+
+        def print_stats(init_density): return print("  ".join([f"{key}={val:>9.2e}" for key, val in get_stats(init_density).items()]))
         prev_properties = {'init_density': get_stats(init_density),
                            'init_phi': get_stats(init_phi),
                            'init_omega': get_stats(init_omega),
                            'initial_density': get_stats(initial_density)}
         print(f"\r[x] Loaded all field values from previous run. (step={init_step:,})")
-        is_valid = lambda arr, prev: np.allclose(list(get_stats(arr).values())[:3], list(prev.values())[:3])
+        def is_valid(arr, prev): return np.allclose(list(get_stats(arr).values())[:3], list(prev.values())[:3])
         # Resize sizes
         if (np.array(init_density.shape) > N).any():
             init_density = cv2.resize(init_density[0, ..., 0], dsize=(N, N), interpolation=INTERPOLATION_FUNC).reshape(1, N, N, 1)
@@ -189,10 +192,10 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
             init_omega = cv2.resize(init_omega[0, ..., 0], dsize=(N, N), interpolation=INTERPOLATION_FUNC).reshape(1, N, N, 1)
             initial_density = cv2.resize(initial_density[0, ..., 0], dsize=(N, N), interpolation=INTERPOLATION_FUNC).reshape(1, N, N, 1)
             # Normalize Functions
-            center = lambda arr, prev: arr-np.mean(arr)+prev['mean']
-            eq_var = lambda arr, prev: (arr/np.std(arr))*prev['std']
-            content = lambda arr, prev: (arr/np.sum(arr))*prev['sum']
-            normalize = lambda arr, prev: center(eq_var(content(arr, prev), prev), prev)
+            def center(arr, prev): return arr - np.mean(arr) + prev['mean']
+            def eq_var(arr, prev): return (arr / np.std(arr)) * prev['std']
+            def content(arr, prev): return (arr / np.sum(arr)) * prev['sum']
+            def normalize(arr, prev): return center(eq_var(content(arr, prev), prev), prev)
             # Normalize and assert properties
             init_density = normalize(init_density, prev_properties['init_density'])
             assert is_valid(init_density, prev_properties['init_density'])
@@ -211,8 +214,8 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
     # Initialize
     else:
         init_density = fft_random
-        init_phi = 0.5*fft_random
-        init_omega = 0.5*fft_random
+        init_phi = 0.5 * fft_random
+        init_omega = 0.5 * fft_random
         initial_density = fft_random
         scene = flow.Scene.create(output_path)
         init_step = 0
@@ -220,13 +223,13 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
         scene.write(init_density, names='density', frame=0)
         scene.write(init_phi, names='phi', frame=0)
         scene.write(init_omega, names='omega', frame=0)
-    
+
     plasma_hw = PlasmaHW(domain,
                          density=init_density,
                          phi=init_phi,
                          omega=init_omega,
                          initial_density=initial_density,
-                         age=init_step*step_size
+                         age=init_step * step_size
                          )
     plasma = flow.world.add(plasma_hw,
                             physics=HasegawaWakatani2D(**initial_state, poisson_solver=Solver)
@@ -243,6 +246,7 @@ def main(mode, step_size, steps, end_time, grid_size, k0, N, nu, c1, kappa, arak
             break
 
     return
+
 
 if __name__ == "__main__":
     main()

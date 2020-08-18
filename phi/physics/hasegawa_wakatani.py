@@ -55,17 +55,17 @@ class HasegawaWakatani2D(Physics):
         Physics.__init__(self, [
             # No effects currently supported for the fields
         ])
-        self.poisson_solver = poisson_solver #SparseCG() # FourierSolver()#
+        self.poisson_solver = poisson_solver  # SparseCG() # FourierSolver()#
         #self.laplace = lambda x: x.laplace(axes=[1, 2])
         self.dim = dim
         self.N = N
         self.c1 = c1
-        self.nu = (-1)**(self.N+1) * nu
+        self.nu = (-1)**(self.N + 1) * nu
         self.K0 = K0
         self.arakawa_coeff = arakawa_coeff
         self.kappa_coeff = kappa_coeff
         # Derived Values
-        self.L = 2*np.pi/K0
+        self.L = 2 * np.pi / K0
         self.energy = 0
         self.enstrophy = 0
         self.step = self.rk4_step
@@ -101,15 +101,15 @@ class HasegawaWakatani2D(Physics):
                                         enstrophy=get_generalized_enstrophy(plasma.density, plasma.omega))
         yn = plasma
         pn = self.get_phi(yn)  # TODO: only execute for t=0
-        k1 = dt*self.gradient_2d(yn, pn, dt=0)
-        p1 = self.get_phi(yn + k1*0.5)
-        k2 = dt*self.gradient_2d(yn + k1*0.5, p1, dt=dt/2)
-        p2 = self.get_phi(yn + k2*0.5)
-        k3 = dt*self.gradient_2d(yn + k2*0.5, p2, dt=dt/2)
+        k1 = dt * self.gradient_2d(yn, pn, dt=0)
+        p1 = self.get_phi(yn + k1 * 0.5)
+        k2 = dt * self.gradient_2d(yn + k1 * 0.5, p1, dt=dt / 2)
+        p2 = self.get_phi(yn + k2 * 0.5)
+        k3 = dt * self.gradient_2d(yn + k2 * 0.5, p2, dt=dt / 2)
         p3 = self.get_phi(yn + k3)
-        k4 = dt*self.gradient_2d(yn + k3, p3, dt=dt)
+        k4 = dt * self.gradient_2d(yn + k3, p3, dt=dt)
         #p4 = self.get_phi(k4)
-        y1 = yn + (k1 + 2*k2 + 2*k3 + k4)*(1/6)  # TODO: currently adds two timesteps
+        y1 = yn + (k1 + 2 * k2 + 2 * k3 + k4) * (1 / 6)  # TODO: currently adds two timesteps
         phi = self.get_phi(y1)
         t1 = time.time()
         # Predicted Energy
@@ -119,8 +119,8 @@ class HasegawaWakatani2D(Physics):
         E = get_total_energy(y1.density, phi)
         U = get_generalized_enstrophy(y1.density, y1.omega)
         # Percentage Deviation
-        perc_E = 1 - pred_E/E
-        perc_U = 1 - pred_U/U
+        perc_E = 1 - pred_E / E
+        perc_U = 1 - pred_U / U
         print(" | ".join([
             f"{plasma.age + dt:<7.04g}",
             f"{np.max(np.abs(yn.density.data)):>7.02g}",
@@ -132,7 +132,7 @@ class HasegawaWakatani2D(Physics):
             f"{perc_E:>8.02g}",
             f"{perc_U:>8.02g}"
         ]))
-        return y1.copied_with(energy=E, enstrophy=U, phi=phi, age=plasma.age+dt)
+        return y1.copied_with(energy=E, enstrophy=U, phi=phi, age=plasma.age + dt)
 
     def euler(self, plasma, dt=0.1):
         # Recast to 3D: return Z from Batch-axis
@@ -140,7 +140,7 @@ class HasegawaWakatani2D(Physics):
         p = plasma_grad.phi  # NOT A GRADIENT
         o = plasma.omega + dt * plasma_grad.omega
         n = plasma.density + dt * plasma_grad.density
-        return plasma.copied_with(density=n, omega=o, phi=p, age=plasma.age+dt, grad_density=plasma_grad.density)
+        return plasma.copied_with(density=n, omega=o, phi=p, age=plasma.age + dt, grad_density=plasma_grad.density)
 
     def gradient_invariants(self, density, omega, phi):
         """returns dE, dU for timestepping
@@ -149,7 +149,7 @@ class HasegawaWakatani2D(Physics):
         dZ/dt = G_n - D^U
 
         discretized using np.sum to get scalar of 2D
-        
+
         :param plasma: [description]
         :type plasma: [type]
         """
@@ -163,8 +163,8 @@ class HasegawaWakatani2D(Physics):
         gamma_n = -math.sum(n * dy_p[0, 0, ...])
         # Gamma_c = c_1 \int{d^2 x /\tilde{n} - \tilde{\phi})^2}
         gamma_c = self.c1 * math.sum((n - p)**2)
-        DE = math.sum(n*diffuse(density, self.N)-p*diffuse(omega, self.N))
-        DU = -math.sum((n-o)*(diffuse(density, self.N)-diffuse(omega, self.N)))
+        DE = math.sum(n * diffuse(density, self.N) - p * diffuse(omega, self.N))
+        DU = -math.sum((n - o) * (diffuse(density, self.N) - diffuse(omega, self.N)))
         # dE/dt = G_n - G_c - DE
         dE = gamma_n - gamma_c - DE
         # dU/dt = G_n - DU
@@ -202,18 +202,20 @@ class HasegawaWakatani2D(Physics):
         # Calculate Gradients
         diff = (phi - plasma.density).data[0, ..., 0]
         # Step 2.1: New Omega.
-        o = (self.c1 * diff
-             - self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.omega.data[0, ..., 0])
-             + self.nu * diffuse(plasma.omega, self.N))
+        o = (  # self.c1 * diff
+            #- self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.omega.data[0, ..., 0])
+            #+ self.nu * diffuse(plasma.omega, self.N)
+        )
 
         # Step 2.2: New Density.
-        n = (self.c1 * diff
-             - self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.density.data[0, ..., 0])
-             - self.kappa_coeff * dy_p
-             + self.nu * diffuse(plasma.density, self.N))
+        n = (  # self.c1 * diff
+            #- self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.density.data[0, ..., 0])
+            - self.kappa_coeff * dy_p
+            #+ self.nu * diffuse(plasma.density, self.N)
+        )
 
-        #print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
-            # Fields
+        # print("{:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | {:>7.2g} | ".format(
+        # Fields
         #    np.max(o), np.max(n), np.max(phi.data[0, ..., 0]),
         #    np.max(self.c1 * (plasma.density - phi).data[0, ..., 0]),
         #    np.max(self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.omega.data[0, ..., 0])),
@@ -221,17 +223,17 @@ class HasegawaWakatani2D(Physics):
         #    np.max(self.arakawa_coeff * periodic_arakawa(phi.data[0, ..., 0], plasma.density.data[0, ..., 0])),
         #    np.max(self.kappa_coeff * kappa * dy_p),
         #    np.max(self.nu * diffuse(plasma.density, self.N))
-        #))
+        # ))
 
         energy, enstrophy = self.gradient_invariants(plasma.density, plasma.omega, phi)
 
         return plasma.copied_with(
             density=plasma.density.copied_with(data=math.reshape(n, plasma.density.data.shape)),
             omega=plasma.omega.copied_with(data=math.reshape(o, plasma.omega.data.shape)),
-            phi=phi,  # NOT A GRADIENT
+            phi=phi,  # NOTE: NOT A GRADIENT
             energy=energy,
             enstrophy=enstrophy,
-            age=plasma.age+dt
+            age=plasma.age + dt
         )
 
 
@@ -266,7 +268,7 @@ def get_generalized_enstrophy(n, omega):
     Calculate generalized enstrophy of HW plasma
     $U = \frac{1}{2} \int d^2 x (\tilde{n} - \nabla^2_\bot \tilde{\phi})^2 \equiv \frac{1}{2} \int d^2 x (\tilde{n} - \tilde{\Omega})^2$
     """
-    return 0.5 * math.sum(((n - omega)*(n - omega))).data[0, ..., 0]
+    return 0.5 * math.sum(((n - omega) * (n - omega))).data[0, ..., 0]
 
 
 def diffuse(field, N=1):
@@ -283,7 +285,7 @@ def diffuse(field, N=1):
     """
     ret_field = field
     if N == 0:
-    	ret_field = CenteredGrid(np.zeros(ret_field.data.shape))
+        ret_field = CenteredGrid(np.zeros(ret_field.data.shape))
     else:
         # Apply laplace N times in perpendicular ([y, x])
         ret_field = field
@@ -293,8 +295,8 @@ def diffuse(field, N=1):
     return ret_field.data[0, ..., 0]
 
 
-@jit(#f4[:,:](f8[:,:], f8[:,:], f4),
-     cache=True, nopython=True)#, nogil=True, parallel=True)
+@jit(  # f4[:,:](f8[:,:], f8[:,:], f4),
+    cache=True, nopython=True)  # , nogil=True, parallel=True)
 def arakawa_vec(zeta, psi, d):
     """2D periodic first-order Arakawa
     requires 1 cell padded input on each border"""
@@ -312,7 +314,7 @@ def periodic_arakawa(zeta, psi, d=1.):
     """2D periodic padding and apply Arakawa stencil to padded matrix"""
     z = periodic_padding(zeta)
     p = periodic_padding(psi)
-    #return arakawa_stencil(z, p, d=d)[1:-1, 1:-1]
+    # return arakawa_stencil(z, p, d=d)[1:-1, 1:-1]
     return arakawa_vec(z, p, d=d)
 
 
