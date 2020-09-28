@@ -15,7 +15,7 @@ Each call to at() or sample_at() generates a new noise field.
 Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
 """
 
-    def __init__(self, channels=1, scale=10, smoothness=1.0, math=math.DYNAMIC_BACKEND, **kwargs):
+    def __init__(self, channels=1, scale=10, smoothness=1.0, math=math.DYNAMIC_BACKEND, seed=None, **kwargs):
         AnalyticField.__init__(self, None, **struct.kwargs(locals()))
 
     @struct.constant()
@@ -56,7 +56,8 @@ Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
     def grid_sample(self, resolution, size, batch_size=1, channels=None):
         channels = channels or self.channels or len(size)
         shape = (batch_size,) + tuple(resolution) + (channels,)
-        rndj = math.to_complex(self.math.random_normal(shape)) + 1j * math.to_complex(self.math.random_normal(shape))  # Note: there is no complex32
+        import tensorflow as tf
+        rndj = math.to_complex(self.math.random_normal(shape, seed=self.seed)) + 1j * math.to_complex(self.math.random_normal(shape, seed=self.seed+1))  # Note: there is no complex32
         k = math.fftfreq(resolution) * resolution / size * self.scale  # in physical units
         k = math.sum(k ** 2, axis=-1, keepdims=True)
         lowest_frequency = 0.1
@@ -81,3 +82,7 @@ Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
     def math(self, m):
         assert isinstance(m, math.Backend)
         return m
+
+    @struct.constant()
+    def seed(self, seed):
+        return seed

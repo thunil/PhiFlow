@@ -53,7 +53,8 @@ class TorchBackend(Backend):
     def random_uniform(self, shape, low=0, high=1):
         return torch.rand(size=shape, dtype=self.precision_dtype) * (high - low) + low
 
-    def random_normal(self, shape):
+    def random_normal(self, shape, seed=None):
+        assert seed is None
         return torch.randn(size=shape, dtype=self.precision_dtype)
 
     def stack(self, values, axis=0):

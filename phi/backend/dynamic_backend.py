@@ -71,7 +71,7 @@ class DynamicBackend(Backend):
     def random_uniform(self, shape, low=0, high=1):
         return self.choose_backend(shape).random_uniform(shape, low=low, high=high)
 
-    def random_normal(self, shape):
+    def random_normal(self, shape, seed=None):
         return self.choose_backend(shape).random_normal(shape)
 
     def stack(self, values, axis=0):
