@@ -78,10 +78,10 @@ def _residual_block_2d(grid, nb_channels, kernel_size=(3, 3), stride=(1, 1), act
     # y = tf.layers.batch_normalization(y, name=None if name is None else name+"/norm2", training=training, trainable=trainable, reuse=reuse)
 
     # identity shortcuts used directly when the input and output are of the same dimensions
-    if _project_shortcut or stride != (1, 1):
+    if _project_shortcut or (stride != 1 and stride != (1, 1)):
         # when the dimensions increase projection shortcut is used to match dimensions (done by 1×1 convolutions)
         # when the shortcuts go across feature maps of two sizes, they are performed with a stride of 2
-        shortcut = tf.pad(shortcut, [[0, 0], pad1, pad2, [0, 0]], mode=padding)
+        # shortcut = tf.pad(shortcut, [[0, 0], pad1, pad2, [0, 0]], mode=padding)
         shortcut = tf.layers.conv2d(shortcut, nb_channels, kernel_size=(1, 1), strides=stride, padding='valid', name=None if name is None else name + "/convid", trainable=trainable, reuse=reuse)
         # shortcut = tf.layers.batch_normalization(shortcut, name=None if name is None else name+"/normid", training=training, trainable=trainable, reuse=reuse)
 
