@@ -28,6 +28,10 @@ class Session(object):
             self._session.run(tf.global_variables_initializer())
             self.saver = tf.train.Saver(max_to_keep=100, allow_empty=True)
 
+    def new_session(self):
+        self._session = tf.Session(graph=self.graph)
+        self.initialize_variables()
+
     def run(self, fetches, feed_dict=None, summary_key=None, time=None, merged_summary=None, item_condition=struct.ALL_ITEMS):
         if isinstance(fetches, np.ndarray):
             return fetches
