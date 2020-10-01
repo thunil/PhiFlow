@@ -8,6 +8,7 @@ import os
 import sys
 import threading
 import time
+import traceback
 import warnings
 from os.path import isfile
 
@@ -193,7 +194,11 @@ class App(object):
 
     def run_action(self, action):
         message_before = self.message
-        action.method()
+        exc = None
+        try:
+            action.method()
+        except BaseException as exc:
+            traceback.print_exception(*sys.exc_info())
         self.invalidate()
         message_after = self.message
         if message_before == message_after:
@@ -201,6 +206,9 @@ class App(object):
                 self.message = display_name(action.name)
             else:
                 self.message += ' | ' + display_name(action.name)
+        if exc is not None:
+            self.message += ' | ' + str(exc)
+            raise exc
 
     @property
     def traits(self):

@@ -56,8 +56,9 @@ Noise can be used as an initializer for CenteredGrids or StaggeredGrids.
     def grid_sample(self, resolution, size, batch_size=1, channels=None):
         channels = channels or self.channels or len(size)
         shape = (batch_size,) + tuple(resolution) + (channels,)
-        import tensorflow as tf
-        rndj = math.to_complex(self.math.random_normal(shape, seed=self.seed)) + 1j * math.to_complex(self.math.random_normal(shape, seed=self.seed+1))  # Note: there is no complex32
+        rnd_real = self.math.random_normal(shape, seed=self.seed)
+        rnd_imag = self.math.random_normal(shape, seed=None if self.seed is None else self.seed+1)
+        rndj = math.to_complex(rnd_real) + 1j * math.to_complex(rnd_imag)  # Note: there is no complex32
         k = math.fftfreq(resolution) * resolution / size * self.scale  # in physical units
         k = math.sum(k ** 2, axis=-1, keepdims=True)
         lowest_frequency = 0.1
