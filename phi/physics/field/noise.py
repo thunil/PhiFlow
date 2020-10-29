@@ -45,7 +45,8 @@ class Noise(AnalyticField):
             return other_field.with_data(array)
         if isinstance(other_field, StaggeredGrid):
             assert self.channels is None or self.channels == other_field.rank
-            return other_field.with_data([self.grid_sample(grid.resolution, grid.box.size, grid._batch_size, 1) for grid in other_field.unstack()])
+            return other_field.with_data([self.grid_sample(grid.resolution, grid.box.size, grid._batch_size, 1)
+                                          for grid in other_field.unstack()])
         if isinstance(other_field, Domain):
             array = self.grid_sample(other_field.resolution, other_field.box.size)
             return CenteredGrid(array, box=other_field.box, extrapolation='boundary')
@@ -53,19 +54,29 @@ class Noise(AnalyticField):
     def sample_at(self, points):
         raise NotImplementedError()
 
-    def grid_sample(self, resolution, size, batch_size=1, channels=None):
+    def grid_sample(self, resolution, size, batch_size=1, channels=None,
+                    min_frequency=0.1, max_frequency=0, min_wavelength=0, max_wavelength=10,
+                    scaling=2):
         channels = channels or self.channels or len(size)
         shape = (batch_size,) + tuple(resolution) + (channels,)
-        rndj = math.to_complex(self.math.random_normal(shape)) + 1j * math.to_complex(self.math.random_normal(shape))  # Note: there is no complex32
+        # Generate physical mode sizes
         k = math.fftfreq(resolution) * resolution / size * self.scale  # in physical units
-        k = math.sum(k ** 2, axis=-1, keepdims=True)
-        lowest_frequency = 0.1
-        weight_mask = 1 / (1 + math.exp((lowest_frequency - k) * 1e3))  # High pass filter
-        # --- Compute 1/k ---
+        k = math.sum(k ** scaling, axis=-1, keepdims=True)
+        # Filter spectrum
+        if max_wavelength:
+            min_frequency = 1 / max_wavelength
+        if min_wavelength:
+            max_frequency = 1 / min_wavelength
+        if min_frequency:
+            weight_mask = 1 / (1 + math.exp((min_frequency - k) * 1e3))  # High pass filter
+        if max_frequency:
+            weight_mask = 1 - 1 / (1 + math.exp((max_frequency - k) * 1e3))  # Low pass filter
+        # Inverse Spectrum for computation
         k[(0,) * len(k.shape)] = np.inf
         inv_k = 1 / k
         inv_k[(0,) * len(k.shape)] = 0
-        # --- Compute result ---
+        # Compute random field with spectrum
+        rndj = math.to_complex(self.math.random_normal(shape)) + 1j * math.to_complex(self.math.random_normal(shape))  # Note: there is no complex32
         fft = rndj * inv_k ** self.smoothness * weight_mask
         array = math.real(math.ifft(fft))
         array /= math.std(array, axis=tuple(range(1, math.ndims(array))), keepdims=True)

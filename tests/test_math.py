@@ -15,7 +15,7 @@ from phi.backend.backend_helper import general_grid_sample_nd as helper_resample
 
 class TestMath(TestCase):
 
-    def test_fft(self):
+    def test_tf_fft(self):
         tf.InteractiveSession()
         for dims in range(1, 4):
             shape = [2] + [4] * dims + [3]
@@ -33,7 +33,7 @@ class TestMath(TestCase):
 
             self.assertLess(max(abs(x_np - x_tf.eval())), 1e-3)
 
-    def test_laplace_padding(self):
+    def test_tf_laplace_padding(self):
         tf.InteractiveSession()
         for dims in range(1, 4):
             shape = [2] + [4] * dims + [3]

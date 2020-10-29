@@ -1,6 +1,7 @@
 import sys
 from phi.flow import *  # Use NumPy
-from phi.physics.plasma import *  # Plasma tools
+from phi.physics.plasma_field import PlasmaHW
+from phi.physics.hasegawa_wakatani import *  # Plasma tools
 MODE = "NumPy"
 
 DESCRIPTION = """
@@ -8,6 +9,7 @@ Hasegawa-Wakatani Plasma
 """
 N = 64
 shape = (1, N, N, N, 1)
+
 
 class PlasmaSim(App):
 
@@ -24,7 +26,7 @@ class PlasmaSim(App):
                 omega=np.random.uniform(low=1, high=10, size=shape),
                 phi=np.random.uniform(low=1, high=10, size=shape)
             ),
-            physics=HasegawaWakatani()
+            physics=HasegawaWakatani2D()
         )
         # Add Fields
         self.dt = EditableFloat('dt', 0.01)

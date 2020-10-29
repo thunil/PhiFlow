@@ -33,6 +33,22 @@ class PlasmaHW(DomainState):
         """
         return self.centered_grid('initial_density', initial_density)
 
+    @struct.constant(default=0, dependencies=DomainState.domain)
+    def initial_phi(self, initial_phi):
+        """
+        The marker density is stored in a CenteredGrid with dimensions matching the domain.
+        It describes: the number of particles per physical volume in the grid.
+        """
+        return self.centered_grid('initial_phi', initial_phi)
+
+    @struct.constant(default=0, dependencies=DomainState.domain)
+    def initial_omega(self, initial_omega):
+        """
+        The marker density is stored in a CenteredGrid with dimensions matching the domain.
+        It describes: the number of particles per physical volume in the grid.
+        """
+        return self.centered_grid('initial_omega', initial_omega)
+
     @struct.variable(default=0, dependencies=DomainState.domain)
     def phi(self, phi):
         """
@@ -85,18 +101,18 @@ class PlasmaHW(DomainState):
         return "plasma[density: %s, phi: %s, omega %s]" % (self.density, self.phi, self.omega)
 
     def __mul__(self, other):
-        return self.copied_with(density=self.density*other,
-                                phi=self.phi*other,
-                                omega=self.omega*other,
-                                energy=self.energy*other,
-                                enstrophy=self.enstrophy*other)
+        return self.copied_with(density=self.density * other,
+                                phi=self.phi * other,
+                                omega=self.omega * other,
+                                energy=self.energy * other,
+                                enstrophy=self.enstrophy * other)
 
     __rmul__ = __mul__
 
     def __add__(self, other):
-        return self.copied_with(density=self.density+other.density,
-                                phi=self.phi+other.phi,
-                                omega=self.omega+other.omega,
-                                energy=self.energy+other.energy,
-                                enstrophy=self.enstrophy+other.enstrophy,
+        return self.copied_with(density=self.density + other.density,
+                                phi=self.phi + other.phi,
+                                omega=self.omega + other.omega,
+                                energy=self.energy + other.energy,
+                                enstrophy=self.enstrophy + other.enstrophy,
                                 age=max(self.age, other.age))
