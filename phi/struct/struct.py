@@ -258,7 +258,7 @@ def properties_dict(struct):
         return struct.__properties_dict__()
     if isinstance(struct, (list, tuple)):
         return [properties_dict(s) for s in struct]
-    if isinstance(struct, np.ndarray) and struct.dtype == np.object:
+    if isinstance(struct, np.ndarray) and struct.dtype == object:
         return [properties_dict(s) for s in struct]
     if isinstance(struct, dict):
         return {key: properties_dict(value) for key,value in struct.items()}
@@ -284,7 +284,7 @@ def copy_with(struct, new_values_dict, change_type=None):
         for key, value in new_values_dict.items():
             duplicate[key] = value
         return duplicate
-    if isinstance(struct, np.ndarray) and struct.dtype == np.object:
+    if isinstance(struct, np.ndarray) and struct.dtype == object:
         duplicate = struct.copy()
         for key, value in new_values_dict.items():
             duplicate[key] = value
@@ -303,7 +303,7 @@ def copy_with(struct, new_values_dict, change_type=None):
 def isstruct(obj, leaf_condition=None):
     if not isinstance(obj, (Struct, list, tuple, dict, np.ndarray)):
         return False
-    if isinstance(obj, np.ndarray) and obj.dtype != np.object:
+    if isinstance(obj, np.ndarray) and obj.dtype != object:
         return False
     if leaf_condition is not None and leaf_condition(obj):
         return False
@@ -312,7 +312,7 @@ def isstruct(obj, leaf_condition=None):
 
 def equal(obj1, obj2):
     if isinstance(obj1, np.ndarray) or isinstance(obj2, np.ndarray):
-        if obj1.dtype != np.object and obj2.dtype != np.object:
+        if obj1.dtype != object and obj2.dtype != object:
             if not np.allclose(obj1, obj2):
                 return False
         else:

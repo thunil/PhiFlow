@@ -205,7 +205,7 @@ class StaggeredGrid(Field):
         else:
             data = [data_operator(c1, other) for c1 in self.data]
             flags = propagate_flags_operation(self.flags, linear_if_scalar, self.rank, self.component_count)
-        return self.copied_with(data=np.array(data, dtype=np.object), flags=flags)
+        return self.copied_with(data=np.array(data, dtype=object), flags=flags)
 
     def staggered_tensor(self):
         tensors = [c.data for c in self.data]

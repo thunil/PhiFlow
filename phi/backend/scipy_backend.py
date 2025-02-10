@@ -61,7 +61,7 @@ class SciPyBackend(Backend):
         if not only_native and isinstance(x, numbers.Number):
             return True
         if isinstance(x, np.ndarray):
-            return x.dtype != np.object
+            return x.dtype != object
         else:
             return False
 
